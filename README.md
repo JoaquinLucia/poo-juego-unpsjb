@@ -2,7 +2,7 @@
 
 ## 1. Integrantes del Equipo
 - Lucia, Joaquin
-- Apellido, Nombre 
+- Porco Velasquez, Ariel 
 - Apellido, Nombre 
 - Apellido, Nombre
 
