@@ -1,7 +1,7 @@
 # Proyecto: Tower Defense - El Último Bastión
 
 ## 1. Integrantes del Equipo
-- Apellido, Nombre 
+- Lucia, Joaquin
 - Apellido, Nombre 
 - Apellido, Nombre 
 - Apellido, Nombre
