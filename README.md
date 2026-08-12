@@ -1,18 +1,43 @@
-## Getting Started
+# Proyecto: Tower Defense - El Último Bastión
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+## 1. Integrantes del Equipo
+- Apellido, Nombre 
+- Apellido, Nombre 
+- Apellido, Nombre 
+- Apellido, Nombre
 
-## Folder Structure
+## 2. Dominio y Alcance del Sistema 
 
-The workspace contains two folders by default, where:
+### Descripción del Problema
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+### Objetivo del Sistema
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+### Funcionalidades Principales (Features)
 
-## Dependency Management
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+**Mecánicas de Juego:**
+
+**Interfaz Gráfica (IGU):**
+
+
+**Persistencia:**
+
+## 3. Arquitectura y Diseño
+
+### Patrón de Diseño Adicional:
+
+### Diagramas de Diseño
+
+#### **Diagrama de Clases UML (Conceptual)**
+
+
+#### **Prototipo de la IGU (Wireframe)**
+
+## 4. Stack Tecnológico 
+
+- **Lenguaje:** Java 17
+- **IDE:** Visual Studio Code
+- **Base de Datos:** MySQL 8.0 (para persistencia de High Scores)
+- **Framework de IGU:** Java Swing
+- **Control de Versiones:** Git y GitHub Classroom
