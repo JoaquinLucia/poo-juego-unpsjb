@@ -3,7 +3,7 @@
 ## 1. Integrantes del Equipo
 - Lucia, Joaquin
 - Porco Velasquez, Ariel 
-- Apellido, Nombre 
+- Miranda, Juan Manuel A. 
 - Apellido, Nombre
 
 ## 2. Dominio y Alcance del Sistema 
