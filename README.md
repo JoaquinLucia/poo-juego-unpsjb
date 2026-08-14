@@ -56,7 +56,7 @@ Recompensa
 Después de ciertos combates el jugador podrá elegir entre diferentes recompensas (Robar una habilidad del enemigo o un aumento de estadísticas).
 
 **Interfaz Gráfica (IGU):**
-
+Indicadores visuales de estado (barras de vida, turno activo y registro de combate).
 
 **Persistencia:**
 
