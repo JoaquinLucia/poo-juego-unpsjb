@@ -59,7 +59,9 @@ Interfaz Gráfica (IGU):
 
 Indicadores visuales de estado (barras de vida, turno activo y registro de combate).
 
-**Persistencia:**
+Persistencia:
+
+Guardado y consulta del historial de batallas y mejores calificaciones (High Scores) en una base de datos SQLite.
 
 ## 3. Arquitectura y Diseño
 
