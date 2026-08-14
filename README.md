@@ -4,7 +4,7 @@
 - Lucia, Joaquin
 - Porco Velasquez, Ariel 
 - Miranda, Juan Manuel A. 
-- Apellido, Nombre
+- Molina Tenorio, Juan David
 
 ## 2. Dominio y Alcance del Sistema 
 
