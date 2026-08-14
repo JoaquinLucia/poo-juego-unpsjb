@@ -1,4 +1,4 @@
-# Proyecto: Tower Defense - El Último Bastión
+# Proyecto: RPG - El Último Bastión
 
 ## 1. Integrantes del Equipo
 - Lucia, Joaquin
@@ -14,7 +14,7 @@ Se busca desarrollar un juego de escritorio del estilo RPG por turnos con elemen
 ### Objetivo del Sistema
 El sistema será un juego funcional y extensible que permita al jugador experimentar las mecánicas básicas de un RPG de combate por turnos y exploración en un mapa 2D lineal que esté ramificado en casilleros o nodos, combatir enemigos mediante un sistema de turnos, obtener habilidades y recompensas para mejorar las características de su personaje y enfrentarse a enemigos cada vez más poderosos hasta alcanzar al jefe final.
 
-El sistema buscará generar partidas diferentes y rejugables, donde las decisiones tomadas por el jugador determinen su estrategia y posibilidades de supervivencia.
+
 
 ### Funcionalidades Principales (Features)
 Sistema de personaje
@@ -44,7 +44,7 @@ Los enemigos tendrán comportamientos y características diferentes.
 El jugador recorrerá un mapa generado para la partida, compuesto por diferentes casillas.
 
 Combate
-El jugador enfrenta uno o varios enemigos.
+El jugador enfrenta un enemigo.
 
 Combate élite
 Enfrenta enemigos más fuertes pero recibe mejores recompensas.
