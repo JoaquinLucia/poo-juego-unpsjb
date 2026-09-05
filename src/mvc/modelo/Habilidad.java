@@ -1,4 +1,6 @@
-public abstract class Habilidad {
+package mvc.modelo;
+
+public abstract class Habilidad implements HabilidadUsable {
     private String nombreHabilidad;
     private int danioHabilidad;
     private int cooldown;
@@ -10,10 +12,15 @@ public abstract class Habilidad {
         this.cooldown = cooldown;
     }
 
-    public boolean estaLista( boolean cdListo){
+    public boolean estaLista(boolean cdListo){
         if(cdListo){
             this.cooldown = 0;
         }
         return cdListo;
     }
+
+    @Override
+     public void usarHabilidad(){
+
+     }
 }
