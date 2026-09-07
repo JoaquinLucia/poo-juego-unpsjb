@@ -55,6 +55,11 @@ Persistencia:
 
 Guardado y consulta del historial de batallas y mejores clasificaciones (High Scores) en una base de datos SQLite.
 
+Nuestro grupo pensó en utilizar la herencia en este juego a través de la creación de una clase abstracta llamada "Entidad", la cual contiene los atributos generales que posteriormente van a ser utilizados por sus respectivas subclases: "Heroe" y "Enemigo.
+Los personajes representados por éstas clases tendrán comportamientos y características particulares, además de las heredadas por su clase padre.
+Por una parte, esto hace referencia al polimorfismo, ya que en la forma que se utiliza herencia permite que las subclases puedan utilizar los comportamientos de la clase padre, aplicados a su propia manera.
+Por otra parte, tenemos en consideración implementar varias interfaces que nos permitan reutilizar código mediante el polimorfismo, así poder  aplicar los comportamientos asociados a éstos a distintas clases que lo requieran.
+
 ## 3. Arquitectura y Diseño
 
 ### Patrón de Diseño Adicional:
