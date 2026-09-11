@@ -1,12 +1,12 @@
-package mvc.modelo;
+package modelo;
 
 public class Heroe extends Entidad {
     private int nivel;
 
     public Heroe(String nombre, int vida, int ataque, int nivel, int cantidadHabilidadMax) {
         super(nombre, vida, ataque,cantidadHabilidadMax);
-        if (cantidadHabilidadMax < 1) {
-            throw new IllegalArgumentException("El héroe debe poder llevar al menos una habilidad");
+        if (nivel < 1) {
+            throw new IllegalArgumentException("El nivel debe ser mayor o igual a 1");
         }
         this.nivel = nivel;
     }
@@ -18,5 +18,5 @@ public class Heroe extends Entidad {
     public void subirNivel(){
         this.nivel++;
     }
- 
+
 }
