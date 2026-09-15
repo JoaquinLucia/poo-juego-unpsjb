@@ -31,7 +31,7 @@ public class Heroe extends Entidad {
             Habilidad nuevaHabilidad = robable.obtenerHabilidad();
             //agregar la habilidad al listado del heroe
             this.agregarHabilidad(nuevaHabilidad);
-            System.out.println("Ganaste" + getNombre() + "Derrotaste a " + objetivo.getNombre() + " Y le robaste la habilidad:  " + nuevaHabilidad.getNombreHabilidad());
+            System.out.println("Ganaste " + getNombre() + " derrotaste a " + objetivo.getNombre() + " y le robaste la habilidad: " + nuevaHabilidad.getNombreHabilidad());
         } else {
             System.out.println("El objetivo no tiene habilidades para robar.");
         }
