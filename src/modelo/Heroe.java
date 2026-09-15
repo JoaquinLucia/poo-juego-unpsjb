@@ -19,4 +19,22 @@ public class Heroe extends Entidad {
         this.nivel++;
     }
 
+    public void robarHabilidad(Entidad objetivo) {
+
+        if (objetivo.estaVivo()) {
+            System.out.println("Todavia no podes la habilidad" + objetivo.getNombre() + " esta vivo");
+            return;
+        }
+
+        if(objetivo instanceof Robable) {
+            Robable robable = (Robable) objetivo;
+            Habilidad nuevaHabilidad = robable.obtenerHabilidad();
+            //agregar la habilidad al listado del heroe
+            this.agregarHabilidad(nuevaHabilidad);
+            System.out.println("Ganaste" + getNombre() + "Derrotaste a " + objetivo.getNombre() + " Y le robaste la habilidad:  " + nuevaHabilidad.getNombreHabilidad());
+        } else {
+            System.out.println("El objetivo no tiene habilidades para robar.");
+        }
+    }
+
 }
