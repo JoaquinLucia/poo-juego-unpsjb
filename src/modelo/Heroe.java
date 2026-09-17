@@ -37,4 +37,13 @@ public class Heroe extends Entidad {
         }
     }
 
+    public void usarHabilidad(int indice, Entidad objetivo) {
+    if (indice >= 0 && indice < getHabilidades().size()) {
+        Habilidad h = getHabilidades().get(indice);
+        h.usar(this, objetivo);
+    } else {
+        System.out.println("No hay ninguna habilidad en esa posición.");
+    }
+}
+
 }

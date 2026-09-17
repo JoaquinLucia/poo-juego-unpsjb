@@ -1,43 +1,55 @@
 package controlador;
 
 import modelo.*;
-import modelo.enemigos.*;
+import vista.VistaJuego;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Juego {
+    private final VistaJuego vista;
+    private final Heroe heroe;
+    private Enemigo enemigoActual;
 
-    public void iniciarJuego() {
-        Heroe heroe = new Heroe("Lancelot", 100, 15, 1, 4);
+    public Juego(VistaJuego vista, Heroe heroe, Enemigo enemigoInicial) {
+        this.vista = vista;
+        this.heroe = heroe;
+        this.enemigoActual = enemigoInicial;
 
-        // Definimos los escenarios y enemigos a enfrentar en orden
-        Enemigo[] enemigos = { new Goblin(), new Esqueleto() };
+        // Receptores con Lambdas (un receptor por botón en una sola línea)
+        this.vista.getBtnAtaqueBasico().addActionListener(e -> ejecutarAtaque());
+        this.vista.getBtnRobarHabilidad().addActionListener(e -> ejecutarRobo());
+        this.vista.getBtnUsarHabilidadRobada().addActionListener(e -> ejecutarHabilidadRobada());
 
-        System.out.println("¡Comienza la aventura de " + heroe.getNombre() + "!\n");
+        // Receptor de teclado con KeyAdapter (Clase anónima sobre adaptador)
+        this.vista.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_A) {
+                    ejecutarAtaque();
+                } else if (e.getKeyCode() == KeyEvent.VK_R) {
+                    ejecutarRobo();
+                }
+            }
+        });
 
-        for (int i = 0; i < enemigos.length; i++) {
-            Enemigo enemigoActual = enemigos[i];
-            System.out.println("-- ESCENARIO " + (i + 1) + ": Enfrentando a " + enemigoActual.getNombre() + " --");
-
-            ejecutarCombate(heroe, enemigoActual);
-
-            // Recompensa post-combate
-            heroe.robarHabilidad(enemigoActual);
-            System.out.println();
-        }
-
-        mostrarResumen(heroe);
+        this.vista.setFocusable(true);
     }
 
-    private void ejecutarCombate(Heroe heroe, Enemigo enemigo) {
-        while (heroe.estaVivo() && enemigo.estaVivo()) {
-            heroe.atacar(enemigo);
-        }
+    // Métodos privados con la lógica del negocio
+    private void ejecutarAtaque() {
+        this.heroe.atacar(this.enemigoActual);
+        this.vista.getLblEstado().setText("Atacaste al enemigo. Vida enemigo: " + this.enemigoActual.getVida());
     }
 
-    private void mostrarResumen(Heroe heroe) {
-        System.out.println("-- FIN DEL CAMINO --");
-        System.out.println("Las habilidades que " + heroe.getNombre() + " obtuvo son:");
-        for (Habilidad h : heroe.getHabilidades()) {
-            System.out.println("- " + h.getNombreHabilidad());
-        }
+    private void ejecutarRobo() {
+        // robarHabilidad en tu Heroe.java recibe (Entidad objetivo)
+        this.heroe.robarHabilidad(this.enemigoActual);
+        this.vista.getLblEstado().setText("Intentaste robar la habilidad de " + this.enemigoActual.getNombre());
+    }
+
+    private void ejecutarHabilidadRobada() {
+        // Llama a usarHabilidad heredado de Entidad (usando el índice 0 de la lista)
+        this.heroe.usarHabilidad(0, this.enemigoActual);
+        this.vista.getLblEstado().setText("Usaste la habilidad robada contra " + this.enemigoActual.getNombre());
     }
 }
