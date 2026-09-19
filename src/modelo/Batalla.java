@@ -2,9 +2,7 @@ package modelo;
 
 public class Batalla {
 
-
     public enum Turno {HEROE, ENEMIGO};
-
 
     private Heroe heroe;
     private Enemigo enemigo;
@@ -32,8 +30,6 @@ public void combate() {
                 turnoheroe = true;
             }
         }
-
-
         
         if (heroe.estaVivo()) {
             System.out.println(heroe.getNombre() + " ganó la batalla.");
@@ -41,5 +37,8 @@ public void combate() {
             System.out.println(enemigo.getNombre() + " ganó la batalla.");
         }
     }
+
+    public Heroe getHeroe() { return heroe; }
+    public Enemigo getEnemigo() { return enemigo; }
 }
 
