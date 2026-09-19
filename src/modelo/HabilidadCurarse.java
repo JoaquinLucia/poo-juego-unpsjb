@@ -11,7 +11,10 @@ public void ejecutarHabilidad(Entidad usuario, Entidad objetivo){
     if (getCooldownActual()==0) {
         usuario.sumarVida(getValorBase());
         activarcooldown();
+        System.out.println(" se curo " + usuario.getNombre());
     }
+            System.out.println(" aun no disponible");
+
 }
 
 }
