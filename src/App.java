@@ -9,7 +9,7 @@ public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             // 1. Creamos el Modelo (El Héroe y el Enemigo)
-            Heroe heroe = new Heroe("Ariel", 100, 20, 1, 3);
+            Heroe heroe = new Heroe("Lancelot", 100, 20, 1, 3);
             Enemigo enemigo = new Goblin("Goblin Salvaje", 50, 10, 15);
 
             // 2. Creamos la Vista pasándole el modelo
