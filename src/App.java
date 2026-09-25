@@ -1,11 +1,11 @@
 
-import controlador.ControladorBatalla;
+import Controlador.ControladorBatalla;
+import Vista.VistaBatalla;
 import javax.swing.SwingUtilities;
 import modelo.Batalla;
 import modelo.Enemigo;
 import modelo.HabilidadCurarse;
 import modelo.Heroe;
-import vista.VistaBatalla;
 
 public class App {
     public static void main(String[] args) throws Exception {
@@ -23,11 +23,7 @@ public class App {
 
     }    
 }
- 
- 
+
+
 // Batalla batalla1=new Batalla(heroe1, enemigo1);
 // batalla1.combate();
-
- 
- //
-

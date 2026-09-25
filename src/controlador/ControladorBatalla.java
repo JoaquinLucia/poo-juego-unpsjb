@@ -1,9 +1,9 @@
-package controlador;
+package Controlador;
 
+import Vista.VistaBatalla;
 import modelo.Batalla;
 import modelo.Enemigo;
 import modelo.Heroe;
-import vista.VistaBatalla;
 
 public class ControladorBatalla{
 
