@@ -1,21 +1,16 @@
 package modelo;
 
 public class HabilidadCurarse extends Habilidad {
-
-
-public HabilidadCurarse(String nombreHabilidad,String descripcion,int valorBase,int cooldown){
-    super(nombreHabilidad, descripcion, valorBase, cooldown);
-}
-@Override 
-public void ejecutarHabilidad(Entidad usuario, Entidad objetivo){
-    if (getCooldownActual()==0) {
-        usuario.sumarVida(getValorBase());
-        activarcooldown();
-        System.out.println(" se curo " + usuario.getNombre());
+    public HabilidadCurarse(String nombreHabilidad, String descripcion, int valorBase, int cooldown) {
+        super(nombreHabilidad, descripcion, valorBase, cooldown);
     }
-            System.out.println(" aun no disponible");
 
-}
-
+    @Override
+    public void ejecutarHabilidad(Entidad usuario, Entidad objetivo) {
+        if (this.getCdListo()) {
+            usuario.sumarVida(this.getValorBase());
+            this.activarcooldown();
+        }
+    }
 }
 

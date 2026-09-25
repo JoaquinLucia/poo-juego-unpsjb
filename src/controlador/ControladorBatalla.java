@@ -1,34 +1,78 @@
 package controlador;
 
+import javax.swing.Timer;
 import modelo.Batalla;
-import modelo.Enemigo;
 import modelo.Heroe;
+import modelo.Enemigo;
 import vista.VistaBatalla;
 
-public class ControladorBatalla{
+public class ControladorBatalla {
+    private VistaBatalla vista;
+    private Batalla batalla;
 
-    private VistaBatalla vistaBatalla;
-    private Batalla modeloBatalla;
-    private Heroe modeloHeroe;
-    private Enemigo modeloEnemigo;
+    public ControladorBatalla(VistaBatalla vista, Batalla batalla) {
+        this.vista = vista;
+        this.batalla = batalla;
 
-    public ControladorBatalla(VistaBatalla vistaBatalla, Batalla modeloBatalla){
-        this.vistaBatalla = vistaBatalla;
-        this.modeloBatalla = modeloBatalla;
-        this.modeloHeroe = modeloBatalla.getHeroe();     // se obtienen del modelo
-        this.modeloEnemigo = modeloBatalla.getEnemigo();
-        this.vistaBatalla.getBotonHeroe().addActionListener(evento -> this.atacaHeroe());
-        this.vistaBatalla.getBotonEnemigo().addActionListener(evento -> this.atacaEnemigo());
-        
+        vincularEventos();
+        actualizarInterfaz();
     }
 
-        private void atacaHeroe() {
-        this.vistaBatalla.mostraeResultado(this.modeloHeroe.getNombre(), this.modeloHeroe.getAtaque());
+    private void vincularEventos() {
+        // Asumiendo que la vista tiene el botón de ataque del héroe
+        if (vista.getBotonHeroe() != null) {
+            vista.getBotonHeroe().addActionListener(e -> procesarAtaqueHeroe());
+        }
+    }
+
+    private void procesarAtaqueHeroe() {
+        if (batalla.getTurnoActual() != Batalla.Turno.HEROE || batalla.estaTerminada()) {
+            return;
         }
 
-        private void atacaEnemigo() {
-        vistaBatalla.mostraeResultado(modeloEnemigo.getNombre(), modeloEnemigo.getAtaque());
-    
+        // 1. Ejecutar turno del jugador
+        String logHeroe = batalla.ejecutarAtaqueHeroe();
+        vista.mostraeResultado(batalla.getHeroe().getNombre(), batalla.getHeroe().getAtaque());
+        actualizarInterfaz();
+
+        // 2. Verificar si murió el enemigo
+        if (batalla.estaTerminada()) {
+            finalizarCombate();
+            return;
         }
+
+        // 3. Concurrencia: Turno del enemigo tras 1 segundo sin bloquear la UI
+        bloquearControles(true);
+        Timer timerEnemigo = new Timer(1000, evento -> {
+            String logEnemigo = batalla.ejecutarTurnoEnemigo();
+            vista.mostraeResultado(batalla.getEnemigo().getNombre(), batalla.getEnemigo().getAtaque());
+            actualizarInterfaz();
+            bloquearControles(false);
+
+            if (batalla.estaTerminada()) {
+                finalizarCombate();
+            }
+        });
+        timerEnemigo.setRepeats(false);
+        timerEnemigo.start();
+    }
+
+    private void actualizarInterfaz() {
+        // Acá se sincronizan barras de vida o etiquetas según los métodos de VistaBatalla
+    }
+
+    private void bloquearControles(boolean bloquear) {
+        if (vista.getBotonHeroe() != null) {
+            vista.getBotonHeroe().setEnabled(!bloquear);
+        }
+    }
+
+    private void finalizarCombate() {
+        bloquearControles(true);
+        if (batalla.ganoHeroe()) {
+            System.out.println("¡Victoria!");
+        } else {
+            System.out.println("Derrota...");
+        }
+    }
 }
-    
