@@ -1,6 +1,8 @@
 package vista;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
 import javax.swing.*;
 
@@ -10,6 +12,9 @@ public class PanelBatalla extends JPanel {
     private final JProgressBar vidaEnemigo;
     private final JLabel nombreHeroe;
     private final JLabel nombreEnemigo;
+    
+    // Bandera para saber si es el inicio de la pelea (y no hacer la animación de llenado)
+    private boolean primeraVez = true;
 
     public PanelBatalla() {
         // Carga segura de la imagen de fondo
@@ -71,11 +76,46 @@ public class PanelBatalla extends JPanel {
         if (vidaHeroe.getMaximum() == 100 && hpHeroe > 100) vidaHeroe.setMaximum(hpHeroe);
         if (vidaEnemigo.getMaximum() == 100 && hpEnemigo > 100) vidaEnemigo.setMaximum(hpEnemigo);
 
-        vidaHeroe.setValue(Math.max(0, hpHeroe));
-        vidaHeroe.setString(Math.max(0, hpHeroe) + " HP");
+        if (primeraVez) {
+            // Setear instantáneamente al iniciar la pelea
+            vidaHeroe.setValue(Math.max(0, hpHeroe));
+            vidaHeroe.setString(Math.max(0, hpHeroe) + " HP");
+            
+            vidaEnemigo.setValue(Math.max(0, hpEnemigo));
+            vidaEnemigo.setString(Math.max(0, hpEnemigo) + " HP");
+            
+            primeraVez = false;
+        } else {
+            // Llamar a la animación suave durante el combate
+            animarBarraVida(vidaHeroe, Math.max(0, hpHeroe));
+            animarBarraVida(vidaEnemigo, Math.max(0, hpEnemigo));
+        }
+    }
 
-        vidaEnemigo.setValue(Math.max(0, hpEnemigo));
-        vidaEnemigo.setString(Math.max(0, hpEnemigo) + " HP");
+    private void animarBarraVida(JProgressBar barra, int nuevaVida) {
+        // Aumentamos el tiempo a 30 milisegundos para ralentizar la animación general
+        Timer timer = new Timer(30, null);
+        timer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int valorActual = barra.getValue();
+                
+                // Dividimos por 30 (antes 10) para que reste fragmentos más pequeños y tarde más en llegar
+                int diferencia = Math.abs(valorActual - nuevaVida);
+                int paso = Math.max(1, diferencia / 30); 
+
+                if (valorActual > nuevaVida) {
+                    barra.setValue(Math.max(nuevaVida, valorActual - paso)); // Resta vida lentamente
+                } else if (valorActual < nuevaVida) {
+                    barra.setValue(Math.min(nuevaVida, valorActual + paso)); // Suma vida lentamente
+                } else {
+                    ((Timer) e.getSource()).stop(); // Se detiene exacto en el valor
+                }
+                
+                barra.setString(barra.getValue() + " HP");
+            }
+        });
+        timer.start();
     }
 
     @Override

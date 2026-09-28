@@ -1,5 +1,5 @@
 package modelo;
 
-public abstract class EnemigoFactory {
-    public abstract Enemigo crearEnemigo();
+public interface EnemigoFactory {
+    Enemigo crearEnemigo();
 }

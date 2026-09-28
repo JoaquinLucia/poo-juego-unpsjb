@@ -70,7 +70,7 @@ public class ControladorMenu {
         Batalla batalla = new Batalla(heroe, enemigo);
         VistaBatalla vistaBatalla = new VistaBatalla();
         new ControladorBatalla(vistaBatalla, batalla);
-        
+        vistaBatalla.mostrarResultado("¡Un " + enemigo.getNombre() + " se interpone en tu camino!");
         vistaBatalla.mostrar();
     }
 
