@@ -7,7 +7,7 @@ public class MagoFactory implements HeroeFactory {
         
         Heroe mago = new Heroe("Mago", 250, 65, 1, 2);
         
-        // mago.setHabilidad(congelar);
+        mago.agregarHabilidad(congelar); // <-- Descomentado y usando el método correcto
         
         return mago;
     }

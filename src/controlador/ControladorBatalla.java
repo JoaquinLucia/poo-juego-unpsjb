@@ -16,13 +16,13 @@ public class ControladorBatalla {
 
         vincularEventos();
         actualizarInterfaz();
+        vista.mostrarResultado("¡Comienza la batalla entre " + batalla.getHeroe().getNombre() + " y " + batalla.getEnemigo().getNombre() + "!");
     }
 
     private void vincularEventos() {
-        // Asumiendo que la vista tiene el botón de ataque del héroe
-        if (vista.getBotonHeroe() != null) {
-            vista.getBotonHeroe().addActionListener(e -> procesarAtaqueHeroe());
-        }
+        // Conectamos los botones de la nueva vista a nuestros métodos
+        vista.onAtacar(e -> procesarAtaqueHeroe());
+        vista.onHabilidad(e -> procesarHabilidadHeroe());
     }
 
     private void procesarAtaqueHeroe() {
@@ -32,25 +32,59 @@ public class ControladorBatalla {
 
         // 1. Ejecutar turno del jugador
         String logHeroe = batalla.ejecutarAtaqueHeroe();
-        vista.mostraeResultado(batalla.getHeroe().getNombre(), batalla.getHeroe().getAtaque());
+        vista.mostrarResultado(logHeroe != null ? logHeroe : batalla.getHeroe().getNombre() + " ataca con " + batalla.getHeroe().getAtaque() + " de daño.");
         actualizarInterfaz();
 
-        // 2. Verificar si murió el enemigo
+        // 2. Verificar si terminó el combate
         if (batalla.estaTerminada()) {
             finalizarCombate();
             return;
         }
 
-        // 3. Concurrencia: Turno del enemigo tras 1 segundo sin bloquear la UI
-        bloquearControles(true);
+        // 3. Concurrencia: Turno del enemigo
+        iniciarTurnoEnemigo();
+    }
+
+    private void procesarHabilidadHeroe() {
+        if (batalla.getTurnoActual() != Batalla.Turno.HEROE || batalla.estaTerminada()) {
+            return;
+        }
+
+        // Suponemos que el héroe usa su habilidad principal (índice 0)
+        String logHabilidad = batalla.ejecutarHabilidadHeroe(0);
+        
+        // Mostramos en la vista qué pasó (si atacó o si tiró el error de cooldown)
+        vista.mostrarResultado(logHabilidad);
+        actualizarInterfaz();
+
+        // Si la habilidad estaba en cooldown, tu modelo NO llama a pasarTurno().
+        // Por lo tanto, si sigue siendo el turno del héroe, cortamos acá y lo dejamos volver a elegir.
+        if (batalla.getTurnoActual() == Batalla.Turno.HEROE) {
+            return; 
+        }
+
+        // Si la batalla terminó con esa habilidad (ej: lo mató)
+        if (batalla.estaTerminada()) {
+            finalizarCombate();
+            return;
+        }
+
+        // Si la habilidad se usó con éxito, le toca al enemigo
+        iniciarTurnoEnemigo();
+    }
+
+    private void iniciarTurnoEnemigo() {
+        vista.setBotonesHabilitados(false); // Apagamos los botones para que el jugador no haga spam
+
         Timer timerEnemigo = new Timer(1000, evento -> {
             String logEnemigo = batalla.ejecutarTurnoEnemigo();
-            vista.mostraeResultado(batalla.getEnemigo().getNombre(), batalla.getEnemigo().getAtaque());
+            vista.mostrarResultado(logEnemigo != null ? logEnemigo : batalla.getEnemigo().getNombre() + " contraataca con " + batalla.getEnemigo().getAtaque() + " de daño.");
             actualizarInterfaz();
-            bloquearControles(false);
-
+            
             if (batalla.estaTerminada()) {
                 finalizarCombate();
+            } else {
+                vista.setBotonesHabilitados(true); // Desbloqueamos para el siguiente turno del jugador
             }
         });
         timerEnemigo.setRepeats(false);
@@ -58,21 +92,24 @@ public class ControladorBatalla {
     }
 
     private void actualizarInterfaz() {
-        // Acá se sincronizan barras de vida o etiquetas según los métodos de VistaBatalla
-    }
-
-    private void bloquearControles(boolean bloquear) {
-        if (vista.getBotonHeroe() != null) {
-            vista.getBotonHeroe().setEnabled(!bloquear);
-        }
+        Heroe heroe = batalla.getHeroe();
+        Enemigo enemigo = batalla.getEnemigo();
+        
+        // Enviamos los datos reales del modelo a las etiquetas de la vista
+        vista.actualizarEstadisticas(
+            heroe.getNombre(), 
+            heroe.getVida(), 
+            enemigo.getNombre(), 
+            enemigo.getVida()
+        );
     }
 
     private void finalizarCombate() {
-        bloquearControles(true);
+        vista.setBotonesHabilitados(false);
         if (batalla.ganoHeroe()) {
-            System.out.println("¡Victoria!");
+            vista.mostrarResultado("¡Victoria! " + batalla.getEnemigo().getNombre() + " ha sido derrotado.");
         } else {
-            System.out.println("Derrota...");
+            vista.mostrarResultado("Derrota... " + batalla.getHeroe().getNombre() + " ha caído en batalla.");
         }
     }
 }
