@@ -1,115 +1,132 @@
 package controlador;
 
+import java.awt.event.ActionEvent;
 import javax.swing.Timer;
+
 import modelo.Batalla;
-import modelo.Heroe;
-import modelo.Enemigo;
+import modelo.Entidad;
+import modelo.Habilidad;
 import vista.VistaBatalla;
 
 public class ControladorBatalla {
-    private VistaBatalla vista;
-    private Batalla batalla;
+    private final VistaBatalla vista;
+    private final Batalla batalla;
+    private final Timer timerEnemigo;
 
     public ControladorBatalla(VistaBatalla vista, Batalla batalla) {
         this.vista = vista;
         this.batalla = batalla;
 
-        vincularEventos();
-        actualizarInterfaz();
-        vista.mostrarResultado("¡Comienza la batalla entre " + batalla.getHeroe().getNombre() + " y " + batalla.getEnemigo().getNombre() + "!");
-    }
+        // Configuramos el temporizador para el turno del enemigo (1.5 segundos)
+        this.timerEnemigo = new Timer(1500, (ActionEvent e) -> turnoEnemigo());
+        this.timerEnemigo.setRepeats(false);
 
-    private void vincularEventos() {
-        // Conectamos los botones de la nueva vista a nuestros métodos
-        vista.onAtacar(e -> procesarAtaqueHeroe());
-        vista.onHabilidad(e -> procesarHabilidadHeroe());
-    }
-
-    private void procesarAtaqueHeroe() {
-        if (batalla.getTurnoActual() != Batalla.Turno.HEROE || batalla.estaTerminada()) {
-            return;
-        }
-
-        // 1. Ejecutar turno del jugador
-        String logHeroe = batalla.ejecutarAtaqueHeroe();
-        vista.mostrarResultado(logHeroe != null ? logHeroe : batalla.getHeroe().getNombre() + " ataca con " + batalla.getHeroe().getAtaque() + " de daño.");
-        actualizarInterfaz();
-
-        // 2. Verificar si terminó el combate
-        if (batalla.estaTerminada()) {
-            finalizarCombate();
-            return;
-        }
-
-        // 3. Concurrencia: Turno del enemigo
-        iniciarTurnoEnemigo();
-    }
-
-    private void procesarHabilidadHeroe() {
-        if (batalla.getTurnoActual() != Batalla.Turno.HEROE || batalla.estaTerminada()) {
-            return;
-        }
-
-        // Suponemos que el héroe usa su habilidad principal (índice 0)
-        String logHabilidad = batalla.ejecutarHabilidadHeroe(0);
-        
-        // Mostramos en la vista qué pasó (si atacó o si tiró el error de cooldown)
-        vista.mostrarResultado(logHabilidad);
-        actualizarInterfaz();
-
-        // Si la habilidad estaba en cooldown, tu modelo NO llama a pasarTurno().
-        // Por lo tanto, si sigue siendo el turno del héroe, cortamos acá y lo dejamos volver a elegir.
-        if (batalla.getTurnoActual() == Batalla.Turno.HEROE) {
-            return; 
-        }
-
-        // Si la batalla terminó con esa habilidad (ej: lo mató)
-        if (batalla.estaTerminada()) {
-            finalizarCombate();
-            return;
-        }
-
-        // Si la habilidad se usó con éxito, le toca al enemigo
-        iniciarTurnoEnemigo();
-    }
-
-    private void iniciarTurnoEnemigo() {
-        vista.setBotonesHabilitados(false); // Apagamos los botones para que el jugador no haga spam
-
-        Timer timerEnemigo = new Timer(1000, evento -> {
-            String logEnemigo = batalla.ejecutarTurnoEnemigo();
-            vista.mostrarResultado(logEnemigo != null ? logEnemigo : batalla.getEnemigo().getNombre() + " contraataca con " + batalla.getEnemigo().getAtaque() + " de daño.");
-            actualizarInterfaz();
-            
-            if (batalla.estaTerminada()) {
-                finalizarCombate();
-            } else {
-                vista.setBotonesHabilitados(true); // Desbloqueamos para el siguiente turno del jugador
+        // Enganchamos los botones de la vista a los métodos del controlador
+        this.vista.onAtacar(e -> {
+            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
+                accionJugador_Atacar();
             }
         });
-        timerEnemigo.setRepeats(false);
-        timerEnemigo.start();
+
+        this.vista.onHabilidad(e -> {
+            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
+                accionJugador_Habilidad();
+            }
+        });
+
+        // Actualización inicial
+        actualizarVista();
     }
 
-    private void actualizarInterfaz() {
-        Heroe heroe = batalla.getHeroe();
-        Enemigo enemigo = batalla.getEnemigo();
-        
-        // Enviamos los datos reales del modelo a las etiquetas de la vista
+    private void actualizarVista() {
         vista.actualizarEstadisticas(
-            heroe.getNombre(), 
-            heroe.getVida(), 
-            enemigo.getNombre(), 
-            enemigo.getVida()
+            batalla.getHeroe().getNombre(), batalla.getHeroe().getVida(),
+            batalla.getEnemigo().getNombre(), batalla.getEnemigo().getVida()
         );
     }
 
-    private void finalizarCombate() {
-        vista.setBotonesHabilitados(false);
-        if (batalla.ganoHeroe()) {
-            vista.mostrarResultado("¡Victoria! " + batalla.getEnemigo().getNombre() + " ha sido derrotado.");
+    private void accionJugador_Atacar() {
+        // El jugador ataca
+        batalla.getHeroe().atacar(batalla.getEnemigo());
+        vista.mostrarResultado(batalla.getHeroe().getNombre() + " asestó un golpe básico!");
+        
+        finalizarTurnoJugador();
+    }
+
+    private void accionJugador_Habilidad() {
+        if (batalla.getHeroe().getCantidadHabilidades() > 0) {
+            Habilidad hab = batalla.getHeroe().getHabilidad(0);
+            
+            if (hab.getCdListo()) {
+                hab.ejecutarHabilidad(batalla.getHeroe(), batalla.getEnemigo());
+                vista.mostrarResultado("¡" + batalla.getHeroe().getNombre() + " usó " + hab.getNombreHabilidad() + "!");
+                finalizarTurnoJugador();
+            } else {
+                vista.mostrarResultado("Habilidad en enfriamiento (" + hab.getCooldownActual() + " turnos)");
+                // No llamamos a finalizarTurnoJugador(), le dejamos elegir otra acción.
+            }
         } else {
-            vista.mostrarResultado("Derrota... " + batalla.getHeroe().getNombre() + " ha caído en batalla.");
+            vista.mostrarResultado("El héroe no tiene habilidades.");
+        }
+    }
+
+    private void finalizarTurnoJugador() {
+        actualizarVista();
+        vista.setBotonesHabilitados(false); // Bloqueamos para que no spammee
+        
+        // Reducimos el cooldown de las habilidades del jugador
+        reducirCooldowns(batalla.getHeroe());
+
+        if (!batalla.getEnemigo().estaVivo()) {
+            vista.mostrarResultado("¡Victoria! Has derrotado al " + batalla.getEnemigo().getNombre());
+            // Acá podrías llamar al Menú para volver o guardar el puntaje
+            return;
+        }
+
+        // Si el enemigo está vivo, chequeamos si está aturdido
+        if (batalla.getEnemigo().getaturdir()) {
+            vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " está aturdido y pierde su turno.");
+            batalla.getEnemigo().sacarAturdimiento(); // Se le pasa el efecto para el próximo turno
+            
+            // Como perdió el turno, le devolvemos los controles al jugador tras una pausa breve
+            Timer timerRecuperacion = new Timer(1500, e -> {
+                vista.setBotonesHabilitados(true);
+                vista.mostrarResultado("¡Es tu turno!");
+            });
+            timerRecuperacion.setRepeats(false);
+            timerRecuperacion.start();
+            
+        } else {
+            // Si no está aturdido, arranca el timer normal para que ataque
+            this.timerEnemigo.start();
+        }
+    }
+
+    private void turnoEnemigo() {
+        if (!batalla.getEnemigo().estaVivo()) return;
+
+        // El enemigo ataca
+        batalla.getEnemigo().atacar(batalla.getHeroe());
+        vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " te atacó ferozmente.");
+        
+        // Reducimos cooldowns del enemigo (si llegara a tener habilidades)
+        reducirCooldowns(batalla.getEnemigo());
+        
+        actualizarVista();
+
+        if (!batalla.getHeroe().estaVivo()) {
+            vista.mostrarResultado("¡Has sido derrotado por el " + batalla.getEnemigo().getNombre() + "!");
+        } else {
+            vista.setBotonesHabilitados(true); // Le devolvemos el turno al jugador
+        }
+    }
+    
+    // Método auxiliar para bajarle los turnos a todas las habilidades de una entidad
+    private void reducirCooldowns(Entidad entidad) {
+        for (Habilidad h : entidad.getHabilidades()) {
+            if (h != null) {
+                h.cronoCooldown();
+            }
         }
     }
 }

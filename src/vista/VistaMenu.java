@@ -29,8 +29,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-
-
 public class VistaMenu extends JFrame {
 
     private static final String RUTA_IMAGENES = "/recursos/imagenes_menu/";
@@ -55,11 +53,8 @@ public class VistaMenu extends JFrame {
 
     // --- NUEVAS VARIABLES PARA LA SELECCIÓN DE PERSONAJE ---
     private static final String PANTALLA_SELECCION = "seleccion";
-    
-    private final JButton btnCaballero = crearBoton("Elegir Caballero");
-    private final JButton btnMago = crearBoton("Elegir Mago");
-    private final JButton btnArquero = crearBoton("Elegir Arquero");
-    private final JButton btnVolver = crearBoton("Volver al Menú");
+    private final PanelSeleccionPersonaje panelSeleccion = new PanelSeleccionPersonaje();
+
     // Mismo orden que el arreglo de botones
     private final BufferedImage[] imagenesBotones = {
             cargarImagen("boton_comenzar.png"),
@@ -114,16 +109,16 @@ public class VistaMenu extends JFrame {
         fondo.add(contenido);
 
         pantallas.add(fondo, PANTALLA_MENU);
-        armarPantallaSeleccion();
+        pantallas.add(panelSeleccion, PANTALLA_SELECCION); // <-- Agregamos el nuevo panel aquí
+        
         setContentPane(pantallas);
 
         configurarEventosDePantalla();
-        //modoVentana();
         entrarPantallaCompleta();
     }
 
     private JButton crearBoton (String texto) { 
-    JButton boton = new JButton(texto);
+        JButton boton = new JButton(texto);
         // Sin el aspecto de Swing: solo se ve la imagen
         boton.setFocusPainted(false);
         boton.setContentAreaFilled(false);
@@ -134,37 +129,6 @@ public class VistaMenu extends JFrame {
         boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         boton.setForeground(java.awt.Color.WHITE);
         return boton;
-    }
-
-    private void armarPantallaSeleccion() {
-        JPanel panelSeleccion = new JPanel();
-        panelSeleccion.setLayout(new BoxLayout(panelSeleccion, BoxLayout.Y_AXIS));
-        panelSeleccion.setOpaque(false);
-
-        // Un título blanco para que resalte
-        JLabel titulo = new JLabel("Selecciona tu Clase", SwingConstants.CENTER);
-        titulo.setForeground(java.awt.Color.WHITE);
-        titulo.setFont(titulo.getFont().deriveFont(24f)); 
-        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        // Agregamos todo al panel con separaciones
-        panelSeleccion.add(titulo);
-        panelSeleccion.add(Box.createVerticalStrut(40));
-        panelSeleccion.add(btnCaballero);
-        panelSeleccion.add(Box.createVerticalStrut(15));
-        panelSeleccion.add(btnMago);
-        panelSeleccion.add(Box.createVerticalStrut(15));
-        panelSeleccion.add(btnArquero);
-        panelSeleccion.add(Box.createVerticalStrut(40));
-        panelSeleccion.add(btnVolver);
-
-        // Reutilizamos la clase de tu compañero para tener el mismo fondo animado
-        PanelFondo fondoSeleccion = new PanelFondo(RUTA_IMAGENES + "fondo.gif", new GridBagLayout());
-        fondoSeleccion.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        fondoSeleccion.add(panelSeleccion);
-
-        // Añadimos esta nueva pantalla al mazo de cartas
-        pantallas.add(fondoSeleccion, PANTALLA_SELECCION);
     }
 
     // ---------- Imágenes ----------
@@ -224,17 +188,6 @@ public class VistaMenu extends JFrame {
                 }
             }
         });
-
-        // Sin barra de título no hay botón de restaurar, así que Esc sale de pantalla completa
-       /* JRootPane raiz = getRootPane();
-        raiz.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "salirPantallaCompleta");
-        raiz.getActionMap().put("salirPantallaCompleta", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                salirPantallaCompleta();
-            }
-        });*/ 
     }
 
     public final void entrarPantallaCompleta() {
@@ -258,28 +211,9 @@ public class VistaMenu extends JFrame {
         setVisible(true);
     }
 
-    /*public void salirPantallaCompleta() {
-        if (!pantallaCompleta) {
-            return;
-        }
-        pantallaCompleta = false;
-        //modoVentana();
-        setVisible(true);
-    }*/
-
     public boolean isPantallaCompleta() {
         return pantallaCompleta;
     }
-
-    /*private void modoVentana() {
-        dispose();
-        setUndecorated(false);
-        setExtendedState(NORMAL);
-        setResizable(false); // necesario para que el botón de maximizar esté activo
-        aplicarEscala(1.0);
-        setSize(ANCHO_VENTANA, ALTO_VENTANA);
-        setLocationRelativeTo(null);
-    }*/
 
     private void aplicarEscala(double escala) {
         double factor = escala * ESCALA_IMAGENES;
@@ -329,34 +263,20 @@ public class VistaMenu extends JFrame {
         salir.addActionListener(listener);
     }
 
-    // ---------- Enganches para la Selección de Personaje ----------
-    
+    // ---------- Accesos para el Controlador de Menú y Selección ----------
+
     public void mostrarSeleccion() {
         cartas.show(pantallas, PANTALLA_SELECCION);
     }
 
-    public void onSeleccionarCaballero(ActionListener listener) {
-        btnCaballero.addActionListener(listener);
-    }
-
-    public void onSeleccionarMago(ActionListener listener) {
-        btnMago.addActionListener(listener);
-    }
-
-    public void onSeleccionarArquero(ActionListener listener) {
-        btnArquero.addActionListener(listener);
-    }
-
-    public void onVolverMenu(ActionListener listener) {
-        btnVolver.addActionListener(listener);
-    }
-
-    // ---------- Selección de personaje ----------
-
     public void mostrarMenu() {
         cartas.show(pantallas, PANTALLA_MENU);
     }
-
+    
+    // Método clave para que ControladorMenu le pase el panel a ControladorSeleccion
+    public PanelSeleccionPersonaje getPanelSeleccion() {
+        return panelSeleccion;
+    }
 
     // ---------- Diálogos ----------
 

@@ -1,68 +1,76 @@
 package controlador;
 
-import modelo.ModeloPuntuacion;
+import modelo.Arquetipo;
+import modelo.ModeloMenu;
 import modelo.Batalla;
 import modelo.Enemigo;
-import modelo.EnemigoFactory;
 import modelo.EnemigoEliteFactory; 
+import modelo.EnemigoFactory;
 import modelo.Heroe;
-import modelo.HeroeFactory;          // <-- NUEVO IMPORT
-import modelo.CaballeroFactory;      // <-- NUEVO IMPORT
-import modelo.MagoFactory;           // <-- NUEVO IMPORT
-import modelo.ArqueroFactory;        // <-- NUEVO IMPORT
+import modelo.HeroeFactory;
+import modelo.CaballeroFactory;
+import modelo.MagoFactory;
+import modelo.ArqueroFactory;
 import modelo.ModeloTablaPuntuacion;
 import vista.VistaBatalla;
 import vista.VistaMenu;
 import vista.VistaPuntuaciones;
-import controlador.ControladorBatalla;
 
 public class ControladorMenu {
 
     private final VistaMenu vista;
     private final ModeloTablaPuntuacion tablaPuntuaciones;
+    private final ModeloMenu modeloMenu;
+    private ControladorSeleccion controladorSeleccion;
 
     public ControladorMenu(VistaMenu vista, ModeloTablaPuntuacion tablaPuntuaciones) {
         this.vista = vista;
         this.tablaPuntuaciones = tablaPuntuaciones;
+        this.modeloMenu = new ModeloMenu();
+
+        // Inicializamos el sub-controlador de la interfaz nueva
+        this.controladorSeleccion = new ControladorSeleccion(
+            modeloMenu, 
+            vista.getPanelSeleccion(), 
+            () -> vista.mostrarMenu(), // Qué hacer al tocar "Volver"
+            (arquetipoElegido) -> iniciarBatalla(arquetipoElegido) // Qué hacer al tocar "Comenzar"
+        );
 
         // Botones del menú principal
-        vista.onComenzar(e -> vista.mostrarSeleccion()); // <-- AHORA VA A LA SELECCIÓN
+        vista.onComenzar(e -> iniciarSeleccionPersonaje()); 
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());
         vista.onSalir(e -> salir());
-
-        // Botones de la selección de personaje
-        vista.onSeleccionarCaballero(e -> iniciarBatalla(new CaballeroFactory()));
-        vista.onSeleccionarMago(e -> iniciarBatalla(new MagoFactory()));
-        vista.onSeleccionarArquero(e -> iniciarBatalla(new ArqueroFactory()));
-        vista.onVolverMenu(e -> vista.mostrarMenu());
     }
 
     public void iniciar() {
         vista.setVisible(true);
     }
 
-    // Este método reemplaza a tu viejo comenzarJuego()
-    // Recibe la fábrica del héroe que el jugador acaba de elegir
-    private void iniciarBatalla(HeroeFactory fabricaHeroe) {
-        // 1. Ocultamos el menú completo
-        vista.dispose(); 
+    private void iniciarSeleccionPersonaje() {
+        controladorSeleccion.entrar();
+        vista.mostrarSeleccion();
+    }
 
-        // 2. Instanciamos al héroe usando la fábrica que nos pasaron
-        Heroe heroe = fabricaHeroe.crearHeroe();
+    private void iniciarBatalla(Arquetipo arquetipoElegido) {
+        vista.dispose(); 
         
-        // 3. Instanciamos al enemigo
+        // Conectamos el Arquetipo visual con tus Fábricas lógicas
+        HeroeFactory fabricaHeroe = switch (arquetipoElegido.name()) {
+            case "CABALLERO" -> new CaballeroFactory();
+            case "MAGO" -> new MagoFactory(); 
+            case "ARQUERO" -> new ArqueroFactory();
+            default -> new CaballeroFactory();
+        };
+
+        Heroe heroe = fabricaHeroe.crearHeroe();
         EnemigoFactory fabricaEnemigo = new EnemigoEliteFactory(); 
         Enemigo enemigo = fabricaEnemigo.crearEnemigo();
         
-        // 4. Creamos la batalla
         Batalla batalla = new Batalla(heroe, enemigo);
-        
-        // 5. Instanciamos la Vista y el Controlador de batalla
         VistaBatalla vistaBatalla = new VistaBatalla();
         new ControladorBatalla(vistaBatalla, batalla);
         
-        // 6. Mostramos la pantalla de combate
         vistaBatalla.mostrar();
     }
 
