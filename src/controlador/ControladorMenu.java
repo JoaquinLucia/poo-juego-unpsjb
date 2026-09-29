@@ -38,6 +38,8 @@ public class ControladorMenu {
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());
         vista.onSalir(e -> salir());
+
+        GestorDeSonido.precargarEfecto("recursos/sonidos/sonidoclickopciones.wav");
     }
 
     /** Deja el menú principal en primer plano (al iniciar o al volver de una partida). */
@@ -54,13 +56,13 @@ public class ControladorMenu {
     }
 
     private void iniciarSeleccionPersonaje() {
-        GestorDeSonido.reproducirEfecto("sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         controladorSeleccion.entrar();
         vista.mostrarSeleccion();
     }
 
     private void mostrarPuntuaciones() {
-        GestorDeSonido.reproducirEfecto("sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         VistaPuntuaciones modal = new VistaPuntuaciones(ventana);
         modal.cargarPuntuaciones(tablaPuntuaciones.getPuntuacionesOrdenadas());
@@ -68,12 +70,12 @@ public class ControladorMenu {
     }
 
     private void mostrarOpciones() {
-        GestorDeSonido.reproducirEfecto("sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         vista.mostrarMensaje("Opciones (próximamente)");
     }
 
     private void salir() {
-        GestorDeSonido.reproducirEfecto("sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
             System.exit(0);
         }

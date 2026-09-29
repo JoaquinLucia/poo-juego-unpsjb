@@ -15,6 +15,8 @@ import modelo.ModeloMenu;
 import vista.PanelSeleccionPersonaje;
 import vista.PanelSeleccionPersonaje.Zona;
 
+import controlador.utilidades.GestorDeSonido;
+
 /**
  * Controles de la pantalla de selección de personaje.
  *
@@ -54,18 +56,21 @@ public class ControladorSeleccion {
 
     private void mover(int direccion) {
         if (modelo.getCantidadPersonajes() > 1) {
+            GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
             modelo.moverSeleccion(direccion);
             actualizarVista();
         }
     }
 
     private void confirmar() {
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         Arquetipo elegido = modelo.getPersonajeActual();
         modelo.setPersonajeElegido(elegido);
         alConfirmar.accept(elegido);
     }
 
     private void volver() {
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
         alVolver.run();
     }
 
