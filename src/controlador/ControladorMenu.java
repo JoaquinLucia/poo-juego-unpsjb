@@ -56,13 +56,13 @@ public class ControladorMenu {
     }
 
     private void iniciarSeleccionPersonaje() {
-        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al iniciar la selección
         controladorSeleccion.entrar();
         vista.mostrarSeleccion();
     }
 
     private void mostrarPuntuaciones() {
-        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al mostrar puntuaciones
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         VistaPuntuaciones modal = new VistaPuntuaciones(ventana);
         modal.cargarPuntuaciones(tablaPuntuaciones.getPuntuacionesOrdenadas());
@@ -70,12 +70,12 @@ public class ControladorMenu {
     }
 
     private void mostrarOpciones() {
-        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al mostrar opciones
         vista.mostrarMensaje("Opciones (próximamente)");
     }
 
     private void salir() {
-        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- Agregado aquí
+        GestorDeSonido.reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al salir
         if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
             System.exit(0);
         }
