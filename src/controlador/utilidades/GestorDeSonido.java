@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class GestorDeSonido {
 
-    // Caché para almacenar los clips ya cargados en memoria y evitar el delay
+    // Caché para almacenar los clips ya cargados en memoria y evitar el delay inicial
     private static final Map<String, Clip> cacheClips = new HashMap<>();
 
     /**
@@ -40,27 +40,23 @@ public class GestorDeSonido {
     }
 
     /**
-     * Reproduce el efecto de sonido de manera instantánea utilizando la caché.
+     * Reproduce el efecto de sonido utilizando la caché para una respuesta inmediata.
      */
     public static void reproducirEfecto(String rutaRelativa) {
-    try {
-        if (!cacheClips.containsKey(rutaRelativa)) {
-            precargarEfecto(rutaRelativa);
-        }
-
-        Clip clip = cacheClips.get(rutaRelativa);
-        if (clip != null) {
-            // Si está sonando, lo detenemos y limpiamos el búfer de inmediato
-            if (clip.isRunning()) {
-                clip.stop();
+        try {
+            // Si no está precargado, lo cargamos por seguridad
+            if (!cacheClips.containsKey(rutaRelativa)) {
+                precargarEfecto(rutaRelativa);
             }
-            clip.flush(); // <--- Esto limpia la recarga anterior
-            clip.setFramePosition(0); // Volvemos al inicio (fotograma 0)
-            clip.start(); // Reproducimos de nuevo al instante
+
+            Clip clip = cacheClips.get(rutaRelativa);
+            if (clip != null) {
+                clip.setFramePosition(0); // Vuelve al inicio del audio
+                clip.start();            // Reproduce
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo reproducir el audio en la ruta: " + rutaRelativa);
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        System.err.println("No se pudo reproducir el audio en la ruta: " + rutaRelativa);
-        e.printStackTrace();
-    }
     }
 }
