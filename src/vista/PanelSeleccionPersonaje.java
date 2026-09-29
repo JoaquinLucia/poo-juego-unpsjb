@@ -48,7 +48,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     // Espacio de diseño (igual que VistaMenu en modo ventana)
     private static final int ANCHO_DISENO = 800;
     private static final int ALTO_DISENO = 600;
-    private static final double ESCALA_IMAGENES = 0.7; // igual que en VistaMenu
+    private static final double ESCALA_IMAGENES = 0.6; // igual que en VistaMenu
 
     // Paleta tomada del fondo: noche azulada, luna pálida y el rojo del horizonte
     private static final Color HUESO        = new Color(220, 216, 207);
@@ -79,7 +79,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     private Zona hover = Zona.NINGUNA;
 
     private final BufferedImage imagenComenzar = cargarImagen("boton_comenzar.png");
-    private final BufferedImage imagenVolver = cargarImagen("boton_volver.png"); // opcional
+    private final BufferedImage imagenVolver = cargarImagen("boton_volver.png");
     private final BufferedImage imagenComenzarHover = aclarar(imagenComenzar);
     private final BufferedImage imagenVolverHover = aclarar(imagenVolver);
 
@@ -422,7 +422,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
     private void dibujarBotones(Graphics2D g) {
         int separacion = 30;
-        Rectangle tamVolver = medidaBoton(imagenVolver, 150);
+        Rectangle tamVolver = medidaBoton(imagenVolver, 400);
         Rectangle tamComenzar = medidaBoton(imagenComenzar, 200);
         int anchoFila = tamVolver.width + separacion + tamComenzar.width;
         int x = (ANCHO_DISENO - anchoFila) / 2;

@@ -60,7 +60,8 @@ public class VistaMenu extends JFrame {
             cargarImagen("boton_comenzar.png"),
             cargarImagen("boton_tabla_de_puntuaciones.png"),
             cargarImagen("boton_opciones.png"),
-            cargarImagen("boton_salir.png")
+            cargarImagen("boton_salir.png"),
+            cargarImagen("boton_volver.png")
     };
 
     // Espacios entre botones (se guardan para poder escalarlos)
