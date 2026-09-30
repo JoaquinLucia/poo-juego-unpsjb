@@ -1,20 +1,31 @@
 package modelo;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
  * Listado de todos los héroes y enemigos del juego, armados con Builder.
- * Reemplaza a las fábricas (CaballeroFactory, EnemigoEliteFactory, etc.).
+ *
+ * Es la ÚNICA fuente de los datos de juego (nombre, vida, ataque, habilidades).
+ * La pantalla de selección construye un héroe de muestra y lee sus valores de acá,
+ * así que nunca puede mostrar algo distinto de lo que después se juega.
  *
  * Se guarda una "receta" (Supplier) y no el objeto ya creado: cada vez que
  * se pide un personaje se construye uno NUEVO, con la vida completa y con
- * habilidades propias (si dos enemigos compartieran la misma Habilidad,
+ * habilidades propias (si dos personajes compartieran la misma Habilidad,
  * compartirían también el cooldown).
+ *
+ * Para agregar un héroe: sumar su receta en cargarHeroes(), su presentación
+ * en vista.PresentacionesHeroes (con el mismo id) y su imagen en
+ * /recursos/personajes/.
  */
 public class CatalogoPersonajes {
-    private final Map<String, Supplier<Heroe>> heroes = new HashMap<>();
+
+    // LinkedHashMap: conserva el orden de carga, que es el orden de las flechas en la selección.
+    private final Map<String, Supplier<Heroe>> heroes = new LinkedHashMap<>();
     private final Map<String, Supplier<Enemigo>> enemigos = new HashMap<>();
 
     public CatalogoPersonajes() {
@@ -22,29 +33,49 @@ public class CatalogoPersonajes {
         cargarEnemigos();
     }
 
-    // Valores de los personajes
+    // ---------------------------------------------------------------- héroes
+
     private void cargarHeroes() {
-    heroes.put("CABALLERO", () -> new Heroe.Builder("Caballero")
-            .vida(600).ataque(35)
-            .nivel(1)
-            .maxHabilidades(4)
-            .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 70, 3))
-            .build());
+        heroes.put("caballero", () -> new Heroe.Builder("Caballero de Gwyn")
+                .vida(600).ataque(35)
+                .nivel(1)
+                .maxHabilidades(4)
+                .habilidad(new HabilidadGolpe("Golpe aturdidor", "Golpe con el escudo", 70, 3))
+                .build());
 
-    heroes.put("MAGO", () -> new Heroe.Builder("Mago")
-            .vida(350).ataque(55)
-            .nivel(1)
-            .maxHabilidades(4)
-            .habilidad(new HabilidadGolpe("Bola de fuego", "Daño mágico", 110, 3))
-            .build());
+        heroes.put("mago", () -> new Heroe.Builder("Espectro nómada")
+                .vida(350).ataque(55)
+                .nivel(1)
+                .maxHabilidades(4)
+                .habilidad(new HabilidadGolpe("Proyectil ígneo", "Daño mágico", 110, 3))
+                .build());
 
-    heroes.put("CAZADORA", () -> new Heroe.Builder("Cazadora")
-            .vida(420).ataque(45)
-            .nivel(1)
-            .maxHabilidades(4)
-            .habilidad(new HabilidadGolpe("Flecha certera", "Disparo preciso", 90, 2))
-            .build());
-}
+        heroes.put("cazadora", () -> new Heroe.Builder("Viuda de Van Helsing")
+                .vida(420).ataque(45)
+                .nivel(1)
+                .maxHabilidades(4)
+                .habilidad(new HabilidadGolpe("Virote de plata", "Daño perforante", 90, 2))
+                .build());
+    }
+
+    /** Ids de todos los héroes, en el orden en que se muestran en la selección. */
+    public List<String> idsHeroes() {
+        return List.copyOf(heroes.keySet());
+    }
+
+    public Heroe crearHeroe(String id) {
+        Supplier<Heroe> receta = heroes.get(id);
+        if (receta == null) {
+            throw new IllegalArgumentException("No existe el héroe: " + id);
+        }
+        return receta.get();
+    }
+
+    public boolean existeHeroe(String id) {
+        return heroes.containsKey(id);
+    }
+
+    // -------------------------------------------------------------- enemigos
 
     private void cargarEnemigos() {
         enemigos.put("esclavo", () -> new Enemigo.Builder("Esclavo")
@@ -71,14 +102,6 @@ public class CatalogoPersonajes {
                 .habilidad(new HabilidadGolpe("Martillo ígneo", "Golpe devastador", 90, 3))
                 .habilidad(new HabilidadGolpe("Lluvia de brasas", "Daño en área", 60, 2))
                 .build());
-    }
-
-    public Heroe crearHeroe(Arquetipo arquetipo) {
-        Supplier<Heroe> receta = heroes.get(arquetipo.name());
-        if (receta == null) {
-            throw new IllegalArgumentException("No hay héroe cargado para: " + arquetipo.name());
-        }
-        return receta.get();
     }
 
     public Enemigo crearEnemigo(String id) {

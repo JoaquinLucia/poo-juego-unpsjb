@@ -22,12 +22,10 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 import java.io.IOException;
 import java.net.URL;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.swing.Timer;
-
-import modelo.Arquetipo;
 
 /**
  * Pantalla de selección de personaje. Usa el mismo fondo animado que el menú
@@ -37,9 +35,9 @@ import modelo.Arquetipo;
  * modo ventana) y se escala al tamaño real del panel, así que en pantalla
  * completa queda proporcionado igual que el menú.
  *
- * Es solo vista: dibuja el personaje que le indican y, para el controlador,
- * informa qué zona hay bajo el puntero (zonaEn). Los controles de teclado y
- * mouse están en controlador.ControladorSeleccion.
+ * Es solo vista: dibuja la FichaPersonaje que le pasa el controlador y, para
+ * el controlador, informa qué zona hay bajo el puntero (zonaEn). No conoce el
+ * modelo. Los controles de teclado y mouse están en controlador.ControladorSeleccion.
  */
 public class PanelSeleccionPersonaje extends PanelFondo {
 
@@ -70,11 +68,15 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     private static final Rectangle FICHA = new Rectangle(390, 150, 350, 272);
     private static final int Y_BOTONES = 494;
 
+    // Barras de stats: cuántos segmentos tiene cada una
+    private static final int SEGMENTOS_BARRA = 10;
+
     /** Partes clickeables de la pantalla. */
     public enum Zona { COMENZAR, VOLVER, FLECHA_IZQ, FLECHA_DER, NINGUNA }
 
     // Lo que se muestra (lo decide el controlador)
-    private Arquetipo actual = Arquetipo.values()[0];
+    private FichaPersonaje actual;
+    private BufferedImage imagenActual;
     private boolean hayVarios = false;
     private Zona hover = Zona.NINGUNA;
 
@@ -92,10 +94,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     // Transformación diseño -> pantalla del último repintado (para el mouse)
     private AffineTransform transformacion = new AffineTransform();
 
-    // Imágenes de los personajes, cargadas desde la ruta de cada Arquetipo
-    private final Map<Arquetipo, BufferedImage> imagenesPersonajes = new EnumMap<>(Arquetipo.class);
+    // Imágenes de los personajes ya cargadas, por id (se cargan la primera vez que se muestran)
+    private final Map<String, BufferedImage> imagenesPersonajes = new HashMap<>();
     private BufferedImage retratoEscalado;
-    private Arquetipo retratoDe;
+    private String retratoDe;
     private int retratoAlto = -1;
 
     private final Timer animacion;
@@ -106,20 +108,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         setBackground(new Color(8, 10, 16)); // mientras carga el GIF
         setFocusable(true);
 
-        for (Arquetipo a : Arquetipo.values()) {
-            BufferedImage imagen = cargarRecurso(a.getRutaImagen());
-            if (imagen != null) {
-                imagenesPersonajes.put(a, imagen);
-            } else {
-                System.err.println("No se encontró la imagen del personaje: " + a.getRutaImagen());
-            }
-        }
-
         animacion = new Timer(40, e -> {
             tick++;
             repaint();
         });
-
 
         // La animación corre solo mientras la pantalla está a la vista
         addComponentListener(new ComponentAdapter() {
@@ -139,9 +131,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     // ---------- Lo que usa el controlador ----------
 
     /** Muestra un personaje. hayVarios indica si se dibujan las flechas. */
-    public void mostrarPersonaje(Arquetipo personaje, boolean hayVarios) {
-        this.actual = personaje;
+    public void mostrarPersonaje(FichaPersonaje ficha, boolean hayVarios) {
+        this.actual = ficha;
         this.hayVarios = hayVarios;
+        this.imagenActual = imagenDe(ficha);
         repaint();
     }
 
@@ -188,6 +181,20 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         }
     }
 
+    /** Imagen del personaje: la carga la primera vez y después la reutiliza. */
+    private BufferedImage imagenDe(FichaPersonaje ficha) {
+        BufferedImage imagen = imagenesPersonajes.get(ficha.id());
+        if (imagen == null) {
+            imagen = cargarRecurso(ficha.rutaImagen());
+            if (imagen != null) {
+                imagenesPersonajes.put(ficha.id(), imagen);
+            } else {
+                System.err.println("No se encontró la imagen del personaje: " + ficha.rutaImagen());
+            }
+        }
+        return imagen;
+    }
+
     // ---------- Dibujo ----------
 
     @Override
@@ -209,8 +216,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.transform(t);
 
         dibujarTitulo(g);
-        dibujarPersonaje(g, actual);
-        dibujarFicha(g, actual);
+        if (actual != null) {
+            dibujarPersonaje(g, actual);
+            dibujarFicha(g, actual);
+        }
         dibujarBotones(g);
 
         g.dispose();
@@ -255,8 +264,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.drawString(sub, centrar(g, sub, 0, ANCHO_DISENO), 124);
     }
 
-    private void dibujarPersonaje(Graphics2D g, Arquetipo a) {
-        BufferedImage imagen = imagenesPersonajes.get(a);
+    private void dibujarPersonaje(Graphics2D g, FichaPersonaje ficha) {
         int alto = ALTO_PERSONAJE;
         int yArriba = Y_PERSONAJE;
         int yPiso = yArriba + alto;
@@ -279,10 +287,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.setColor(new Color(0, 0, 0, 150));
         g.fillOval(CENTRO_PERSONAJE_X - 58, yPiso - 7, 116, 14);
 
-        if (imagen != null) {
-            dibujarImagenPersonaje(g, a, imagen, yArriba);
+        if (imagenActual != null) {
+            dibujarImagenPersonaje(g, ficha.id(), imagenActual, yArriba);
         }
-        dibujarNombre(g, a, yPiso);
+        dibujarNombre(g, ficha, yPiso);
     }
 
     /**
@@ -290,7 +298,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
      * real en pantalla (con buena calidad) y se guarda, así no se pixela ni se
      * recalcula en cada cuadro.
      */
-    private void dibujarImagenPersonaje(Graphics2D g, Arquetipo a, BufferedImage imagen, int yArriba) {
+    private void dibujarImagenPersonaje(Graphics2D g, String id, BufferedImage imagen, int yArriba) {
         double proporcion = imagen.getWidth() / (double) imagen.getHeight();
         int ancho = (int) Math.round(ALTO_PERSONAJE * proporcion);
         // El cuerpo no está en el centro del PNG (la espada sale hacia la derecha)
@@ -298,10 +306,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
         double escala = transformacion.getScaleY();
         int altoReal = Math.max(1, (int) Math.round(ALTO_PERSONAJE * escala));
-        if (retratoEscalado == null || retratoDe != a || retratoAlto != altoReal) {
+        if (retratoEscalado == null || !id.equals(retratoDe) || retratoAlto != altoReal) {
             int anchoReal = Math.max(1, (int) Math.round(altoReal * proporcion));
             retratoEscalado = escalarConCalidad(imagen, anchoReal, altoReal);
-            retratoDe = a;
+            retratoDe = id;
             retratoAlto = altoReal;
         }
 
@@ -323,10 +331,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         return resultado;
     }
 
-    private void dibujarNombre(Graphics2D g, Arquetipo a, int yPiso) {
+    private void dibujarNombre(Graphics2D g, FichaPersonaje ficha, int yPiso) {
         // Nombre y rol
         g.setFont(new Font(FUENTE, Font.BOLD, 20));
-        String nombre = a.getNombre().toUpperCase();
+        String nombre = ficha.nombre().toUpperCase();
         g.setColor(new Color(0, 0, 0, 200));
         g.drawString(nombre, centrar(g, nombre, CENTRO_PERSONAJE_X - 150, 300) + 1, yPiso + 38);
         g.setColor(HUESO);
@@ -334,7 +342,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
         g.setFont(new Font(FUENTE, Font.ITALIC, 15));
         g.setColor(BRASA);
-        String rol = "~ " + a.getRol() + " ~";
+        String rol = "~ " + ficha.rol() + " ~";
         g.drawString(rol, centrar(g, rol, CENTRO_PERSONAJE_X - 150, 300), yPiso + 58);
 
         if (hayVarios) {
@@ -352,7 +360,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
                       new int[] {yCentro - 12, yCentro, yCentro + 12}, 3);
     }
 
-    private void dibujarFicha(Graphics2D g, Arquetipo a) {
+    private void dibujarFicha(Graphics2D g, FichaPersonaje ficha) {
         Rectangle f = FICHA;
         dibujarMarco(g, f);
 
@@ -366,11 +374,11 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
         g.setFont(new Font(FUENTE, Font.PLAIN, 15));
         g.setColor(HUESO);
-        int y = dibujarParrafo(g, a.getDescripcion(), x, f.y + 52, ancho);
+        int y = dibujarParrafo(g, ficha.descripcion(), x, f.y + 52, ancho);
 
         g.setFont(new Font(FUENTE, Font.ITALIC, 14));
         g.setColor(new Color(205, 120, 100));
-        y = dibujarParrafo(g, a.getHabilidad(), x, y + 6, ancho);
+        y = dibujarParrafo(g, ficha.habilidad(), x, y + 6, ancho);
 
         // Separador
         y += 4;
@@ -378,20 +386,33 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.fillRect(x, y, ancho, 1);
         y += 20;
 
-        int[] stats = a.getStats();
+        // Barras en proporción al héroe más fuerte en cada stat
+        String[] nombres = {"Vida", "Ataque"};
+        int[] valores = {ficha.vida(), ficha.ataque()};
+        int[] maximos = {ficha.vidaMaxima(), ficha.ataqueMaximo()};
+
         int xBarra = x + 82;
         int anchoBarra = ancho - 82;
-        int segmento = anchoBarra / Arquetipo.STAT_MAXIMO;
+        int segmento = anchoBarra / SEGMENTOS_BARRA;
         g.setFont(new Font(FUENTE, Font.BOLD, 14));
-        for (int i = 0; i < stats.length; i++) {
+        for (int i = 0; i < valores.length; i++) {
             int yFila = y + i * 27;
+            int llenos = segmentosLlenos(valores[i], maximos[i]);
             g.setColor(NIEBLA);
-            g.drawString(Arquetipo.NOMBRES_STATS[i], x, yFila + 12);
-            for (int s = 0; s < Arquetipo.STAT_MAXIMO; s++) {
-                g.setColor(s < stats[i] ? colorStat(i) : BARRA_VACIA);
+            g.drawString(nombres[i], x, yFila + 12);
+            for (int s = 0; s < SEGMENTOS_BARRA; s++) {
+                g.setColor(s < llenos ? colorStat(i) : BARRA_VACIA);
                 g.fillRect(xBarra + s * segmento, yFila, segmento - 3, 13);
             }
         }
+    }
+
+    /** Cuántos segmentos se pintan: proporcional al máximo, y al menos uno. */
+    private static int segmentosLlenos(int valor, int maximo) {
+        if (maximo <= 0) {
+            return 0;
+        }
+        return Math.max(1, Math.round(valor * (float) SEGMENTOS_BARRA / maximo));
     }
 
     /** Marco doble con esquinas marcadas, al estilo de los paneles pixel art. */
@@ -413,11 +434,11 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     }
 
     private Color colorStat(int indice) {
-        switch (indice) {
-            case 0:  return new Color(158, 59, 53);   // vida
-            case 1:  return new Color(141, 151, 168); // defensa
-            default: return new Color(176, 112, 63);  // ataque
-        }
+        return switch (indice) {
+            case 0  -> new Color(158, 59, 53);   // vida
+            case 1  -> new Color(176, 112, 63);  // ataque
+            default -> new Color(141, 151, 168);
+        };
     }
 
     private void dibujarBotones(Graphics2D g) {
@@ -492,6 +513,9 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
     /** Escribe el texto cortando por palabras; devuelve la Y de la línea siguiente. */
     private int dibujarParrafo(Graphics2D g, String texto, int x, int y, int ancho) {
+        if (texto == null || texto.isEmpty()) {
+            return y;
+        }
         FontMetrics fm = g.getFontMetrics();
         StringBuilder linea = new StringBuilder();
         for (String palabra : texto.split(" ")) {

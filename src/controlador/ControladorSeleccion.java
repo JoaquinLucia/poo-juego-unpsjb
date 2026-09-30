@@ -5,15 +5,21 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
-import modelo.Arquetipo;
+import modelo.CatalogoPersonajes;
+import modelo.Habilidad;
+import modelo.Heroe;
 import modelo.ModeloMenu;
+import vista.FichaPersonaje;
 import vista.PanelSeleccionPersonaje;
 import vista.PanelSeleccionPersonaje.Zona;
+import vista.PresentacionHeroe;
+import vista.PresentacionesHeroes;
 
 /**
  * Controles de la pantalla de selección de personaje.
@@ -22,21 +28,38 @@ import vista.PanelSeleccionPersonaje.Zona;
  * a la vista qué mostrar. La vista no toma decisiones: solo dibuja e informa
  * qué hay bajo el puntero.
  *
+ * Los datos de cada personaje se arman juntando el héroe real del catálogo
+ * (nombre, habilidad, vida, ataque) con su presentación visual (rol, historia,
+ * imagen). Así la pantalla nunca muestra algo distinto de lo que se juega.
+ *
  * Teclas: Enter / Espacio comenzar, Esc volver, ← → (o A / D) cambiar de personaje.
  */
 public class ControladorSeleccion {
 
     private final ModeloMenu modelo;
+    private final CatalogoPersonajes catalogo;
     private final PanelSeleccionPersonaje panel;
     private final Runnable alVolver;
-    private final Consumer<Arquetipo> alConfirmar;
+    private final Consumer<String> alConfirmar;
 
-    public ControladorSeleccion(ModeloMenu modelo, PanelSeleccionPersonaje panel,
-                                Runnable alVolver, Consumer<Arquetipo> alConfirmar) {
+    // Valor más alto entre todos los héroes, para dibujar las barras en proporción
+    private final int vidaMaxima;
+    private final int ataqueMaximo;
+
+    public ControladorSeleccion(ModeloMenu modelo, CatalogoPersonajes catalogo,
+                                PanelSeleccionPersonaje panel,
+                                Runnable alVolver, Consumer<String> alConfirmar) {
         this.modelo = modelo;
+        this.catalogo = catalogo;
         this.panel = panel;
         this.alVolver = alVolver;
         this.alConfirmar = alConfirmar;
+
+        // Si a algún héroe le falta su presentación, falla acá, al abrir el juego
+        PresentacionesHeroes.verificar(catalogo.idsHeroes());
+
+        this.vidaMaxima = maximo(Heroe::getVida);
+        this.ataqueMaximo = maximo(Heroe::getAtaque);
 
         configurarTeclado();
         configurarMouse();
@@ -60,7 +83,7 @@ public class ControladorSeleccion {
     }
 
     private void confirmar() {
-        Arquetipo elegido = modelo.getPersonajeActual();
+        String elegido = modelo.getPersonajeActual();
         modelo.setPersonajeElegido(elegido);
         alConfirmar.accept(elegido);
     }
@@ -70,7 +93,42 @@ public class ControladorSeleccion {
     }
 
     private void actualizarVista() {
-        panel.mostrarPersonaje(modelo.getPersonajeActual(), modelo.getCantidadPersonajes() > 1);
+        panel.mostrarPersonaje(armarFicha(modelo.getPersonajeActual()),
+                               modelo.getCantidadPersonajes() > 1);
+    }
+
+    // ---------- Datos para la vista ----------
+
+    private FichaPersonaje armarFicha(String id) {
+        Heroe muestra = catalogo.crearHeroe(id); // héroe descartable, solo para leer sus datos
+        PresentacionHeroe presentacion = PresentacionesHeroes.de(id);
+
+        return new FichaPersonaje(
+                id,
+                muestra.getNombre(),
+                presentacion.rol(),
+                presentacion.descripcion(),
+                presentacion.rutaImagen(),
+                textoHabilidad(muestra),
+                muestra.getVida(), vidaMaxima,
+                muestra.getAtaque(), ataqueMaximo);
+    }
+
+    private String textoHabilidad(Heroe heroe) {
+        if (heroe.getCantidadHabilidades() == 0) {
+            return "";
+        }
+        Habilidad principal = heroe.getHabilidad(0);
+        return "Habilidad Principal: " + principal.getNombreHabilidad()
+                + " - " + principal.getDescripcion() + ".";
+    }
+
+    private int maximo(ToIntFunction<Heroe> stat) {
+        return catalogo.idsHeroes().stream()
+                .map(catalogo::crearHeroe)
+                .mapToInt(stat)
+                .max()
+                .orElse(1);
     }
 
     // ---------- Teclado ----------
@@ -118,11 +176,11 @@ public class ControladorSeleccion {
             @Override
             public void mouseClicked(MouseEvent e) {
                 switch (panel.zonaEn(e.getPoint())) {
-                    case COMENZAR:   confirmar(); break;
-                    case VOLVER:     volver();    break;
-                    case FLECHA_IZQ: mover(-1);   break;
-                    case FLECHA_DER: mover(+1);   break;
-                    default:         break;
+                    case COMENZAR   -> confirmar();
+                    case VOLVER     -> volver();
+                    case FLECHA_IZQ -> mover(-1);
+                    case FLECHA_DER -> mover(+1);
+                    default         -> { }
                 }
             }
         };

@@ -3,6 +3,7 @@ package controlador;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import modelo.CatalogoPersonajes;
 import modelo.ModeloMenu;
 import modelo.ModeloTablaPuntuacion;
 import vista.VistaMenu;
@@ -17,18 +18,19 @@ public class ControladorMenu {
     private final ControladorSeleccion controladorSeleccion;
 
     public ControladorMenu(VistaMenu vista, ModeloTablaPuntuacion tablaPuntuaciones,
-                           ControladorMaestro maestro) {
+                           CatalogoPersonajes catalogo, ControladorMaestro maestro) {
         this.vista = vista;
         this.tablaPuntuaciones = tablaPuntuaciones;
         this.maestro = maestro;
-        this.modeloMenu = new ModeloMenu();
+        this.modeloMenu = new ModeloMenu(catalogo.idsHeroes());
 
         // Sub-controlador de la selección de personaje
         this.controladorSeleccion = new ControladorSeleccion(
             modeloMenu,
+            catalogo,
             vista.getPanelSeleccion(),
-            () -> vista.mostrarMenu(),                                  // "Volver"
-            (arquetipoElegido) -> maestro.comenzarPartida(arquetipoElegido) // "Comenzar"
+            () -> vista.mostrarMenu(),                                   // "Volver"
+            idHeroe -> this.maestro.comenzarPartida(idHeroe)             // "Comenzar"
         );
 
         // Botones del menú principal

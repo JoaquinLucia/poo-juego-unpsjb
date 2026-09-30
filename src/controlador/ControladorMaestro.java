@@ -1,8 +1,6 @@
 package controlador;
 
 import java.awt.event.KeyEvent;
-
-import modelo.Arquetipo;
 import modelo.Batalla;
 import modelo.Camino;
 import modelo.CatalogoPersonajes;
@@ -62,7 +60,7 @@ public class ControladorMaestro {
     private int enemigosDerrotados;
 
     public ControladorMaestro() {
-        ctrlMenu = new ControladorMenu(new VistaMenu(), tablaPuntuaciones, this);
+        ctrlMenu = new ControladorMenu(new VistaMenu(), tablaPuntuaciones, catalogo, this);
         ctrlMazmorra = new ControladorMazmorra(new VistaMazmorra(), this);
 
         ctrlPausa = new ControladorPausa(new VistaPausa(ventana), this);
@@ -129,8 +127,8 @@ public class ControladorMaestro {
     // ---------- Avisos de los otros controladores ----------
 
     /** Lo llama ControladorMenu (a través de la selección) al tocar "Comenzar". */
-    public void comenzarPartida(Arquetipo arquetipo) {
-        heroe = catalogo.crearHeroe(arquetipo);
+    public void comenzarPartida(String idHeroe) {
+        heroe = catalogo.crearHeroe(idHeroe);
         nivel = repositorio.crearNivelUno();
         enemigosDerrotados = 0;
         irAExploracion("");
