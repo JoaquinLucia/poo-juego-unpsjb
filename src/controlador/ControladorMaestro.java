@@ -1,5 +1,7 @@
 package controlador;
 
+import java.awt.event.KeyEvent;
+
 import modelo.Arquetipo;
 import modelo.Batalla;
 import modelo.Camino;
@@ -14,6 +16,7 @@ import vista.VentanaPrincipal;
 import vista.VistaBatalla;
 import vista.VistaMazmorra;
 import vista.VistaMenu;
+import vista.VistaPausa;
 
 /**
  * Controlador maestro (patrón Mediator).
@@ -47,6 +50,11 @@ public class ControladorMaestro {
     private final ControladorMenu ctrlMenu;
     private final ControladorMazmorra ctrlMazmorra;
     private ControladorBatalla ctrlBatalla; // se crea uno nuevo en cada pelea
+    private final ControladorPausa ctrlPausa;
+
+    // Qué pantalla se está viendo y si el juego está en pausa
+    private String pantallaActual = MENU;
+    private boolean enPausa = false;
 
     // Estado de la partida en curso
     private Heroe heroe;
@@ -57,9 +65,14 @@ public class ControladorMaestro {
         ctrlMenu = new ControladorMenu(new VistaMenu(), tablaPuntuaciones, this);
         ctrlMazmorra = new ControladorMazmorra(new VistaMazmorra(), this);
 
+        ctrlPausa = new ControladorPausa(new VistaPausa(ventana), this);
+
         ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
         ventana.agregarPantalla(MENU, ctrlMenu.getVista());
         ventana.agregarPantalla(MAZMORRA, ctrlMazmorra.getVista());
+
+        // Esc abre la pausa, pero solo cuando se puede pausar (ver sePuedePausar)
+        ventana.registrarTecla(KeyEvent.VK_ESCAPE, "pausa", this::pausar, this::sePuedePausar);
     }
 
     public void iniciar() {
@@ -75,6 +88,7 @@ public class ControladorMaestro {
         ventana.cambiarPantalla(MENU, () -> {
             cerrarBatalla();
             ctrlMenu.mostrar();
+            pantallaActual = MENU;
         }, alTerminar);
     }
 
@@ -87,6 +101,7 @@ public class ControladorMaestro {
         ventana.cambiarPantalla(MAZMORRA, () -> {
             cerrarBatalla();
             ctrlMazmorra.mostrar(nivel.getSalaActual().getEscenario(), mensaje);
+            pantallaActual = MAZMORRA;
         }, null);
     }
 
@@ -98,6 +113,7 @@ public class ControladorMaestro {
             ctrlBatalla = new ControladorBatalla(new VistaBatalla(), batalla, this);
             ventana.agregarPantalla(BATALLA, ctrlBatalla.getVista());
             ctrlBatalla.iniciar();
+            pantallaActual = BATALLA;
         }, null);
     }
 
@@ -139,6 +155,46 @@ public class ControladorMaestro {
         } else {
             terminarPartida(true);
         }
+    }
+
+    // ---------- Pausa ----------
+
+    /** Solo se pausa durante la partida (exploración o batalla) y fuera de un fundido. */
+    private boolean sePuedePausar() {
+        boolean enPartida = pantallaActual.equals(MAZMORRA) || pantallaActual.equals(BATALLA);
+        return enPartida && !enPausa && !ventana.enTransicion();
+    }
+
+    /** Lo dispara la tecla Esc. */
+    private void pausar() {
+        enPausa = true;
+        if (ctrlBatalla != null) {
+            ctrlBatalla.pausar(); // congela el turno del enemigo y demás temporizadores
+        }
+        ventana.atenuar(true);
+        ctrlPausa.mostrar(); // modal: se queda acá hasta que se elige una opción
+    }
+
+    /** Lo llama ControladorPausa con "Volver al juego" (o Esc dentro de la pausa). */
+    public void reanudarJuego() {
+        enPausa = false;
+        ventana.atenuar(false);
+        if (ctrlBatalla != null) {
+            ctrlBatalla.reanudar();
+        }
+    }
+
+    /** Lo llama ControladorPausa con "Volver al título": se abandona la partida sin puntaje. */
+    public void volverAlTitulo() {
+        enPausa = false;
+        heroe = null;
+        nivel = null;
+        irAMenu(null); // el fundido sale del oscurecido de la pausa y termina en el menú
+    }
+
+    /** Lo llama ControladorPausa con "Salir del juego". */
+    public void salirDelJuego() {
+        System.exit(0);
     }
 
     // ---------- Fin de la partida ----------

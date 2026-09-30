@@ -2,46 +2,45 @@ package modelo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Enemigo extends Entidad {
 
-    public Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax, Habilidad habilidadInicial) {
-        super(nombre, vida, ataque, cantidadHabilidadMax);
-        if (habilidadInicial == null) {
-            throw new IllegalArgumentException("El enemigo debe tener una habilidad inicial");
+    private Enemigo(Builder b) {
+        super(b.nombre, b.vida, b.ataque, b.maxHabilidades);
+        if (b.habilidades.isEmpty()) {
+            throw new IllegalStateException(b.nombre + " necesita al menos una habilidad");
         }
-        agregarHabilidad(habilidadInicial);
+        for (Habilidad h : b.habilidades) {
+            agregarHabilidad(h); // Entidad valida el máximo
+        }
     }
 
     // ---------- Builder ----------
     public static class Builder {
         private final String nombre;
-        private int vida = 50;
-        private int ataque = 5;
-        private int maxHabilidades = 1;
+        private int vida;
+        private int ataque;
+        private int maxHabilidades;
         private final List<Habilidad> habilidades = new ArrayList<>();
 
         public Builder(String nombre) {
-            this.nombre = nombre;
+            this.nombre = Objects.requireNonNull(nombre, "El nombre no puede ser null");
         }
 
         public Builder vida(int vida)                     { this.vida = vida; return this; }
         public Builder ataque(int ataque)                 { this.ataque = ataque; return this; }
         public Builder maxHabilidades(int maxHabilidades) { this.maxHabilidades = maxHabilidades; return this; }
-        public Builder habilidad(Habilidad habilidad)     { this.habilidades.add(habilidad); return this; }
+
+        public Builder habilidad(Habilidad habilidad) {
+            habilidades.add(Objects.requireNonNull(habilidad, "La habilidad no puede ser null"));
+            return this;
+        }
 
         public Enemigo build() {
-            if (habilidades.isEmpty()) {
-                throw new IllegalStateException(nombre + " necesita al menos una habilidad");
-            }
-            if (habilidades.size() > maxHabilidades) {
-                throw new IllegalStateException(nombre + " tiene más habilidades que el máximo (" + maxHabilidades + ")");
-            }
-            Enemigo enemigo = new Enemigo(nombre, vida, ataque, maxHabilidades, habilidades.get(0));
-            for (int i = 1; i < habilidades.size(); i++) {
-                enemigo.agregarHabilidad(habilidades.get(i));
-            }
-            return enemigo;
+            if (vida <= 0)   throw new IllegalStateException(nombre + ": falta definir vida (> 0)");
+            if (ataque < 0)  throw new IllegalStateException(nombre + ": falta definir ataque (>= 0)");
+            return new Enemigo(this);
         }
     }
 }

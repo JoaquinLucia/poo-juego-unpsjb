@@ -4,14 +4,18 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.BooleanSupplier;
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
 /**
@@ -28,6 +32,7 @@ public class VentanaPrincipal extends JFrame {
     private static final int MS_POR_PASO = 15;
     private static final float PASO_OSCURECER = 0.08f; // ~200 ms hasta negro
     private static final float PASO_ACLARAR = 0.06f;   // ~250 ms hasta ver la pantalla
+    private static final float OPACIDAD_PAUSA = 0.55f;  // cuánto se oscurece el juego detrás de la pausa
 
     private final CardLayout cartas = new CardLayout();
     private final JPanel pantallas = new JPanel(cartas);
@@ -111,6 +116,37 @@ public class VentanaPrincipal extends JFrame {
 
     public boolean enTransicion() {
         return animacion != null && animacion.isRunning();
+    }
+
+    /**
+     * Oscurece (o aclara) el juego detrás de un modal, como el menú de pausa.
+     * Mientras está oscurecido, la capa también bloquea el mouse.
+     */
+    public void atenuar(boolean atenuado) {
+        capaFundido.opacidad = atenuado ? OPACIDAD_PAUSA : 0f;
+        capaFundido.setVisible(atenuado);
+        capaFundido.repaint();
+    }
+
+    /**
+     * Asocia una tecla a una acción en toda la ventana.
+     * "habilitada" se consulta en cada pulsación: si devuelve false, la tecla
+     * queda libre para otras pantallas (por ejemplo, Esc en la selección de personaje).
+     */
+    public void registrarTecla(int codigoTecla, String nombre, Runnable accion, BooleanSupplier habilitada) {
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(codigoTecla, 0), nombre);
+        getRootPane().getActionMap().put(nombre, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                accion.run();
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return habilitada.getAsBoolean();
+            }
+        });
     }
 
     private void aclarar(Runnable alTerminar) {

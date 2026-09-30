@@ -22,37 +22,46 @@ public class CatalogoPersonajes {
         cargarEnemigos();
     }
 
-    // Valores de ejemplo: copiá acá los que tenías en tus fábricas
+    // Valores de los personajes
     private void cargarHeroes() {
-        heroes.put("CABALLERO", () -> new Heroe.Builder("Caballero")
-                .vida(600).ataque(35)
-                .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 70, 3))
-                .build());
+    heroes.put("CABALLERO", () -> new Heroe.Builder("Caballero")
+            .vida(600).ataque(35)
+            .nivel(1)
+            .maxHabilidades(4)
+            .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 70, 3))
+            .build());
 
-        heroes.put("MAGO", () -> new Heroe.Builder("Mago")
-                .vida(350).ataque(55)
-                .habilidad(new HabilidadGolpe("Bola de fuego", "Daño mágico", 110, 3))
-                .build());
+    heroes.put("MAGO", () -> new Heroe.Builder("Mago")
+            .vida(350).ataque(55)
+            .nivel(1)
+            .maxHabilidades(4)
+            .habilidad(new HabilidadGolpe("Bola de fuego", "Daño mágico", 110, 3))
+            .build());
 
-        heroes.put("ARQUERO", () -> new Heroe.Builder("Arquero")
-                .vida(420).ataque(45)
-                .habilidad(new HabilidadGolpe("Flecha certera", "Disparo preciso", 90, 2))
-                .build());
-    }
+    heroes.put("CAZADORA", () -> new Heroe.Builder("Cazadora")
+            .vida(420).ataque(45)
+            .nivel(1)
+            .maxHabilidades(4)
+            .habilidad(new HabilidadGolpe("Flecha certera", "Disparo preciso", 90, 2))
+            .build());
+}
 
     private void cargarEnemigos() {
         enemigos.put("esclavo", () -> new Enemigo.Builder("Esclavo")
                 .vida(150).ataque(20)
+                .maxHabilidades(1)
                 .habilidad(new HabilidadGolpe("Cadenazo", "Golpe con cadenas", 35, 3))
                 .build());
 
         enemigos.put("guardia_hueco", () -> new Enemigo.Builder("Guardia hueco")
                 .vida(220).ataque(25)
+                .maxHabilidades(1)
                 .habilidad(new HabilidadGolpe("Tajo oxidado", "Espadazo lento", 45, 3))
                 .build());
 
         enemigos.put("sacerdotisa", () -> new Enemigo.Builder("Sacerdotisa de ceniza")
                 .vida(260).ataque(30)
+                .maxHabilidades(1)
                 .habilidad(new HabilidadGolpe("Llama azul", "Fuego frío", 55, 3))
                 .build());
 

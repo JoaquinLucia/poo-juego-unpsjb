@@ -1,6 +1,8 @@
 package controlador;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.Timer;
 
 import modelo.Batalla;
@@ -16,6 +18,10 @@ public class ControladorBatalla {
     private final ControladorMaestro maestro;
     private final Timer timerEnemigo;
 
+    // Todos los temporizadores de la pelea, para poder congelarlos durante la pausa
+    private final List<Timer> timers = new ArrayList<>();
+    private final List<Timer> congelados = new ArrayList<>();
+
     public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro maestro) {
         this.vista = vista;
         this.batalla = batalla;
@@ -24,6 +30,7 @@ public class ControladorBatalla {
         // Configuramos el temporizador para el turno del enemigo (1.5 segundos de pausa)
         this.timerEnemigo = new Timer(1500, (ActionEvent e) -> turnoEnemigo());
         this.timerEnemigo.setRepeats(false);
+        timers.add(timerEnemigo);
 
         // Enganchamos los botones de la vista
         this.vista.onAtacar(e -> {
@@ -47,9 +54,42 @@ public class ControladorBatalla {
         vista.mostrarResultado("¡Un " + batalla.getEnemigo().getNombre() + " se interpone en tu camino!");
     }
 
-    /** Detiene los temporizadores de esta batalla. */
+    /** Detiene los temporizadores de esta batalla (al salir de la pelea). */
     public void cerrar() {
-        timerEnemigo.stop();
+        for (Timer t : timers) {
+            t.stop();
+        }
+        congelados.clear();
+    }
+
+    /** Congela la pelea: los temporizadores que estaban corriendo se detienen. */
+    public void pausar() {
+        congelados.clear();
+        for (Timer t : timers) {
+            if (t.isRunning()) {
+                t.stop();
+                congelados.add(t);
+            }
+        }
+    }
+
+    /** Retoma los temporizadores que se congelaron en pausar(). */
+    public void reanudar() {
+        for (Timer t : congelados) {
+            t.restart();
+        }
+        congelados.clear();
+    }
+
+    /** Crea un temporizador de un solo disparo, registrado para poder pausarlo. */
+    private void programar(int milisegundos, Runnable accion) {
+        Timer t = new Timer(milisegundos, e -> {
+            timers.remove((Timer) e.getSource());
+            accion.run();
+        });
+        t.setRepeats(false);
+        timers.add(t);
+        t.start();
     }
 
     public VistaBatalla getVista() {
@@ -59,9 +99,7 @@ public class ControladorBatalla {
     /** Deja ver el resultado unos segundos y le avisa al maestro. */
     private void terminarBatalla(boolean ganoHeroe) {
         vista.setBotonesHabilitados(false);
-        Timer pausa = new Timer(PAUSA_FIN_BATALLA_MS, e -> maestro.batallaTerminada(ganoHeroe));
-        pausa.setRepeats(false);
-        pausa.start();
+        programar(PAUSA_FIN_BATALLA_MS, () -> maestro.batallaTerminada(ganoHeroe));
     }
 
     private void actualizarVista() {
@@ -117,12 +155,10 @@ public class ControladorBatalla {
             batalla.getEnemigo().sacarAturdimiento(); 
             
             // Pausa cortita y te devuelve el turno a vos
-            Timer timerRecuperacion = new Timer(1500, e -> {
+            programar(1500, () -> {
                 vista.setBotonesHabilitados(true);
                 vista.mostrarResultado("¡Es tu turno!");
             });
-            timerRecuperacion.setRepeats(false);
-            timerRecuperacion.start();
             
         } else {
             // Si no está aturdido, arranca el timer del enemigo para que te devuelva el golpe

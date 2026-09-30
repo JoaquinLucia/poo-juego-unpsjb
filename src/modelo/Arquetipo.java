@@ -19,8 +19,33 @@ public enum Arquetipo {
             + "vuelto a la vaina desde entonces.",
         "Habilidad Principal: "
         + "golpe aturdidor - daña y provoca aturdimiento al enemigo por 3 turnos.",
-        9, 7,
-        "/recursos/personajes/caballero.png");
+        8, 8,
+        "/recursos/personajes/caballero.png")
+        
+        ,
+
+    MAGO(
+        "Espectro nómada", "Mago de combate",
+        "Explorador de tierras malditas. Busca cosechar almas perdidas "
+            + "entre los vestigios de lo que fue antes un próspero imperio "
+            + "para encontrar el secreto de la inmortalidad.",
+        "Habilidad Principal: "
+        + "Proyectil igneo - daña y puede quemar al enemigo por 5 turnos.",
+        6, 10,
+        "/recursos/personajes/mago.png")
+
+        ,
+
+        CAZADORA(
+        "Viuda de Van Helsing", "Cazadora de demonios",
+        "Sobreviviente de la ciudad que cayó en una sola noche. Recorre "
+            + "las ruinas del imperio con su ballesta de runas, asesinando "
+            + "demonios, hasta que no quede ninguno.",
+        "Habilidad Principal: "
+        + "Virote de plata - daño perforante que hace sangrar al enemigo por 3 turnos.",
+        9, 6,
+        "/recursos/personajes/cazadora.png");
+    
 
     /** Nombres de los stats, en el mismo orden que getStats(). */
     public static final String[] NOMBRES_STATS = {"Vida", "Ataque"};

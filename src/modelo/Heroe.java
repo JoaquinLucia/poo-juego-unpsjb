@@ -1,39 +1,38 @@
 package modelo;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+
 
 public class Heroe extends Entidad {
     private int nivel;
 
-    public Heroe(String nombre, int vida, int ataque, int nivel, int cantidadHabilidadMax) {
-        super(nombre, vida, ataque,cantidadHabilidadMax);
-        if (nivel < 1) {
+    private Heroe(Builder b) {
+        super(b.nombre, b.vida, b.ataque, b.maxHabilidades);
+        if (b.nivel < 1) {
             throw new IllegalArgumentException("El nivel debe ser mayor o igual a 1");
         }
-        this.nivel = nivel;
+        this.nivel = b.nivel;
+        for (Habilidad h : b.habilidades) {
+            agregarHabilidad(h); // Entidad valida el máximo
+        }
     }
 
-    public int getNivel() {
-        return nivel;
-    }
+    public int getNivel() { return nivel; }
 
-    public void subirNivel(){
-        this.nivel++;
-    }
+    public void subirNivel() { nivel++; }
 
-
-    // ---------- Builder ----------
     public static class Builder {
         private final String nombre;
-        private int vida = 100;
-        private int ataque = 10;
-        private int nivel = 1;
-        private int maxHabilidades = 2;
+        private int vida;
+        private int ataque ;
+        private int nivel;
+        private int maxHabilidades;
         private final List<Habilidad> habilidades = new ArrayList<>();
 
         public Builder(String nombre) {
-            this.nombre = nombre;
+            this.nombre = Objects.requireNonNull(nombre, "El nombre no puede ser null");
         }
 
         public Builder vida(int vida)                     { this.vida = vida; return this; }
@@ -43,14 +42,7 @@ public class Heroe extends Entidad {
         public Builder habilidad(Habilidad habilidad)     { this.habilidades.add(habilidad); return this; }
 
         public Heroe build() {
-            if (habilidades.size() > maxHabilidades) {
-                throw new IllegalStateException(nombre + " tiene más habilidades que el máximo (" + maxHabilidades + ")");
-            }
-            Heroe heroe = new Heroe(nombre, vida, ataque, nivel, maxHabilidades);
-            for (Habilidad h : habilidades) {
-                heroe.agregarHabilidad(h);
-            }
-            return heroe;
+            return new Heroe(this);
         }
     }
 }

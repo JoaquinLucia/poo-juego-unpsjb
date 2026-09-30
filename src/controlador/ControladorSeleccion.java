@@ -96,6 +96,13 @@ public class ControladorSeleccion {
                     accion.run();
                 }
             }
+
+            // Deshabilitada cuando la selección no se ve: así la tecla (por ejemplo Esc)
+            // queda libre para otras pantallas, como el menú de pausa
+            @Override
+            public boolean isEnabled() {
+                return panel.isShowing();
+            }
         });
     }
 
