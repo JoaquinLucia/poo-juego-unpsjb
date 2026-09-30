@@ -12,7 +12,7 @@ public class GestorDeSonido {
     private static GestorDeSonido instanciaUnica;
     private final Map<String, Clip> cacheClips = new HashMap<>();
 
-    // Constructor privado (Nadie puede hacer new fuera de aquí)
+    // Constructor privado (Nadie puede hacer new fuera de aca)
     private GestorDeSonido() {}
 
     // Método global para obtener la única instancia
@@ -23,7 +23,7 @@ public class GestorDeSonido {
         return instanciaUnica;
     }
 
-    // Método de instancia (sin static) para reproducir sonidos
+    // Método de instancia para reproducir sonidos
     public void reproducirEfecto(String rutaRelativa) {
         try {
             if (!cacheClips.containsKey(rutaRelativa)) {
