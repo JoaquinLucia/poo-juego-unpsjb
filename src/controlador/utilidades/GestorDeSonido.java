@@ -12,7 +12,7 @@ public class GestorDeSonido {
     private static GestorDeSonido instanciaUnica;
     private final Map<String, Clip> cacheClips = new HashMap<>();
 
-    // Constructor privado (Nadie puede hacer new fuera de aca)
+    // Constructor privado (Patrón Singleton)
     private GestorDeSonido() {}
 
     // Método global para obtener la única instancia
@@ -41,23 +41,41 @@ public class GestorDeSonido {
         }
     }
 
-private void precargarEfecto(String rutaRelativa) {
-    if (cacheClips.containsKey(rutaRelativa)) return;
-    try {
-        URL url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
-        if (url == null) {
-            System.err.println("¡ERROR! No se encontró el archivo de audio en la ruta: " + rutaRelativa);
-            return;
-        }
-        InputStream audioSrc = url.openStream();
-        InputStream bufferedIn = new BufferedInputStream(audioSrc);
-        AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
-        Clip clip = AudioSystem.getClip();
-        clip.open(audioStream);
-        cacheClips.put(rutaRelativa, clip);
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
+    private void precargarEfecto(String rutaRelativa) {
+        if (cacheClips.containsKey(rutaRelativa)) return;
+        try {
+            URL url = null;
+            
+            // Estrategia de búsqueda robusta para evitar errores de ruta en VS Code:
+            // 1. Intenta buscar tal cual se pasó
+            url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
+            
+            // 2. Si falla, intenta anteponiendo "recursos/"
+            if (url == null && !rutaRelativa.startsWith("recursos/")) {
+                url = GestorDeSonido.class.getClassLoader().getResource("recursos/" + rutaRelativa);
+            }
+            
+            // 3. Si falla y empieza con barra, la remueve y busca
+            if (url == null && rutaRelativa.startsWith("/")) {
+                String limpia = rutaRelativa.substring(1);
+                url = GestorDeSonido.class.getClassLoader().getResource(limpia);
+            }
 
+            if (url == null) {
+                System.err.println("¡ERROR! No se encontró el archivo de audio en ninguna variante para: " + rutaRelativa);
+                return;
+            }
+
+            InputStream audioSrc = url.openStream();
+            InputStream bufferedIn = new BufferedInputStream(audioSrc);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+            Clip clip = AudioSystem.getClip();
+            clip.open(audioStream);
+            cacheClips.put(rutaRelativa, clip);
+            
+        } catch (Exception e) {
+            System.err.println("Excepción al cargar el audio: " + rutaRelativa);
+            e.printStackTrace();
+        }
+    }
 }
