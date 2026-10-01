@@ -41,19 +41,23 @@ public class GestorDeSonido {
         }
     }
 
-    private void precargarEfecto(String rutaRelativa) {
-        if (cacheClips.containsKey(rutaRelativa)) return;
-        try {
-            URL url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
-            if (url == null) return;
-            InputStream audioSrc = url.openStream();
-            InputStream bufferedIn = new BufferedInputStream(audioSrc);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            cacheClips.put(rutaRelativa, clip);
-        } catch (Exception e) {
-            e.printStackTrace();
+private void precargarEfecto(String rutaRelativa) {
+    if (cacheClips.containsKey(rutaRelativa)) return;
+    try {
+        URL url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
+        if (url == null) {
+            System.err.println("¡ERROR! No se encontró el archivo de audio en la ruta: " + rutaRelativa);
+            return;
         }
+        InputStream audioSrc = url.openStream();
+        InputStream bufferedIn = new BufferedInputStream(audioSrc);
+        AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+        Clip clip = AudioSystem.getClip();
+        clip.open(audioStream);
+        cacheClips.put(rutaRelativa, clip);
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
+
 }

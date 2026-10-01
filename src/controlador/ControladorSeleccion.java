@@ -56,21 +56,21 @@ public class ControladorSeleccion {
 
     private void mover(int direccion) {
         if (modelo.getCantidadPersonajes() > 1) {
-            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav");// <--- sonido de click al mover
+            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");// <--- sonido de click al mover
             modelo.moverSeleccion(direccion);
             actualizarVista();
         }
     }
 
     private void confirmar() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al confirmar
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al confirmar
         Arquetipo elegido = modelo.getPersonajeActual();
         modelo.setPersonajeElegido(elegido);
         alConfirmar.accept(elegido);
     }
 
     private void volver() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidoclickopciones.wav"); // <--- sonido de click al volver
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al volver
         alVolver.run();
     }
 
