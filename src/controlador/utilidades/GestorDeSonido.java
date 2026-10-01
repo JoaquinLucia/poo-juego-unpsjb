@@ -46,21 +46,10 @@ public class GestorDeSonido {
         try {
             URL url = null;
             
-            // Estrategia de búsqueda robusta para evitar errores de ruta en VS Code:
-            // 1. Intenta buscar tal cual se pasó
+            //  Intenta buscar tal cual se pasó
             url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
             
-            // 2. Si falla, intenta anteponiendo "recursos/"
-            if (url == null && !rutaRelativa.startsWith("recursos/")) {
-                url = GestorDeSonido.class.getClassLoader().getResource("recursos/" + rutaRelativa);
-            }
-            
-            // 3. Si falla y empieza con barra, la remueve y busca
-            if (url == null && rutaRelativa.startsWith("/")) {
-                String limpia = rutaRelativa.substring(1);
-                url = GestorDeSonido.class.getClassLoader().getResource(limpia);
-            }
-
+        
             if (url == null) {
                 System.err.println("¡ERROR! No se encontró el archivo de audio en ninguna variante para: " + rutaRelativa);
                 return;
