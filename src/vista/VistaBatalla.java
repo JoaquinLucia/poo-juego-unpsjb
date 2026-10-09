@@ -7,13 +7,14 @@ import javax.swing.JFrame;
 import javax.swing.Timer;
 
 import modelo.Arquetipo;
+import modelo.Enemigo;
 
 public class VistaBatalla {
     private final JFrame ventana;
     private final PanelBatalla panelFondo;
     private final PanelInferior panelInferior;
 
-public VistaBatalla(Arquetipo arquetipo) {
+public VistaBatalla(Arquetipo arquetipo, Enemigo enemigo) {
         this.ventana = new JFrame("Combate");
         this.ventana.setExtendedState(JFrame.MAXIMIZED_BOTH); 
         this.ventana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
@@ -21,7 +22,7 @@ public VistaBatalla(Arquetipo arquetipo) {
         this.ventana.setLayout(new BorderLayout(0, 0));
 
         this.panelFondo = new PanelBatalla(); // Queda igual, no necesita la imagen
-        this.panelInferior = new PanelInferior(arquetipo.getRutaRetrato());
+        this.panelInferior = new PanelInferior(arquetipo.getRutaRetrato(), enemigo.getRutaImagen());
 
         this.ventana.add(panelFondo, BorderLayout.CENTER);
         this.ventana.add(panelInferior, BorderLayout.SOUTH);
