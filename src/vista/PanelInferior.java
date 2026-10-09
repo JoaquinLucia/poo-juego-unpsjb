@@ -12,7 +12,7 @@ public class PanelInferior extends JPanel {
     private final JLabel etiquetaResultado;
     private final JLabel etiquetaTurno;
 
-    public PanelInferior() {
+    public PanelInferior(String rutaRetratoString){
         this.atacar = new JButton("⚔ Atacar");
         this.habilidad = new JButton("✦ Habilidad");
         this.defenderse = new JButton("🛡 Defenderse");
@@ -35,15 +35,15 @@ public class PanelInferior extends JPanel {
         JLabel personajeEnemigo = new JLabel();
         
         // Carga segura de retratos
-        URL url1 = getClass().getResource("/recursos/Artorias.jpg");
-        URL url2 = getClass().getResource("/recursos/Esclavo.jpg");
+        URL url1 = getClass().getResource(rutaRetratoString);
+        URL url2 = getClass().getResource("/recursos/batalla/Esclavo.png"); // El enemigo queda igual por ahora
         
         if (url1 != null) {
-            Image img1 = new ImageIcon(url1).getImage().getScaledInstance(140, 180, Image.SCALE_SMOOTH);
+            Image img1 = new ImageIcon(url1).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
             personajeHeroe.setIcon(new ImageIcon(img1));
         }
         if (url2 != null) {
-            Image img2 = new ImageIcon(url2).getImage().getScaledInstance(140, 180, Image.SCALE_SMOOTH);
+            Image img2 = new ImageIcon(url2).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
             personajeEnemigo.setIcon(new ImageIcon(img2));
         }
 

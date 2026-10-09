@@ -9,13 +9,17 @@ import modelo.Habilidad;
 import vista.VistaBatalla;
 
 public class ControladorBatalla {
+    private static final int PAUSA_FIN_BATALLA_MS = 2000; // tiempo para leer el resultado
+
     private final VistaBatalla vista;
     private final Batalla batalla;
+    private final ControladorMaestro maestro;
     private final Timer timerEnemigo;
 
-    public ControladorBatalla(VistaBatalla vista, Batalla batalla) {
+    public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro maestro) {
         this.vista = vista;
         this.batalla = batalla;
+        this.maestro = maestro;
 
         // Configuramos el temporizador para el turno del enemigo (1.5 segundos de pausa)
         this.timerEnemigo = new Timer(1500, (ActionEvent e) -> turnoEnemigo());
@@ -36,6 +40,26 @@ public class ControladorBatalla {
 
         // Actualización inicial al entrar a la pantalla
         actualizarVista();
+    }
+
+    /** Muestra la pantalla de batalla. */
+    public void iniciar() {
+        vista.mostrarResultado("¡Un " + batalla.getEnemigo().getNombre() + " se interpone en tu camino!");
+        vista.mostrar();
+    }
+
+    /** Cierra la ventana de esta batalla (cada batalla tiene la suya). */
+    public void cerrar() {
+        timerEnemigo.stop();
+        vista.cerrar();
+    }
+
+    /** Deja ver el resultado unos segundos y le avisa al maestro. */
+    private void terminarBatalla(boolean ganoHeroe) {
+        vista.setBotonesHabilitados(false);
+        Timer pausa = new Timer(PAUSA_FIN_BATALLA_MS, e -> maestro.batallaTerminada(ganoHeroe));
+        pausa.setRepeats(false);
+        pausa.start();
     }
 
     private void actualizarVista() {
@@ -81,6 +105,7 @@ public class ControladorBatalla {
 
         if (!batalla.getEnemigo().estaVivo()) {
             vista.mostrarResultado("¡Victoria! Has derrotado al " + batalla.getEnemigo().getNombre());
+            terminarBatalla(true);
             return; // Acá termina la pelea
         }
 
@@ -117,6 +142,7 @@ public class ControladorBatalla {
 
         if (!batalla.getHeroe().estaVivo()) {
             vista.mostrarResultado("¡Has sido derrotado por el " + batalla.getEnemigo().getNombre() + "!");
+            terminarBatalla(false);
         } else {
             vista.setBotonesHabilitados(true); // Te devuelve los botones
             vista.mostrarResultado("¡Es tu turno!");

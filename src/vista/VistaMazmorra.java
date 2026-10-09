@@ -22,16 +22,16 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 /**
  * Pantalla de exploración: imagen de fondo, flechas encima y log abajo.
- * Es un panel dentro de VentanaPrincipal (ya no es una ventana propia).
  * Solo muestra lo que le pide el controlador; no tiene lógica del juego.
  */
-public class VistaMazmorra extends JPanel {
+public class VistaMazmorra extends JFrame {
     // Cartel de texto (se usa cuando el camino no tiene imagen, por ejemplo el jefe)
     private static final int ANCHO_CARTEL = 130;
     private static final int ALTO_CARTEL = 38;
@@ -48,7 +48,8 @@ public class VistaMazmorra extends JPanel {
     private final List<double[]> posiciones = new ArrayList<>();
 
     public VistaMazmorra() {
-        super(new BorderLayout());
+        super("Senderos de las Cenizas");
+        setLayout(new BorderLayout());
 
         // Centro: panel que dibuja la imagen y ubica las flechas encima
         panelFondo = new JPanel(null) {
@@ -56,12 +57,8 @@ public class VistaMazmorra extends JPanel {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (fondo != null) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    // Activa el suavizado de alta calidad para estirar la imagen del camino
-                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    
                     // "this" como observer hace que el GIF animado se siga redibujando
-                    g2.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
+                    g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
                 }
             }
 
@@ -99,9 +96,16 @@ public class VistaMazmorra extends JPanel {
         scrollLog.setBorder(BorderFactory.createLineBorder(new Color(135, 105, 58), 3));
         add(scrollLog, BorderLayout.SOUTH);
 
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(1000, 700);
+        setLocationRelativeTo(null);
+        setExtendedState(MAXIMIZED_BOTH); // igual que la pantalla de batalla
     }
 
     // ---------- Lo que usa el controlador ----------
+
+    public void mostrar() { setVisible(true); }
+    public void ocultar() { setVisible(false); }
 
     /**
      * Crea un cartel centrado en (posX, posY), valores de 0.0 a 1.0.
@@ -214,13 +218,11 @@ public class VistaMazmorra extends JPanel {
         return boton;
     }
 
-private static BufferedImage redimensionar(BufferedImage original, int ancho, int alto) {
+    private static BufferedImage redimensionar(BufferedImage original, int ancho, int alto) {
         BufferedImage resultado = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = resultado.createGraphics();
-        
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-        
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.drawImage(original, 0, 0, ancho, alto, null);
         g.dispose();
         return resultado;

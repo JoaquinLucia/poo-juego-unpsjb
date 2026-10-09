@@ -6,20 +6,22 @@ import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 import javax.swing.Timer;
 
+import modelo.Arquetipo;
+
 public class VistaBatalla {
     private final JFrame ventana;
     private final PanelBatalla panelFondo;
     private final PanelInferior panelInferior;
 
-    public VistaBatalla() {
+public VistaBatalla(Arquetipo arquetipo) {
         this.ventana = new JFrame("Combate");
-        this.ventana.setExtendedState(JFrame.MAXIMIZED_BOTH); // Se abre en pantalla completa
-        this.ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.ventana.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+        this.ventana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
         this.ventana.setLocationRelativeTo(null);
         this.ventana.setLayout(new BorderLayout(0, 0));
 
-        this.panelFondo = new PanelBatalla();
-        this.panelInferior = new PanelInferior();
+        this.panelFondo = new PanelBatalla(); // Queda igual, no necesita la imagen
+        this.panelInferior = new PanelInferior(arquetipo.getRutaRetrato());
 
         this.ventana.add(panelFondo, BorderLayout.CENTER);
         this.ventana.add(panelInferior, BorderLayout.SOUTH);
@@ -27,6 +29,10 @@ public class VistaBatalla {
 
     public void mostrar() {
         this.ventana.setVisible(true);
+    }
+
+    public void cerrar() {
+        this.ventana.dispose();
     }
 
     // --- EFECTOS VISUALES ---

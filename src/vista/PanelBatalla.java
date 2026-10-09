@@ -18,7 +18,7 @@ public class PanelBatalla extends JPanel {
 
     public PanelBatalla() {
         // Carga segura de la imagen de fondo
-        URL urlFondo = getClass().getResource("/recursos/pantalla_de_combate.jpg");
+        URL urlFondo = getClass().getResource("/recursos/batalla/pantalla_de_combate.jpg");
         if (urlFondo != null) {
             imagen = new ImageIcon(urlFondo).getImage();
         }
@@ -72,12 +72,11 @@ public class PanelBatalla extends JPanel {
         nombreHeroe.setText(nomHeroe.toUpperCase());
         nombreEnemigo.setText(nomEnemigo.toUpperCase());
 
-        // Si el héroe tiene más vida que el máximo de la barra (ej: Caballero con 600), ajustamos el tope
-        if (vidaHeroe.getMaximum() == 100 && hpHeroe > 100) vidaHeroe.setMaximum(hpHeroe);
-        if (vidaEnemigo.getMaximum() == 100 && hpEnemigo > 100) vidaEnemigo.setMaximum(hpEnemigo);
-
         if (primeraVez) {
-            // Setear instantáneamente al iniciar la pelea
+            // Fija el tope EXACTO de la barra con la vida con la que inician la pelea
+            vidaHeroe.setMaximum(Math.max(1, hpHeroe));
+            vidaEnemigo.setMaximum(Math.max(1, hpEnemigo));
+
             vidaHeroe.setValue(Math.max(0, hpHeroe));
             vidaHeroe.setString(Math.max(0, hpHeroe) + " HP");
             
@@ -86,7 +85,11 @@ public class PanelBatalla extends JPanel {
             
             primeraVez = false;
         } else {
-            // Llamar a la animación suave durante el combate
+            // Si alguien se cura por encima de su límite original, empujamos el tope visual
+            if (hpHeroe > vidaHeroe.getMaximum()) vidaHeroe.setMaximum(hpHeroe);
+            if (hpEnemigo > vidaEnemigo.getMaximum()) vidaEnemigo.setMaximum(hpEnemigo);
+
+            // Animación suave durante el combate
             animarBarraVida(vidaHeroe, Math.max(0, hpHeroe));
             animarBarraVida(vidaEnemigo, Math.max(0, hpEnemigo));
         }
