@@ -85,4 +85,8 @@ public VistaBatalla(Arquetipo arquetipo, Enemigo enemigo) {
     public void onHabilidad(ActionListener listener) {
         panelInferior.getBotonHabilidad().addActionListener(listener);
     }
+
+    public void onDefenderse(ActionListener listener) {
+        panelInferior.getBotonDefenderse().addActionListener(listener);
+    }
 }

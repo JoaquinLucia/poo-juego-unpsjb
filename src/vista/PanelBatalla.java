@@ -7,20 +7,19 @@ import java.net.URL;
 import javax.swing.*;
 
 public class PanelBatalla extends JPanel {
-    private Image imagen;
+    private Image Imagen; // <-- Solo necesitamos la imagen original
     private final JProgressBar vidaHeroe;
     private final JProgressBar vidaEnemigo;
     private final JLabel nombreHeroe;
     private final JLabel nombreEnemigo;
     
-    // Bandera para saber si es el inicio de la pelea (y no hacer la animación de llenado)
     private boolean primeraVez = true;
 
     public PanelBatalla() {
         // Carga segura de la imagen de fondo
         URL urlFondo = getClass().getResource("/recursos/batalla/pantalla_de_combate.jpg");
         if (urlFondo != null) {
-            imagen = new ImageIcon(urlFondo).getImage();
+            Imagen = new ImageIcon(urlFondo).getImage(); // <-- Se guarda directo en 'imagen'
         }
 
         // BARRAS DE VIDA (Arrancan en 100 por defecto, se ajustan solas en el primer turno)
@@ -121,11 +120,12 @@ public class PanelBatalla extends JPanel {
         timer.start();
     }
 
-    @Override
+@Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (imagen != null) {
-            g.drawImage(imagen, 0, 0, getWidth(), getHeight(), this);
+        if (Imagen != null) {
+            // Vuelve a estirar a los bordes, mostrando la imagen completa sin recortes
+            g.drawImage(Imagen, 0, 0, getWidth(), getHeight(), this);
         }
     }
 }

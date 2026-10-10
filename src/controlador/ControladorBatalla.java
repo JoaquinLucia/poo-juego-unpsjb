@@ -32,6 +32,13 @@ public class ControladorBatalla {
             }
         });
 
+        this.vista.onDefenderse(e -> {
+            // Verificamos que el héroe esté en condiciones de actuar
+            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
+                accionJugador_Defender(); 
+            }
+        });
+
         this.vista.onHabilidad(e -> {
             if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
                 accionJugador_Habilidad();
@@ -76,6 +83,22 @@ public class ControladorBatalla {
         vista.efectoTemblor(); // Hace temblar la pantalla un poquito
         
         finalizarTurnoJugador();
+    }
+
+    public void accionJugador_Defender() {
+        Entidad heroe = batalla.getHeroe();
+        
+        // 1. El héroe levanta el escudo
+        heroe.setDefendiendo(true);
+        
+        // 2. Bloqueamos botones y mostramos el mensaje
+        vista.setBotonesHabilitados(false);
+        vista.mostrarResultado(heroe.getNombre() + " adopta una postura defensiva.");
+        
+        // 3. Pasamos el turno al enemigo después de una breve pausa
+        javax.swing.Timer timer = new javax.swing.Timer(1500, ev -> turnoEnemigo());
+        timer.setRepeats(false);
+        timer.start();
     }
 
     private void accionJugador_Habilidad() {
@@ -128,25 +151,80 @@ public class ControladorBatalla {
         }
     }
 
-    private void turnoEnemigo() {
+private void turnoEnemigo() {
         if (!batalla.getEnemigo().estaVivo()) return;
 
-        batalla.getEnemigo().atacar(batalla.getHeroe());
-        vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " te atacó ferozmente.");
-        
+        Entidad enemigo = batalla.getEnemigo();
+        Entidad heroe = batalla.getHeroe();
+
+        // 1. Verificar si el enemigo está aturdido
+        if (enemigo.getaturdir()) {
+            vista.mostrarResultado(enemigo.getNombre() + " está aturdido y pierde su turno.");
+            enemigo.sacarAturdimiento();
+            reducirCooldowns(enemigo);
+            actualizarVista();
+            
+            // Hacemos una pausa de 2 segundos para que leas que está aturdido
+            javax.swing.Timer timerAturdido = new javax.swing.Timer(2000, e -> {
+                vista.setBotonesHabilitados(true);
+                vista.mostrarResultado("¡Es tu turno!");
+            });
+            timerAturdido.setRepeats(false);
+            timerAturdido.start();
+            
+            return; // Cortamos la ejecución acá
+        }
+
+        // 2. Pensamiento del enemigo: ¿Tiene habilidades especiales listas?
+        boolean usoHabilidad = false;
+        for (modelo.Habilidad hab : enemigo.getHabilidades()) {
+            if (hab.getCdListo()) {
+                hab.ejecutarHabilidad(enemigo, heroe);
+                vista.mostrarResultado("¡" + enemigo.getNombre() + " usó " + hab.getNombreHabilidad() + "!");
+                usoHabilidad = true;
+                break;
+            }
+        }
+
+        // Si ninguna habilidad estaba lista, ataca normal
+        if (!usoHabilidad) {
+            enemigo.atacar(heroe);
+            vista.mostrarResultado("El " + enemigo.getNombre() + " te atacó ferozmente.");
+        }
+
+        // 3. Efectos visuales instantáneos tras el ataque
         vista.efectoTemblor();
-        
-        reducirCooldowns(batalla.getEnemigo());
-        
+        reducirCooldowns(enemigo);
         actualizarVista();
 
-        if (!batalla.getHeroe().estaVivo()) {
-            vista.mostrarResultado("¡Has sido derrotado por el " + batalla.getEnemigo().getNombre() + "!");
-            terminarBatalla(false);
-        } else {
-            vista.setBotonesHabilitados(true); // Te devuelve los botones
-            vista.mostrarResultado("¡Es tu turno!");
-        }
+        // 4. EL SECRETO DEL RITMO: Pausa de 2.5 segundos (2500 ms) antes de chequear el estado y devolverte el turno
+        javax.swing.Timer timerEspera = new javax.swing.Timer(2500, e -> {
+            if (!heroe.estaVivo()) {
+                vista.mostrarResultado("¡Has sido derrotado por el " + enemigo.getNombre() + "!");
+                terminarBatalla(false);
+            } else {
+                // Verificamos si el golpe del enemigo te aturdió
+                if (heroe.getaturdir()) {
+                    vista.mostrarResultado("¡Estás aturdido! Pierdes tu turno.");
+                    heroe.sacarAturdimiento();
+                    reducirCooldowns(heroe);
+                    
+                    // Pausa adicional para leer que te aturdieron, y el enemigo repite turno
+                    javax.swing.Timer timerDobleAtaque = new javax.swing.Timer(2000, ev -> turnoEnemigo());
+                    timerDobleAtaque.setRepeats(false);
+                    timerDobleAtaque.start();
+                } else {
+                    // Flujo normal: estás vivo y no estás aturdido. Te devuelve los controles.
+                    heroe.setDefendiendo(false); 
+                    vista.setBotonesHabilitados(true); 
+                    vista.mostrarResultado("¡Es tu turno!");
+                    vista.setBotonesHabilitados(true); 
+                    vista.mostrarResultado("¡Es tu turno!");
+                }
+            }
+        });
+        timerEspera.setRepeats(false);
+        timerEspera.start();
     }
     
     private void reducirCooldowns(Entidad entidad) {

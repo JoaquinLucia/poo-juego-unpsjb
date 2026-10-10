@@ -79,6 +79,7 @@ public class ControladorMaestro {
         Batalla batalla = new Batalla(heroe, enemigo);
         
         // <-- Le pasamos el arquetipoElegido a VistaBatalla
+        heroe.reiniciarTodasLasHabilidades();
         ctrlBatalla = new ControladorBatalla(new VistaBatalla(arquetipoElegido, enemigo), batalla, this);
         ctrlBatalla.iniciar();
     }

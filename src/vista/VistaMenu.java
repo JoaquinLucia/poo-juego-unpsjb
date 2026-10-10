@@ -149,13 +149,18 @@ public class VistaMenu extends JFrame {
         }
     }
 
-    private static BufferedImage escalar(BufferedImage original, double factor) {
+private static BufferedImage escalar(BufferedImage original, double factor) {
         int ancho = Math.max(1, (int) Math.round(original.getWidth() * factor));
         int alto = Math.max(1, (int) Math.round(original.getHeight() * factor));
         BufferedImage escalada = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = escalada.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        
+        // En lugar de usar BILINEAR, 
+        // usamos NEAREST_NEIGHBOR
+        // que cuando se estira una imagen de arte 2D no afecta tanto la calidad
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         g.drawImage(original, 0, 0, ancho, alto, null);
         g.dispose();
         return escalada;
@@ -217,7 +222,9 @@ public class VistaMenu extends JFrame {
     }
 
     private void aplicarEscala(double escala) {
-        double factor = escala * ESCALA_IMAGENES;
+        // En lugar de forzar un 0.7 fijo, el factor para los botones y logo
+        // se ajusta suavemente según la pantalla, asegurando que no se rompan
+        double factor = escala * 0.8; 
 
         if (imagenLogo != null) {
             logo.setText(null);
@@ -226,14 +233,14 @@ public class VistaMenu extends JFrame {
 
         for (int i = 0; i < botones.length; i++) {
             if (imagenesBotones[i] == null) {
-                continue; // queda el texto
+                continue; 
             }
             BufferedImage imagen = escalar(imagenesBotones[i], factor);
             JButton boton = botones[i];
             boton.setText(null);
             boton.setIcon(new ImageIcon(imagen));
-            boton.setRolloverIcon(new ImageIcon(ajustarBrillo(imagen, 1.2f))); // mouse encima
-            boton.setPressedIcon(new ImageIcon(ajustarBrillo(imagen, 0.8f)));  // al hacer clic
+            boton.setRolloverIcon(new ImageIcon(ajustarBrillo(imagen, 1.2f))); 
+            boton.setPressedIcon(new ImageIcon(ajustarBrillo(imagen, 0.8f)));  
         }
 
         Dimension espacio = new Dimension(0, (int) Math.round(SEPARACION_BOTONES * escala));

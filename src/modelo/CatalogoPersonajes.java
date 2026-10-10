@@ -22,11 +22,10 @@ public class CatalogoPersonajes {
         cargarEnemigos();
     }
 
-    // Valores de ejemplo: copiá acá los que tenías en tus fábricas
     private void cargarHeroes() {
         heroes.put("CABALLERO", () -> new Heroe.Builder("Caballero")
                 .vida(600).ataque(35)
-                .maxHabilidades(1) // Ajustamos el máximo a 1
+                .maxHabilidades(1) 
                 .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 70, 3))
                 .build());
 

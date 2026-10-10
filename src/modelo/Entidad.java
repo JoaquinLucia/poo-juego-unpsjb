@@ -9,6 +9,7 @@ public abstract class Entidad {
     private ArrayList <Habilidad> habilidades;
     private  int cantidadHabilidadMax;
     private boolean aturdir;
+    private boolean defendiendo = false;
     //private boolean estaVivo; tenemos un metodo que nos dice que esta vivo
     public Entidad(String nombre, int vida, int ataque, int cantidadHabilidadMax) {
         if (vida <= 0) {
@@ -31,9 +32,15 @@ public abstract class Entidad {
     }
 
 
-    public void recibirDanio(int danio){
-        this.vida -= danio ;
-        if (this.vida < 0){
+public void recibirDanio(int danio) {
+        if (this.defendiendo) {
+            danio = danio / 2; // Mitad de daño
+            System.out.println(this.nombre + " se defendió y redujo el daño recibido a " + danio);
+        }
+        
+        this.vida -= danio;
+        
+        if (this.vida < 0) {
             this.vida = 0;
         }
     }
@@ -49,6 +56,18 @@ public abstract class Entidad {
     public final  void agregarHabilidad(Habilidad habilidad) {
         if (this.habilidades.size() < this.cantidadHabilidadMax) {
             this.habilidades.add(habilidad);
+        }
+    }
+    // Este método resetea todas las habilidades de la entidad para que arranquen en 0
+    public void reiniciarTodasLasHabilidades() {
+        for (Habilidad hab : habilidades) {
+            // Ponemos el cooldownActual en 0 para que queden listas para usarse
+            // (Si tenés un setter en Habilidad, usalo. Si no, tenemos que resetear 
+            // la lógica. Como en Habilidad hiciste "cooldownActual--", lo más fácil 
+            // es hacer un bucle que llame a cronoCooldown hasta que sea 0).
+            while (!hab.getCdListo()) {
+                hab.cronoCooldown();
+            }
         }
     }
 
@@ -89,5 +108,12 @@ public abstract class Entidad {
     }
     public void aplicarAturdimiento(){
         this.aturdir=true;
+    }
+    public void setDefendiendo(boolean estado) {
+        this.defendiendo = estado;
+    }
+
+    public boolean isDefendiendo() {
+        return this.defendiendo;
     }
 }
