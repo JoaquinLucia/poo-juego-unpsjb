@@ -1,124 +1,139 @@
 package controlador;
 
-import java.awt.event.ActionEvent;
+import java.awt.Point;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.function.Consumer;
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
-import javax.swing.KeyStroke;
+import java.awt.event.MouseMotionAdapter;
+
 import modelo.Arquetipo;
-import modelo.ModeloMenu;
+import modelo.CatalogoPersonajes;
 import vista.PanelSeleccionPersonaje;
-import vista.PanelSeleccionPersonaje.Zona;
+import vista.VistaSeleccion;
 import controlador.utilidades.GestorDeSonido;
 
 /**
- * Controles de la pantalla de selección de personaje.
- * Escucha el teclado y el mouse sobre el panel, actualiza el modelo y le dice
- * a la vista qué mostrar.
+ * Maneja la lógica de interacción (teclado y mouse) para la selección de arquetipos.
  */
 public class ControladorSeleccion {
+    private final VistaSeleccion vista;
+    private final ControladorMaestro maestro;
+    private final CatalogoPersonajes catalogo;
+    private Arquetipo[] arquetipos;
+    private int indiceActual = 0;
 
-    private final ModeloMenu modelo;
-    private final PanelSeleccionPersonaje panel;
-    private final Runnable alVolver;
-    private final Consumer<Arquetipo> alConfirmar;
+    public ControladorSeleccion(VistaSeleccion vista, ControladorMaestro maestro, CatalogoPersonajes catalogo) {
+        this.vista = vista;
+        this.maestro = maestro;
+        this.catalogo = catalogo;
+        
+        // Obtenemos los arquetipos disponibles desde el catálogo
+        this.arquetipos = Arquetipo.values();
 
-    public ControladorSeleccion(ModeloMenu modelo, PanelSeleccionPersonaje panel,
-                                Runnable alVolver, Consumer<Arquetipo> alConfirmar) {
-        this.modelo = modelo;
-        this.panel = panel;
-        this.alVolver = alVolver;
-        this.alConfirmar = alConfirmar;
+        inicializarEventos();
+    }
 
-        configurarTeclado();
-        configurarMouse();
+    public void reiniciar() {
+        indiceActual = 0;
         actualizarVista();
     }
 
-    /** Se llama cada vez que se entra a la pantalla de selección. */
-    public void entrar() {
-        modelo.reiniciarSeleccion();
-        panel.setHover(Zona.NINGUNA);
-        actualizarVista();
+    public VistaSeleccion getVista() {
+        return vista;
     }
 
-    // ---------- Acciones ----------
+    private void actualizarVista() {
+        if (arquetipos.length > 0) {
+            vista.mostrarPersonaje(arquetipos[indiceActual], arquetipos.length > 1);
+        }
+    }
 
-    private void mover(int direccion) {
-        if (modelo.getCantidadPersonajes() > 1) {
-            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al mover
-            modelo.moverSeleccion(direccion);
+    private void siguiente() {
+        if (arquetipos.length > 1) {
+            indiceActual = (indiceActual + 1) % arquetipos.length;
+            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+            actualizarVista();
+        }
+    }
+
+    private void anterior() {
+        if (arquetipos.length > 1) {
+            indiceActual = (indiceActual - 1 + arquetipos.length) % arquetipos.length;
+            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
             actualizarVista();
         }
     }
 
     private void confirmar() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al confirmar
-        Arquetipo elegido = modelo.getPersonajeActual();
-        modelo.setPersonajeElegido(elegido);
-        alConfirmar.accept(elegido);
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+        if (arquetipos.length > 0) {
+            maestro.personajeSeleccionado(arquetipos[indiceActual]);
+        }
     }
 
     private void volver() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al volver
-        alVolver.run();
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+        maestro.iniciar(); // Vuelve al menú principal
     }
 
-    private void actualizarVista() {
-        panel.mostrarPersonaje(modelo.getPersonajeActual(), modelo.getCantidadPersonajes() > 1);
-    }
+    private void inicializarEventos() {
+        PanelSeleccionPersonaje panel = vista.getPanelSeleccion();
 
-    // ---------- Teclado ----------
-
-    private void configurarTeclado() {
-        InputMap im = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap am = panel.getActionMap();
-        vincular(im, am, "seleccionComenzar", this::confirmar, KeyEvent.VK_ENTER, KeyEvent.VK_SPACE);
-        vincular(im, am, "seleccionVolver", this::volver, KeyEvent.VK_ESCAPE);
-        vincular(im, am, "seleccionIzquierda", () -> mover(-1), KeyEvent.VK_LEFT, KeyEvent.VK_A);
-        vincular(im, am, "seleccionDerecha", () -> mover(+1), KeyEvent.VK_RIGHT, KeyEvent.VK_D);
-    }
-
-    private void vincular(InputMap im, ActionMap am, String nombre, Runnable accion, int... teclas) {
-        for (int tecla : teclas) {
-            im.put(KeyStroke.getKeyStroke(tecla, 0), nombre);
-        }
-        am.put(nombre, new AbstractAction() {
+        // Eventos de Teclado
+        panel.addKeyListener(new KeyAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (panel.isShowing()) {
-                    accion.run();
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_LEFT:
+                    case KeyEvent.VK_A:
+                        anterior();
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                    case KeyEvent.VK_D:
+                        siguiente();
+                        break;
+                    case KeyEvent.VK_ENTER:
+                        confirmar();
+                        break;
+                    case KeyEvent.VK_ESCAPE:
+                        volver();
+                        break;
                 }
             }
         });
-    }
 
-    // ---------- Mouse ----------
-
-    private void configurarMouse() {
-        MouseAdapter mouse = new MouseAdapter() {
+        // Eventos de Mouse (Movimiento / Hover)
+        panel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                panel.setHover(panel.zonaEn(e.getPoint()));
+                PanelSeleccionPersonaje.Zona zona = panel.zonaEn(e.getPoint());
+                panel.setHover(zona);
             }
+        });
 
+        // Eventos de Mouse (Clicks)
+        panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                switch (panel.zonaEn(e.getPoint())) {
-                    case COMENZAR:   confirmar(); break;
-                    case VOLVER:    volver();    break;
-                    case FLECHA_IZQ: mover(-1);   break;
-                    case FLECHA_DER: mover(+1);   break;
-                    default:         break;
+                PanelSeleccionPersonaje.Zona zona = panel.zonaEn(e.getPoint());
+                switch (zona) {
+                    case COMENZAR:
+                        confirmar();
+                        break;
+                    case VOLVER:
+                        volver();
+                        break;
+                    case FLECHA_IZQ:
+                        anterior();
+                        break;
+                    case FLECHA_DER:
+                        siguiente();
+                        break;
+                    default:
+                        break;
                 }
             }
-        };
-        panel.addMouseListener(mouse);
-        panel.addMouseMotionListener(mouse);
+        });
     }
 }

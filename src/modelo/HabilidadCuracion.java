@@ -17,7 +17,7 @@ public class HabilidadCuracion extends Habilidad {
         // La curación se aplica al usuario que lanza la habilidad, no al enemigo
         usuario.sumarVida(getValorBase());
         
-        System.out.println(usuario.getNombre() + " usó " + getNombre() + " y recuperó " + getValorBase() + " puntos de vida.");
+        System.out.println(usuario.getNombre() + " usó " + getNombreHabilidad() + " y recuperó " + getValorBase() + " puntos de vida.");
         
         // Activamos el enfriamiento para que deba esperar los turnos correspondientes
         activarcooldown();

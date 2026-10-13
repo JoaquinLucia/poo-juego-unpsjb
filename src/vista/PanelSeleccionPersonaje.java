@@ -10,8 +10,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RadialGradientPaint;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -32,48 +32,35 @@ import modelo.Arquetipo;
 /**
  * Pantalla de selección de personaje. Usa el mismo fondo animado que el menú
  * (hereda de PanelFondo) y dibuja encima el personaje, su ficha y los botones.
- *
- * Todo se dibuja en un espacio de diseño de 800x600 (el mismo que VistaMenu en
- * modo ventana) y se escala al tamaño real del panel, así que en pantalla
- * completa queda proporcionado igual que el menú.
- *
- * Es solo vista: dibuja el personaje que le indican y, para el controlador,
- * informa qué zona hay bajo el puntero (zonaEn). Los controles de teclado y
- * mouse están en controlador.ControladorSeleccion.
  */
 public class PanelSeleccionPersonaje extends PanelFondo {
 
     private static final String RUTA_IMAGENES = "/recursos/imagenes_menu/";
 
-    // Espacio de diseño (igual que VistaMenu en modo ventana)
     private static final int ANCHO_DISENO = 800;
     private static final int ALTO_DISENO = 600;
-    private static final double ESCALA_IMAGENES = 0.6; // igual que en VistaMenu
+    private static final double ESCALA_IMAGENES = 0.6;
 
-    // Paleta tomada del fondo: noche azulada, luna pálida y el rojo del horizonte
-    private static final Color HUESO        = new Color(220, 216, 207);
-    private static final Color NIEBLA       = new Color(142, 151, 168);
-    private static final Color LUNA         = new Color(201, 211, 230);
-    private static final Color BRASA        = new Color(181, 80, 63);
-    private static final Color PANEL        = new Color(8, 10, 16, 190);
-    private static final Color BORDE        = new Color(92, 102, 122);
+    private static final Color HUESO         = new Color(220, 216, 207);
+    private static final Color NIEBLA        = new Color(142, 151, 168);
+    private static final Color LUNA          = new Color(201, 211, 230);
+    private static final Color BRASA         = new Color(181, 80, 63);
+    private static final Color PANEL         = new Color(8, 10, 16, 190);
+    private static final Color BORDE         = new Color(92, 102, 122);
     private static final Color BORDE_OSCURO = new Color(34, 39, 50);
     private static final Color BARRA_VACIA  = new Color(34, 38, 48, 220);
 
-    private static final String FUENTE = Font.SERIF;
+    private static final String FUENTE = "Serif";
 
-    // Ubicación de los elementos (en coordenadas de diseño)
     private static final int CENTRO_PERSONAJE_X = 220;
-    private static final int Y_PERSONAJE = 146;     // imagen PNG
+    private static final int Y_PERSONAJE = 146;
     private static final int ALTO_PERSONAJE = 248;
-    private static final double CENTRO_CUERPO = 0.42; // dónde cae el cuerpo dentro del PNG (0 a 1)
+    private static final double CENTRO_CUERPO = 0.42;
     private static final Rectangle FICHA = new Rectangle(390, 150, 350, 272);
     private static final int Y_BOTONES = 494;
 
-    /** Partes clickeables de la pantalla. */
     public enum Zona { COMENZAR, VOLVER, FLECHA_IZQ, FLECHA_DER, NINGUNA }
 
-    // Lo que se muestra (lo decide el controlador)
     private Arquetipo actual = Arquetipo.values()[0];
     private boolean hayVarios = false;
     private Zona hover = Zona.NINGUNA;
@@ -83,16 +70,13 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     private final BufferedImage imagenComenzarHover = aclarar(imagenComenzar);
     private final BufferedImage imagenVolverHover = aclarar(imagenVolver);
 
-    // Zonas clickeables en coordenadas de diseño
     private final Rectangle zonaComenzar = new Rectangle();
     private final Rectangle zonaVolver = new Rectangle();
     private final Rectangle zonaFlechaIzq = new Rectangle();
     private final Rectangle zonaFlechaDer = new Rectangle();
 
-    // Transformación diseño -> pantalla del último repintado (para el mouse)
     private AffineTransform transformacion = new AffineTransform();
 
-    // Imágenes de los personajes, cargadas desde la ruta de cada Arquetipo
     private final Map<Arquetipo, BufferedImage> imagenesPersonajes = new EnumMap<>(Arquetipo.class);
     private BufferedImage retratoEscalado;
     private Arquetipo retratoDe;
@@ -103,7 +87,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
     public PanelSeleccionPersonaje() {
         super(RUTA_IMAGENES + "fondo.gif", null);
-        setBackground(new Color(8, 10, 16)); // mientras carga el GIF
+        setBackground(new Color(8, 10, 16));
         setFocusable(true);
 
         for (Arquetipo a : Arquetipo.values()) {
@@ -120,8 +104,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
             repaint();
         });
 
-
-        // La animación corre solo mientras la pantalla está a la vista
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -136,16 +118,12 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         });
     }
 
-    // ---------- Lo que usa el controlador ----------
-
-    /** Muestra un personaje. hayVarios indica si se dibujan las flechas. */
     public void mostrarPersonaje(Arquetipo personaje, boolean hayVarios) {
         this.actual = personaje;
         this.hayVarios = hayVarios;
         repaint();
     }
 
-    /** Resalta la zona que tiene el mouse encima y cambia el cursor. */
     public void setHover(Zona zona) {
         if (zona == hover) {
             return;
@@ -155,7 +133,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         repaint();
     }
 
-    /** Qué zona de la pantalla hay en ese punto (en coordenadas del panel). */
     public Zona zonaEn(Point enPantalla) {
         Point p = aDiseno(enPantalla);
         if (zonaComenzar.contains(p)) return Zona.COMENZAR;
@@ -188,11 +165,9 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         }
     }
 
-    // ---------- Dibujo ----------
-
     @Override
     protected void paintComponent(Graphics g0) {
-        super.paintComponent(g0); // el fondo animado
+        super.paintComponent(g0);
 
         Graphics2D g = (Graphics2D) g0.create();
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -200,7 +175,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
 
         oscurecerFondo(g);
 
-        // Escala el diseño de 800x600 al tamaño real, centrado y sin deformar
         double escala = Math.min(getWidth() / (double) ANCHO_DISENO, getHeight() / (double) ALTO_DISENO);
         AffineTransform t = new AffineTransform();
         t.translate((getWidth() - ANCHO_DISENO * escala) / 2, (getHeight() - ALTO_DISENO * escala) / 2);
@@ -216,7 +190,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.dispose();
     }
 
-    /** Baja el brillo del fondo y agrega viñeta para que el texto se lea bien. */
     private void oscurecerFondo(Graphics2D g) {
         int w = getWidth();
         int h = getHeight();
@@ -240,7 +213,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.setColor(HUESO);
         g.drawString(titulo, tx, 78);
 
-        // Filete con un rombo en el medio
         int yLinea = 96;
         g.setPaint(new GradientPaint(220, yLinea, new Color(92, 102, 122, 0), 400, yLinea, BORDE, true));
         g.fillRect(220, yLinea, 360, 1);
@@ -262,7 +234,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         int yPiso = yArriba + alto;
         int yCentro = yArriba + alto / 2;
 
-        // Halo de luz de luna detrás del personaje (late despacio)
         float pulso = 0.85f + 0.15f * (float) Math.sin(tick * 0.05);
         int alfaHalo = Math.round(70 * pulso);
         g.setPaint(new RadialGradientPaint(CENTRO_PERSONAJE_X, yCentro, 160,
@@ -271,7 +242,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
                              new Color(LUNA.getRed(), LUNA.getGreen(), LUNA.getBlue(), 0)}));
         g.fillOval(CENTRO_PERSONAJE_X - 160, yCentro - 160, 320, 320);
 
-        // Niebla en el piso y sombra
         g.setPaint(new RadialGradientPaint(CENTRO_PERSONAJE_X, yPiso, 120,
                 new float[] {0f, 1f},
                 new Color[] {new Color(150, 160, 180, 60), new Color(150, 160, 180, 0)}));
@@ -285,15 +255,9 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         dibujarNombre(g, a, yPiso);
     }
 
-    /**
-     * Dibuja el PNG del personaje. La imagen se reescala una sola vez al tamaño
-     * real en pantalla (con buena calidad) y se guarda, así no se pixela ni se
-     * recalcula en cada cuadro.
-     */
     private void dibujarImagenPersonaje(Graphics2D g, Arquetipo a, BufferedImage imagen, int yArriba) {
         double proporcion = imagen.getWidth() / (double) imagen.getHeight();
         int ancho = (int) Math.round(ALTO_PERSONAJE * proporcion);
-        // El cuerpo no está en el centro del PNG (la espada sale hacia la derecha)
         int x = CENTRO_PERSONAJE_X - (int) Math.round(ancho * CENTRO_CUERPO);
 
         double escala = transformacion.getScaleY();
@@ -305,7 +269,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
             retratoAlto = altoReal;
         }
 
-        // Respiración: el cuerpo se estira apenas hacia arriba, con los pies fijos
         double respiro = (Math.sin(tick * 0.08) + 1) * 1.1;
         int altoDibujo = (int) Math.round(ALTO_PERSONAJE + respiro);
         int yDibujo = yArriba + ALTO_PERSONAJE - altoDibujo;
@@ -324,7 +287,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     }
 
     private void dibujarNombre(Graphics2D g, Arquetipo a, int yPiso) {
-        // Nombre y rol
         g.setFont(new Font(FUENTE, Font.BOLD, 20));
         String nombre = a.getNombre().toUpperCase();
         g.setColor(new Color(0, 0, 0, 200));
@@ -372,7 +334,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.setColor(new Color(205, 120, 100));
         y = dibujarParrafo(g, a.getHabilidad(), x, y + 6, ancho);
 
-        // Separador
         y += 4;
         g.setColor(BORDE_OSCURO);
         g.fillRect(x, y, ancho, 1);
@@ -394,7 +355,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         }
     }
 
-    /** Marco doble con esquinas marcadas, al estilo de los paneles pixel art. */
     private void dibujarMarco(Graphics2D g, Rectangle r) {
         g.setColor(PANEL);
         g.fillRect(r.x, r.y, r.width, r.height);
@@ -445,7 +405,6 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.drawString(ayuda, centrar(g, ayuda, 0, ANCHO_DISENO), 578);
     }
 
-    /** Tamaño del botón en coordenadas de diseño: el del PNG escalado, o uno fijo si no hay PNG. */
     private Rectangle medidaBoton(BufferedImage imagen, int anchoTexto) {
         if (imagen != null) {
             return new Rectangle(0, 0,
@@ -456,15 +415,14 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     }
 
     private void dibujarBoton(Graphics2D g, Rectangle r, String texto,
-                              BufferedImage imagen, BufferedImage imagenHover,
-                              boolean hover, boolean principal) {
+                            BufferedImage imagen, BufferedImage imagenHover,
+                            boolean hover, boolean principal) {
         if (imagen != null) {
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g.drawImage(hover ? imagenHover : imagen, r.x, r.y, r.width, r.height, null);
             return;
         }
 
-        // Sin PNG: botón dibujado con el mismo estilo que la ficha
         g.setColor(hover ? new Color(26, 30, 42, 225) : new Color(8, 10, 16, 200));
         g.fillRect(r.x, r.y, r.width, r.height);
         g.setColor(hover || principal ? BORDE.brighter() : BORDE);
@@ -484,13 +442,10 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         g.drawString(texto, centrar(g, texto, r.x, r.width), ty);
     }
 
-    // ---------- Utilidades ----------
-
     private int centrar(Graphics2D g, String texto, int x, int ancho) {
         return x + (ancho - g.getFontMetrics().stringWidth(texto)) / 2;
     }
 
-    /** Escribe el texto cortando por palabras; devuelve la Y de la línea siguiente. */
     private int dibujarParrafo(Graphics2D g, String texto, int x, int y, int ancho) {
         FontMetrics fm = g.getFontMetrics();
         StringBuilder linea = new StringBuilder();
@@ -512,7 +467,7 @@ public class PanelSeleccionPersonaje extends PanelFondo {
     }
 
     private static BufferedImage cargarImagen(String nombre) {
-        return cargarRecurso(RUTA_IMAGENES + nombre); // si no está, se dibuja el botón con texto
+        return cargarRecurso(RUTA_IMAGENES + nombre);
     }
 
     private static BufferedImage cargarRecurso(String ruta) {

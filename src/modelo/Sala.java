@@ -13,6 +13,10 @@ public class Sala {
         this.idEnemigo = idEnemigo;
     }
 
+    public boolean esCombate() {
+        return idEnemigo != null && !idEnemigo.isEmpty();
+    }
+
     public Escenario getEscenario() { return escenario; }
     public String getIdEnemigo() { return idEnemigo; }
 }

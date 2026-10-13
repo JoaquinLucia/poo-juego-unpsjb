@@ -3,7 +3,6 @@ package controlador;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import modelo.ModeloMenu;
 import modelo.ModeloTablaPuntuacion;
 import vista.VistaMenu;
 import vista.VistaPuntuaciones;
@@ -13,33 +12,31 @@ public class ControladorMenu {
 
     private final VistaMenu vista;
     private final ModeloTablaPuntuacion tablaPuntuaciones;
-    private final ModeloMenu modeloMenu;
     private final ControladorMaestro maestro;
-    private final ControladorSeleccion controladorSeleccion;
 
-    public ControladorMenu(VistaMenu vista, ModeloTablaPuntuacion tablaPuntuaciones,
-                           ControladorMaestro maestro) {
+    // Constructor de 3 parámetros
+    public ControladorMenu(VistaMenu vista, ModeloTablaPuntuacion tablaPuntuaciones, ControladorMaestro maestro) {
         this.vista = vista;
         this.tablaPuntuaciones = tablaPuntuaciones;
         this.maestro = maestro;
-        this.modeloMenu = new ModeloMenu();
+        configurarEventos();
+    }
 
-        // Sub-controlador de la selección de personaje
-        this.controladorSeleccion = new ControladorSeleccion(
-            modeloMenu,
-            vista.getPanelSeleccion(),
-            () -> vista.mostrarMenu(),                            // "Volver"
-            (arquetipoElegido) -> maestro.comenzarPartida(arquetipoElegido) // "Comenzar"
-        );
+    // Constructor alternativo de 2 parámetros (para que no falle el ControladorMaestro)
+    public ControladorMenu(VistaMenu vista, ControladorMaestro maestro) {
+        this.vista = vista;
+        this.tablaPuntuaciones = new ModeloTablaPuntuacion();
+        this.maestro = maestro;
+        configurarEventos();
+    }
 
-        // Botones del menú principal
+    private void configurarEventos() {
         vista.onComenzar(e -> iniciarSeleccionPersonaje());
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());
         vista.onSalir(e -> salir());
     }
 
-    /** Deja el menú principal en primer plano (al iniciar o al volver de una partida). */
     public void mostrar() {
         vista.mostrarMenu();
     }
@@ -53,13 +50,12 @@ public class ControladorMenu {
     }
 
     private void iniciarSeleccionPersonaje() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al iniciar selección
-        controladorSeleccion.entrar();
-        vista.mostrarSeleccion();
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+        maestro.iniciarJuegoDesdeMenu();
     }
 
     private void mostrarPuntuaciones() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al ver puntuaciones
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         VistaPuntuaciones modal = new VistaPuntuaciones(ventana);
         modal.cargarPuntuaciones(tablaPuntuaciones.getPuntuacionesOrdenadas());
@@ -67,12 +63,12 @@ public class ControladorMenu {
     }
 
     private void mostrarOpciones() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido en opciones
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         vista.mostrarMensaje("Opciones (próximamente)");
     }
 
     private void salir() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al salir
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
             System.exit(0);
         }

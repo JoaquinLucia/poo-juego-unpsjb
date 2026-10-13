@@ -1,85 +1,128 @@
 package controlador;
 
-import modelo.Arquetipo;
 import modelo.Batalla;
 import modelo.Camino;
-import modelo.CatalogoPersonajes;
 import modelo.Enemigo;
 import modelo.Heroe;
-import modelo.ModeloPuntuacion;
-import modelo.ModeloTablaPuntuacion;
 import modelo.Nivel;
-import modelo.RepositorioEscenarios;
+import modelo.CatalogoPersonajes;
+import modelo.Arquetipo;
+import modelo.Escenario;
 import vista.VentanaPrincipal;
 import vista.VistaBatalla;
-import vista.VistaMazmorra;
 import vista.VistaMenu;
+import vista.VistaSeleccion;
+import vista.VistaMazmorra;
 
-/**
- * Controlador maestro (patrón Mediator).
- * Es el único que sabe en qué orden van las pantallas y gestiona las transiciones
- * dentro de la VentanaPrincipal con fundido a negro.
- */
 public class ControladorMaestro {
-    private static final int PUNTOS_POR_ENEMIGO = 100;
-
-    // Nombres de las pantallas dentro de la ventana
-    private static final String MENU = "menu";
-    private static final String MAZMORRA = "mazmorra";
-    private static final String BATALLA = "batalla";
-
-    // Modelos que viven toda la aplicación
-    private final ModeloTablaPuntuacion tablaPuntuaciones = new ModeloTablaPuntuacion();
-    private final RepositorioEscenarios repositorio = new RepositorioEscenarios();
-    private final CatalogoPersonajes catalogo = new CatalogoPersonajes();
-
-    // La única ventana del juego
-    private final VentanaPrincipal ventana = new VentanaPrincipal();
-
-    // Controladores de cada pantalla
-    private final ControladorMenu ctrlMenu;
-    private final ControladorMazmorra ctrlMazmorra;
-    private ControladorBatalla ctrlBatalla; // se crea uno nuevo en cada pelea
-
-    // Estado de la partida en curso
-    private Heroe heroe;
+    private final VentanaPrincipal ventana;
+    private final CatalogoPersonajes catalogo;
     private Nivel nivel;
-    private Arquetipo arquetipoElegido;
-    private int enemigosDerrotados;
+    private Heroe heroe;
+    
+    private ControladorMenu ctrlMenu;
+    private ControladorSeleccion ctrlSeleccion;
+    private ControladorMazmorra ctrlMazmorra;
+    private ControladorBatalla ctrlBatalla;
+
+    private static final String MENU = "MENU";
+    private static final String SELECCION = "SELECCION";
+    private static final String MAZMORRA = "MAZMORRA";
+    private static final String BATALLA = "BATALLA";
 
     public ControladorMaestro() {
-        ctrlMenu = new ControladorMenu(new VistaMenu(), tablaPuntuaciones, this);
-        ctrlMazmorra = new ControladorMazmorra(new VistaMazmorra(), this);
+        this.ventana = new VentanaPrincipal();
+        this.catalogo = new CatalogoPersonajes();
+        
+        VistaMenu vistaMenu = new VistaMenu();
+        VistaSeleccion vistaSeleccion = new VistaSeleccion();
+        VistaMazmorra vistaMazmorra = new VistaMazmorra();
 
-        ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
-        ventana.agregarPantalla(MENU, ctrlMenu.getVista());
-        ventana.agregarPantalla(MAZMORRA, ctrlMazmorra.getVista());
+        this.ctrlMenu = new ControladorMenu(vistaMenu, this);
+        this.ctrlSeleccion = new ControladorSeleccion(vistaSeleccion, this, catalogo);
+        this.ctrlMazmorra = new ControladorMazmorra(vistaMazmorra, this);
+
+        ventana.agregarPantalla(MENU, vistaMenu);
+        ventana.agregarPantalla(SELECCION, vistaSeleccion);
+        ventana.agregarPantalla(MAZMORRA, vistaMazmorra);
     }
 
     public void iniciar() {
-        ctrlMenu.mostrar();
         ventana.mostrarDirecto(MENU);
     }
 
-    // ---------- Navegación ----------
+    public void iniciarJuegoDesdeMenu() {
+        ctrlSeleccion.reiniciar();
+        ventana.cambiarPantalla(SELECCION, () -> {}, null);
+    }
 
-    private void irAMenu(Runnable alTerminar) {
-        ventana.cambiarPantalla(MENU, () -> {
-            cerrarBatalla();
-            ctrlMenu.mostrar();
-        }, alTerminar);
+    public void personajeSeleccionado(Arquetipo arquetipoElegido) {
+        this.heroe = catalogo.crearHeroe(arquetipoElegido);
+        
+        // Creamos los escenarios usando los métodos estáticos de Escenario.java
+        Escenario escenarioBosque = Escenario.salaNormal(
+            "bosque", 
+            "/recursos/mazmorra/bosque.png", 
+            "Te encuentras en los senderos oscuros del bosque.", 
+            "Ir por la senda izquierda.", 
+            "Seguir al frente entre los árboles.", 
+            "Tomar el sendero derecho."
+        );
+        
+        Escenario escenarioCatacumbas = Escenario.salaNormal(
+            "catacumbas", 
+            "/recursos/mazmorra/catacumbas.png", 
+            "El aire es pesado en las catacumbas.", 
+            "Bajar por el pasillo izquierdo.", 
+            "Continuar por el corredor principal.", 
+            "Explorar la cripta derecha."
+        );
+        
+        Escenario escenarioJefe = Escenario.salaDelJefe(
+            "jefe", 
+            "/recursos/mazmorra/jefe.png", 
+            "Has llegado a la cámara final.", 
+            "Enfrentar al Guardián de las Cenizas."
+        );
+
+        // Construimos el nivel con el Builder pasando las instancias de los escenarios
+        this.nivel = new Nivel.Builder("Senderos de las Cenizas")
+                .sala(escenarioBosque, "esclavo")
+                .sala(escenarioCatacumbas, "guardia_hueco")
+                .jefe(escenarioJefe, "guardian_cenizas")
+                .build();
+                
+        irAExploracion("¡Comienza tu aventura en los Senderos de las Cenizas!");
     }
 
     private void irAExploracion(String mensajePrevio) {
-        String encabezado = nivel.getNombre() + " — Sala " + nivel.getNumeroSala()
-                + " de " + nivel.getCantidadSalas()
-                + "   |   " + heroe.getNombre() + ": " + heroe.getVida() + " de vida";
+        String encabezado = nivel.getNombre() + " - Sala " + nivel.getNumeroSala() + 
+                " de " + nivel.getCantidadSalas() + 
+                " | " + heroe.getNombre() + ": " + heroe.getVida() + " de vida";
         String mensaje = mensajePrevio.isEmpty() ? encabezado : encabezado + "\n" + mensajePrevio;
 
         ventana.cambiarPantalla(MAZMORRA, () -> {
             cerrarBatalla();
             ctrlMazmorra.mostrar(nivel.getSalaActual().getEscenario(), mensaje);
         }, null);
+    }
+
+    public void avanzarSala() {
+        if (nivel.haySiguiente()) {
+            nivel.avanzar();
+            
+            if (nivel.getSalaActual().getIdEnemigo() != null && !nivel.getSalaActual().getIdEnemigo().isEmpty()) {
+                irABatalla();
+            } else {
+                irAExploracion("Avanzas sin contratiempos a la siguiente sala.");
+            }
+        } else {
+            ventana.cambiarPantalla(MENU, () -> {}, null);
+        }
+    }
+
+    public void caminoElegido(Camino camino) {
+        avanzarSala();
     }
 
     private void irABatalla() {
@@ -89,13 +132,13 @@ public class ControladorMaestro {
             Batalla batalla = new Batalla(heroe, enemigo);
             
             heroe.reiniciarTodasLasHabilidades();
-            ctrlBatalla = new ControladorBatalla(new VistaBatalla(arquetipoElegido, enemigo), batalla, this);
+            
+            ctrlBatalla = new ControladorBatalla(new VistaBatalla(), batalla, this);
             ventana.agregarPantalla(BATALLA, ctrlBatalla.getVista());
             ctrlBatalla.iniciar();
         }, null);
     }
 
-    /** Cada pelea tiene su propia vista: al salir se detiene y se saca de la ventana. */
     private void cerrarBatalla() {
         if (ctrlBatalla != null) {
             ctrlBatalla.cerrar();
@@ -104,53 +147,11 @@ public class ControladorMaestro {
         }
     }
 
-    // ---------- Avisos de los otros controladores ----------
-
-    /** Lo llama ControladorMenu (a través de la selección) al tocar "Comenzar". */
-    public void comenzarPartida(Arquetipo arquetipo) {
-        this.arquetipoElegido = arquetipo;
-        heroe = catalogo.crearHeroe(arquetipo);
-        nivel = repositorio.crearNivelUno();
-        enemigosDerrotados = 0;
-        irAExploracion("");
-    }
-
-    /** Lo llama ControladorMazmorra cuando el jugador hace clic en un cartel. */
-    public void caminoElegido(Camino camino) {
-        irABatalla();
-    }
-
-    /** Lo llama ControladorBatalla cuando alguien muere. */
     public void batallaTerminada(boolean ganoHeroe) {
-        if (!ganoHeroe) {
-            terminarPartida(false);
-            return;
-        }
-
-        enemigosDerrotados++;
-        if (nivel.haySiguiente()) {
-            nivel.avanzar();
-            irAExploracion("Venciste al enemigo y seguís avanzando.");
+        if (ganoHeroe) {
+            avanzarSala();
         } else {
-            terminarPartida(true);
+            ventana.cambiarPantalla(MENU, () -> {}, null);
         }
-    }
-
-    // ---------- Fin de la partida ----------
-
-    private void terminarPartida(boolean victoria) {
-        int puntos = enemigosDerrotados * PUNTOS_POR_ENEMIGO;
-        tablaPuntuaciones.agregar(new ModeloPuntuacion(heroe.getNombre(), puntos));
-
-        String mensaje = victoria
-                ? "¡Victoria! Derrotaste al jefe de " + nivel.getNombre() + ".\nPuntos: " + puntos
-                : "Caíste en la sala " + nivel.getNumeroSala() + " de " + nivel.getCantidadSalas()
-                  + ".\nPuntos: " + puntos;
-
-        heroe = null;
-        nivel = null;
-
-        // El mensaje aparece cuando el menú ya terminó de aclararse
-        irAMenu(() -> ctrlMenu.mostrarMensaje(mensaje));
     }
 }
