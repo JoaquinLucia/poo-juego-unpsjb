@@ -474,8 +474,13 @@ public class PanelSeleccionPersonaje extends PanelFondo {
         if (ruta == null) {
             return null;
         }
+        // Si la ruta no es absoluta desde recursos, se la agregamos
+        if (!ruta.startsWith("/")) {
+            ruta = "/recursos/" + ruta;
+        }
         URL url = PanelSeleccionPersonaje.class.getResource(ruta);
         if (url == null) {
+            System.err.println("No se encontró el recurso en la ruta: " + ruta);
             return null;
         }
         try {
