@@ -7,7 +7,7 @@ public enum Arquetipo {
         "Un veterano de las guerras antiguas cubierto de acero oxidado.",
         "Golpe Pesado: Un ataque demoledor que aturde al rival.",
         new int[]{5, 4, 3}, // Vida, Defensa, Ataque
-        "caballero.png"
+        "personajes/caballero.png"
     ),
     MAGO(
         "Mago",
@@ -15,7 +15,7 @@ public enum Arquetipo {
         "Estudioso de los fuegos primordiales y las artes olvidadas.",
         "Llamarada: Arrasa al enemigo con fuego puro.",
         new int[]{3, 2, 5},
-        "mago.png"
+        "personajes/mago.png"
     ),
     ARQUERO(
         "Arquero",
@@ -23,7 +23,7 @@ public enum Arquetipo {
         "Vigilante de los senderos oscuros con reflejos felinos.",
         "Disparo Certero: Una flecha rápida que nunca falla.",
         new int[]{4, 3, 4},
-        "arquero.png"
+        "personajes/arquero.png"
     );
 
     private final String nombre;
