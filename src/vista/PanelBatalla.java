@@ -13,12 +13,11 @@ public class PanelBatalla extends JPanel {
     private final JLabel nombreHeroe;
     private final JLabel nombreEnemigo;
     
-    // Bandera para saber si es el inicio de la pelea (y no hacer la animación de llenado)
     private boolean primeraVez = true;
 
     public PanelBatalla() {
         // Carga segura de la imagen de fondo
-        URL urlFondo = getClass().getResource("/recursos/pantalla_de_combate.jpg");
+        URL urlFondo = getClass().getResource("/recursos/batalla/pantalla_de_combate.jpg");
         if (urlFondo != null) {
             imagen = new ImageIcon(urlFondo).getImage();
         }
@@ -72,12 +71,11 @@ public class PanelBatalla extends JPanel {
         nombreHeroe.setText(nomHeroe.toUpperCase());
         nombreEnemigo.setText(nomEnemigo.toUpperCase());
 
-        // Si el héroe tiene más vida que el máximo de la barra (ej: Caballero con 600), ajustamos el tope
-        if (vidaHeroe.getMaximum() == 100 && hpHeroe > 100) vidaHeroe.setMaximum(hpHeroe);
-        if (vidaEnemigo.getMaximum() == 100 && hpEnemigo > 100) vidaEnemigo.setMaximum(hpEnemigo);
-
         if (primeraVez) {
-            // Setear instantáneamente al iniciar la pelea
+            // Fija el tope EXACTO de la barra con la vida con la que inician la pelea
+            vidaHeroe.setMaximum(Math.max(1, hpHeroe));
+            vidaEnemigo.setMaximum(Math.max(1, hpEnemigo));
+
             vidaHeroe.setValue(Math.max(0, hpHeroe));
             vidaHeroe.setString(Math.max(0, hpHeroe) + " HP");
             
@@ -86,30 +84,32 @@ public class PanelBatalla extends JPanel {
             
             primeraVez = false;
         } else {
-            // Llamar a la animación suave durante el combate
+            // Si alguien se cura por encima de su límite original, empujamos el tope visual
+            if (hpHeroe > vidaHeroe.getMaximum()) vidaHeroe.setMaximum(hpHeroe);
+            if (hpEnemigo > vidaEnemigo.getMaximum()) vidaEnemigo.setMaximum(hpEnemigo);
+
+            // Animación suave durante el combate
             animarBarraVida(vidaHeroe, Math.max(0, hpHeroe));
             animarBarraVida(vidaEnemigo, Math.max(0, hpEnemigo));
         }
     }
 
     private void animarBarraVida(JProgressBar barra, int nuevaVida) {
-        // Aumentamos el tiempo a 30 milisegundos para ralentizar la animación general
         Timer timer = new Timer(30, null);
         timer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int valorActual = barra.getValue();
                 
-                // Dividimos por 30 (antes 10) para que reste fragmentos más pequeños y tarde más en llegar
                 int diferencia = Math.abs(valorActual - nuevaVida);
                 int paso = Math.max(1, diferencia / 30); 
 
                 if (valorActual > nuevaVida) {
-                    barra.setValue(Math.max(nuevaVida, valorActual - paso)); // Resta vida lentamente
+                    barra.setValue(Math.max(nuevaVida, valorActual - paso)); 
                 } else if (valorActual < nuevaVida) {
-                    barra.setValue(Math.min(nuevaVida, valorActual + paso)); // Suma vida lentamente
+                    barra.setValue(Math.min(nuevaVida, valorActual + paso)); 
                 } else {
-                    ((Timer) e.getSource()).stop(); // Se detiene exacto en el valor
+                    ((Timer) e.getSource()).stop(); 
                 }
                 
                 barra.setString(barra.getValue() + " HP");

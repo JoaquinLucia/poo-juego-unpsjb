@@ -32,6 +32,12 @@ public class ControladorBatalla {
             }
         });
 
+        this.vista.onDefenderse(e -> {
+            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
+                accionJugador_Defender(); 
+            }
+        });
+
         this.vista.onHabilidad(e -> {
             if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
                 accionJugador_Habilidad();
@@ -42,7 +48,7 @@ public class ControladorBatalla {
         actualizarVista();
     }
 
-    /** Prepara el mensaje inicial de la pelea (el maestro se encarga de mostrar la pantalla). */
+    /** Prepara el mensaje inicial de la pelea. */
     public void iniciar() {
         vista.mostrarResultado("¡Un " + batalla.getEnemigo().getNombre() + " se interpone en tu camino!");
     }
@@ -74,10 +80,19 @@ public class ControladorBatalla {
     private void accionJugador_Atacar() {
         batalla.getHeroe().atacar(batalla.getEnemigo());
         vista.mostrarResultado(batalla.getHeroe().getNombre() + " asestó un golpe básico!");
-        
-        vista.efectoTemblor(); // Hace temblar la pantalla un poquito
-        
+        vista.efectoTemblor(); 
         finalizarTurnoJugador();
+    }
+
+    public void accionJugador_Defender() {
+        Entidad heroe = batalla.getHeroe();
+        heroe.setDefendiendo(true);
+        vista.setBotonesHabilitados(false);
+        vista.mostrarResultado(heroe.getNombre() + " adopta una postura defensiva.");
+        
+        Timer timer = new Timer(1500, ev -> turnoEnemigo());
+        timer.setRepeats(false);
+        timer.start();
     }
 
     private void accionJugador_Habilidad() {
@@ -87,9 +102,7 @@ public class ControladorBatalla {
             if (hab.getCdListo()) {
                 hab.ejecutarHabilidad(batalla.getHeroe(), batalla.getEnemigo());
                 vista.mostrarResultado("¡" + batalla.getHeroe().getNombre() + " usó " + hab.getNombreHabilidad() + "!");
-                
-                vista.efectoTemblor(); // Tiembla cuando usás la habilidad
-                
+                vista.efectoTemblor(); 
                 finalizarTurnoJugador();
             } else {
                 vista.mostrarResultado("Habilidad en enfriamiento (" + hab.getCooldownActual() + " turnos)");
@@ -101,31 +114,27 @@ public class ControladorBatalla {
 
     private void finalizarTurnoJugador() {
         actualizarVista();
-        vista.setBotonesHabilitados(false); // Bloqueamos los botones para no hacer trampa
+        vista.setBotonesHabilitados(false); 
         
         reducirCooldowns(batalla.getHeroe());
 
         if (!batalla.getEnemigo().estaVivo()) {
             vista.mostrarResultado("¡Victoria! Has derrotado al " + batalla.getEnemigo().getNombre());
             terminarBatalla(true);
-            return; // Acá termina la pelea
+            return; 
         }
 
-        // Si el enemigo sigue vivo, chequeamos si lo aturdiste con la habilidad
         if (batalla.getEnemigo().getaturdir()) {
             vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " está aturdido y pierde su turno.");
             batalla.getEnemigo().sacarAturdimiento(); 
             
-            // Pausa cortita y te devuelve el turno a vos
             Timer timerRecuperacion = new Timer(1500, e -> {
                 vista.setBotonesHabilitados(true);
                 vista.mostrarResultado("¡Es tu turno!");
             });
             timerRecuperacion.setRepeats(false);
             timerRecuperacion.start();
-            
         } else {
-            // Si no está aturdido, arranca el timer del enemigo para que te devuelva el golpe
             this.timerEnemigo.start();
         }
     }
@@ -133,22 +142,65 @@ public class ControladorBatalla {
     private void turnoEnemigo() {
         if (!batalla.getEnemigo().estaVivo()) return;
 
-        batalla.getEnemigo().atacar(batalla.getHeroe());
-        vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " te atacó ferozmente.");
-        
+        Entidad enemigo = batalla.getEnemigo();
+        Entidad heroe = batalla.getHeroe();
+
+        if (enemigo.getaturdir()) {
+            vista.mostrarResultado(enemigo.getNombre() + " está aturdido y pierde su turno.");
+            enemigo.sacarAturdimiento();
+            reducirCooldowns(enemigo);
+            actualizarVista();
+            
+            Timer timerAturdido = new Timer(2000, e -> {
+                vista.setBotonesHabilitados(true);
+                vista.mostrarResultado("¡Es tu turno!");
+            });
+            timerAturdido.setRepeats(false);
+            timerAturdido.start();
+            return;
+        }
+
+        boolean usoHabilidad = false;
+        for (Habilidad hab : enemigo.getHabilidades()) {
+            if (hab.getCdListo()) {
+                hab.ejecutarHabilidad(enemigo, heroe);
+                vista.mostrarResultado("¡" + enemigo.getNombre() + " usó " + hab.getNombreHabilidad() + "!");
+                usoHabilidad = true;
+                break;
+            }
+        }
+
+        if (!usoHabilidad) {
+            enemigo.atacar(heroe);
+            vista.mostrarResultado("El " + enemigo.getNombre() + " te atacó ferozmente.");
+        }
+
         vista.efectoTemblor();
-        
-        reducirCooldowns(batalla.getEnemigo());
-        
+        reducirCooldowns(enemigo);
         actualizarVista();
 
-        if (!batalla.getHeroe().estaVivo()) {
-            vista.mostrarResultado("¡Has sido derrotado por el " + batalla.getEnemigo().getNombre() + "!");
-            terminarBatalla(false);
-        } else {
-            vista.setBotonesHabilitados(true); // Te devuelve los botones
-            vista.mostrarResultado("¡Es tu turno!");
-        }
+        Timer timerEspera = new Timer(2500, e -> {
+            if (!heroe.estaVivo()) {
+                vista.mostrarResultado("¡Has sido derrotado por el " + enemigo.getNombre() + "!");
+                terminarBatalla(false);
+            } else {
+                if (heroe.getaturdir()) {
+                    vista.mostrarResultado("¡Estás aturdido! Pierdes tu turno.");
+                    heroe.sacarAturdimiento();
+                    reducirCooldowns(heroe);
+                    
+                    Timer timerDobleAtaque = new Timer(2000, ev -> turnoEnemigo());
+                    timerDobleAtaque.setRepeats(false);
+                    timerDobleAtaque.start();
+                } else {
+                    heroe.setDefendiendo(false); 
+                    vista.setBotonesHabilitados(true); 
+                    vista.mostrarResultado("¡Es tu turno!");
+                }
+            }
+        });
+        timerEspera.setRepeats(false);
+        timerEspera.start();
     }
     
     private void reducirCooldowns(Entidad entidad) {

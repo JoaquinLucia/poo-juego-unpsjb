@@ -17,15 +17,8 @@ import vista.VistaMenu;
 
 /**
  * Controlador maestro (patrón Mediator).
- *
- * Es el único que sabe en qué orden van las pantallas:
- *   Menú → Selección → [Exploración → Batalla] x salas → Victoria / Derrota → Menú
- *
- * Los demás controladores no se conocen entre sí: cuando terminan lo suyo,
- * le avisan al maestro y él decide qué pantalla sigue.
- *
- * Todas las pantallas viven en una sola VentanaPrincipal; el maestro cambia
- * de una a otra con un fundido a negro.
+ * Es el único que sabe en qué orden van las pantallas y gestiona las transiciones
+ * dentro de la VentanaPrincipal con fundido a negro.
  */
 public class ControladorMaestro {
     private static final int PUNTOS_POR_ENEMIGO = 100;
@@ -51,6 +44,7 @@ public class ControladorMaestro {
     // Estado de la partida en curso
     private Heroe heroe;
     private Nivel nivel;
+    private Arquetipo arquetipoElegido;
     private int enemigosDerrotados;
 
     public ControladorMaestro() {
@@ -68,8 +62,6 @@ public class ControladorMaestro {
     }
 
     // ---------- Navegación ----------
-    // Todo lo que va dentro de "preparar" se ejecuta con la pantalla en negro,
-    // así el jugador no ve cómo se arma la pantalla nueva.
 
     private void irAMenu(Runnable alTerminar) {
         ventana.cambiarPantalla(MENU, () -> {
@@ -95,7 +87,9 @@ public class ControladorMaestro {
             cerrarBatalla();
             Enemigo enemigo = catalogo.crearEnemigo(nivel.getSalaActual().getIdEnemigo());
             Batalla batalla = new Batalla(heroe, enemigo);
-            ctrlBatalla = new ControladorBatalla(new VistaBatalla(), batalla, this);
+            
+            heroe.reiniciarTodasLasHabilidades();
+            ctrlBatalla = new ControladorBatalla(new VistaBatalla(arquetipoElegido, enemigo), batalla, this);
             ventana.agregarPantalla(BATALLA, ctrlBatalla.getVista());
             ctrlBatalla.iniciar();
         }, null);
@@ -114,6 +108,7 @@ public class ControladorMaestro {
 
     /** Lo llama ControladorMenu (a través de la selección) al tocar "Comenzar". */
     public void comenzarPartida(Arquetipo arquetipo) {
+        this.arquetipoElegido = arquetipo;
         heroe = catalogo.crearHeroe(arquetipo);
         nivel = repositorio.crearNivelUno();
         enemigosDerrotados = 0;

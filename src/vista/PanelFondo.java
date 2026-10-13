@@ -1,14 +1,13 @@
 package vista;
 
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
-
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.LayoutManager;
 import java.awt.RenderingHints;
 import java.net.URL;
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
 
 // Panel que dibuja una imagen de fondo (GIF animado incluido) cubriendo todo su tamaño.
 public class PanelFondo extends JPanel {
@@ -22,7 +21,7 @@ public class PanelFondo extends JPanel {
             System.err.println("No se encontró el fondo: " + rutaRecurso);
             imagen = null;
         } else {
-            // Se carga con ImageIcon (no con ImageIO) para que el GIF conserve la animación
+            // Se carga con ImageIcon para que el GIF conserve la animación
             imagen = new ImageIcon(url).getImage();
         }
     }
@@ -40,8 +39,8 @@ public class PanelFondo extends JPanel {
             return; // todavía se está cargando
         }
 
-        // Modo "cover": escala manteniendo la proporción y recorta lo que sobra,
-        // así el fondo no se deforma al pasar a pantalla completa
+        // Modo "cover": escala manteniendo la proporción y centra la imagen,
+        // así el fondo no se deforma al cambiar el tamaño de la ventana
         double escala = Math.max(
                 getWidth() / (double) anchoImagen,
                 getHeight() / (double) altoImagen);
@@ -53,6 +52,7 @@ public class PanelFondo extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        
         // Pasar "this" como observador hace que el panel se repinte en cada cuadro del GIF
         g2.drawImage(imagen, x, y, ancho, alto, this);
         g2.dispose();

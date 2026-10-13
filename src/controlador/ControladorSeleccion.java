@@ -14,17 +14,12 @@ import modelo.Arquetipo;
 import modelo.ModeloMenu;
 import vista.PanelSeleccionPersonaje;
 import vista.PanelSeleccionPersonaje.Zona;
-
 import controlador.utilidades.GestorDeSonido;
 
 /**
  * Controles de la pantalla de selección de personaje.
- *
  * Escucha el teclado y el mouse sobre el panel, actualiza el modelo y le dice
- * a la vista qué mostrar. La vista no toma decisiones: solo dibuja e informa
- * qué hay bajo el puntero.
- *
- * Teclas: Enter / Espacio comenzar, Esc volver, ← → (o A / D) cambiar de personaje.
+ * a la vista qué mostrar.
  */
 public class ControladorSeleccion {
 
@@ -56,21 +51,21 @@ public class ControladorSeleccion {
 
     private void mover(int direccion) {
         if (modelo.getCantidadPersonajes() > 1) {
-            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");// <--- sonido de click al mover
+            GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al mover
             modelo.moverSeleccion(direccion);
             actualizarVista();
         }
     }
 
     private void confirmar() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al confirmar
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al confirmar
         Arquetipo elegido = modelo.getPersonajeActual();
         modelo.setPersonajeElegido(elegido);
         alConfirmar.accept(elegido);
     }
 
     private void volver() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al volver
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al volver
         alVolver.run();
     }
 
@@ -96,7 +91,6 @@ public class ControladorSeleccion {
         am.put(nombre, new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Con CardLayout el panel sigue en la ventana aunque esté oculto
                 if (panel.isShowing()) {
                     accion.run();
                 }
@@ -117,7 +111,7 @@ public class ControladorSeleccion {
             public void mouseClicked(MouseEvent e) {
                 switch (panel.zonaEn(e.getPoint())) {
                     case COMENZAR:   confirmar(); break;
-                    case VOLVER:     volver();    break;
+                    case VOLVER:    volver();    break;
                     case FLECHA_IZQ: mover(-1);   break;
                     case FLECHA_DER: mover(+1);   break;
                     default:         break;

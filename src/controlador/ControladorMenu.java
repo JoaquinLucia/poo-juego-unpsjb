@@ -7,7 +7,6 @@ import modelo.ModeloMenu;
 import modelo.ModeloTablaPuntuacion;
 import vista.VistaMenu;
 import vista.VistaPuntuaciones;
-
 import controlador.utilidades.GestorDeSonido;
 
 public class ControladorMenu {
@@ -29,7 +28,7 @@ public class ControladorMenu {
         this.controladorSeleccion = new ControladorSeleccion(
             modeloMenu,
             vista.getPanelSeleccion(),
-            () -> vista.mostrarMenu(),                                  // "Volver"
+            () -> vista.mostrarMenu(),                            // "Volver"
             (arquetipoElegido) -> maestro.comenzarPartida(arquetipoElegido) // "Comenzar"
         );
 
@@ -38,8 +37,6 @@ public class ControladorMenu {
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());
         vista.onSalir(e -> salir());
-
-
     }
 
     /** Deja el menú principal en primer plano (al iniciar o al volver de una partida). */
@@ -56,13 +53,13 @@ public class ControladorMenu {
     }
 
     private void iniciarSeleccionPersonaje() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al iniciar la selección
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al iniciar selección
         controladorSeleccion.entrar();
         vista.mostrarSeleccion();
     }
 
     private void mostrarPuntuaciones() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al mostrar puntuaciones
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al ver puntuaciones
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         VistaPuntuaciones modal = new VistaPuntuaciones(ventana);
         modal.cargarPuntuaciones(tablaPuntuaciones.getPuntuacionesOrdenadas());
@@ -70,12 +67,12 @@ public class ControladorMenu {
     }
 
     private void mostrarOpciones() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al mostrar opciones
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido en opciones
         vista.mostrarMensaje("Opciones (próximamente)");
     }
 
     private void salir() {
-        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // <--- sonido de click al salir
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // Sonido al salir
         if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
             System.exit(0);
         }

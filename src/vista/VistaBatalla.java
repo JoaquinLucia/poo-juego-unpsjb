@@ -7,8 +7,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 /**
- * Pantalla de combate. Es un panel dentro de VentanaPrincipal
- * (ya no abre una ventana propia).
+ * Pantalla de combate. Es un panel dentro de VentanaPrincipal.
  */
 public class VistaBatalla extends JPanel {
     private final PanelBatalla panelFondo;
@@ -72,5 +71,9 @@ public class VistaBatalla extends JPanel {
 
     public void onHabilidad(ActionListener listener) {
         panelInferior.getBotonHabilidad().addActionListener(listener);
+    }
+
+    public void onDefenderse(ActionListener listener) {
+        panelInferior.getBotonDefenderse().addActionListener(listener);
     }
 }

@@ -11,7 +11,6 @@ import vista.VistaMazmorra;
 /**
  * Pantalla de exploración. Muestra el escenario que le indica el maestro
  * y, cuando el jugador elige un camino, le avisa al maestro.
- * No sabe qué pasa después (eso lo decide el ControladorMaestro).
  */
 public class ControladorMazmorra {
     private final VistaMazmorra vista;
@@ -22,7 +21,7 @@ public class ControladorMazmorra {
         this.maestro = maestro;
     }
 
-    /** Carga un escenario en la vista. mensajePrevio se antepone en el log (puede ser vacío). */
+    /** Muestra un escenario. mensajePrevio se antepone en el log (puede ser vacío). */
     public void mostrar(Escenario escenario, String mensajePrevio) {
         vista.limpiarCarteles();
         vista.cambiarFondo(escenario.getRutaImagen());
@@ -56,5 +55,9 @@ public class ControladorMazmorra {
 
     public VistaMazmorra getVista() {
         return vista;
+    }
+
+    public void ocultar() {
+        // En caso de requerirse ocultar o manejar visibilidad directa
     }
 }

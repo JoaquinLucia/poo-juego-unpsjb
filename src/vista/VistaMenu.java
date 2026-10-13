@@ -7,7 +7,6 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -27,14 +26,13 @@ import javax.swing.SwingConstants;
 
 /**
  * Pantalla del menú principal y de la selección de personaje.
- * Es un panel dentro de VentanaPrincipal (ya no es una ventana propia).
+ * Es un panel dentro de VentanaPrincipal.
  */
 public class VistaMenu extends JPanel {
 
     private static final String RUTA_IMAGENES = "/recursos/imagenes_menu/";
 
-    // El diseño es de 800x600 (escala 1); VentanaPrincipal calcula el factor
-    // para la pantalla real y lo pasa a aplicarEscala().
+    // El diseño es de 800x600 (escala 1)
     private static final double ESCALA_IMAGENES = 0.7; // tamaño de los PNG en modo ventana
     private static final int SEPARACION_BOTONES = 12;
     private static final int SEPARACION_LOGO = 25;
@@ -49,7 +47,7 @@ public class VistaMenu extends JPanel {
     private final JButton salir = crearBoton("Salir");
     private final JButton[] botones = {comenzar, ranking, opciones, salir};
 
-    // --- NUEVAS VARIABLES PARA LA SELECCIÓN DE PERSONAJE ---
+    // --- VARIABLES PARA LA SELECCIÓN DE PERSONAJE ---
     private static final String PANTALLA_SELECCION = "seleccion";
     private final PanelSeleccionPersonaje panelSeleccion = new PanelSeleccionPersonaje();
 
@@ -91,8 +89,7 @@ public class VistaMenu extends JPanel {
         contenido.add(logo, BorderLayout.NORTH);
         contenido.add(panelBotones, BorderLayout.CENTER);
 
-        // GridBagLayout sin "fill" respeta el tamaño preferido del contenido
-        // y lo centra: por eso los botones no se estiran con la ventana.
+        // GridBagLayout sin "fill" respeta el tamaño preferido del contenido y lo centra
         PanelFondo fondo = new PanelFondo("/recursos/imagenes_menu/fondo.gif", new GridBagLayout());
         fondo.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         fondo.add(contenido);
@@ -103,7 +100,6 @@ public class VistaMenu extends JPanel {
 
     private JButton crearBoton (String texto) { 
         JButton boton = new JButton(texto);
-        // Sin el aspecto de Swing: solo se ve la imagen
         boton.setFocusPainted(false);
         boton.setContentAreaFilled(false);
         boton.setBorderPainted(false);
@@ -137,14 +133,15 @@ public class VistaMenu extends JPanel {
         int alto = Math.max(1, (int) Math.round(original.getHeight() * factor));
         BufferedImage escalada = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = escalada.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
         g.drawImage(original, 0, 0, ancho, alto, null);
         g.dispose();
         return escalada;
     }
 
-    // factor > 1 aclara, factor < 1 oscurece (la transparencia no se toca)
     private static BufferedImage ajustarBrillo(BufferedImage imagen, float factor) {
         RescaleOp op = new RescaleOp(
                 new float[]{factor, factor, factor, 1f},
@@ -166,14 +163,14 @@ public class VistaMenu extends JPanel {
 
         for (int i = 0; i < botones.length; i++) {
             if (imagenesBotones[i] == null) {
-                continue; // queda el texto
+                continue; 
             }
             BufferedImage imagen = escalar(imagenesBotones[i], factor);
             JButton boton = botones[i];
             boton.setText(null);
             boton.setIcon(new ImageIcon(imagen));
-            boton.setRolloverIcon(new ImageIcon(ajustarBrillo(imagen, 1.2f))); // mouse encima
-            boton.setPressedIcon(new ImageIcon(ajustarBrillo(imagen, 0.8f)));  // al hacer clic
+            boton.setRolloverIcon(new ImageIcon(ajustarBrillo(imagen, 1.2f))); 
+            boton.setPressedIcon(new ImageIcon(ajustarBrillo(imagen, 0.8f)));  
         }
 
         Dimension espacio = new Dimension(0, (int) Math.round(SEPARACION_BOTONES * escala));

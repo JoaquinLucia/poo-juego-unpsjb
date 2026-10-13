@@ -28,7 +28,7 @@ import javax.swing.JTextArea;
 
 /**
  * Pantalla de exploración: imagen de fondo, flechas encima y log abajo.
- * Es un panel dentro de VentanaPrincipal (ya no es una ventana propia).
+ * Es un panel dentro de VentanaPrincipal.
  * Solo muestra lo que le pide el controlador; no tiene lógica del juego.
  */
 public class VistaMazmorra extends JPanel {
@@ -37,7 +37,6 @@ public class VistaMazmorra extends JPanel {
     private static final int ALTO_CARTEL = 38;
 
     // Con el panel de 1000 px de alto, las flechas se dibujan al 75% de su tamaño.
-    // Si las querés más grandes o más chicas, cambiá este número.
     private static final double TAMANO_FLECHAS = 0.75;
 
     private Image fondo;
@@ -94,7 +93,6 @@ public class VistaMazmorra extends JPanel {
         JScrollPane scrollLog = new JScrollPane(txtLog);
         scrollLog.setBorder(BorderFactory.createLineBorder(new Color(135, 105, 58), 3));
         add(scrollLog, BorderLayout.SOUTH);
-
     }
 
     // ---------- Lo que usa el controlador ----------
@@ -223,7 +221,7 @@ public class VistaMazmorra extends JPanel {
     // factor > 1 aclara, factor < 1 oscurece (la transparencia no se toca)
     private static BufferedImage ajustarBrillo(BufferedImage imagen, float factor) {
         RescaleOp op = new RescaleOp(new float[]{factor, factor, factor, 1f},
-                                     new float[]{0f, 0f, 0f, 0f}, null);
+                                    new float[]{0f, 0f, 0f, 0f}, null);
         return op.filter(imagen, null);
     }
 
@@ -246,7 +244,7 @@ public class VistaMazmorra extends JPanel {
         }
     }
 
-    /** Busca en el classpath y, si no está, como archivo (para VS Code). */
+    /** Busca en el classpath y, si não está, como archivo (para VS Code). */
     private URL buscarRecurso(String ruta) {
         URL url = getClass().getResource(ruta);
         if (url != null) {

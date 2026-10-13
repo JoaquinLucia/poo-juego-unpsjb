@@ -8,13 +8,15 @@ public class HabilidadRoboVida extends Habilidad {
 
     @Override
     public void ejecutarHabilidad(Entidad lanzador, Entidad objetivo) {
+        int valor = getValorBase();
+        
         // 1. Causamos daño al objetivo
-        objetivo.recibirDanio(getValorBase());
+        objetivo.recibirDanio(valor);
         
-        // 2. Curamos al lanzador usando tu método existente sumarVida()
-        lanzador.sumarVida(getValorBase());
+        // 2. Curamos al lanzador con la misma cantidad de vida robada
+        lanzador.sumarVida(valor);
         
-        // 3. Activamos el enfriamiento
+        // 3. Activamos el enfriamiento de la habilidad
         activarcooldown();
     }
 }
