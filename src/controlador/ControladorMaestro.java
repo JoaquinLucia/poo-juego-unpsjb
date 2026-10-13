@@ -35,6 +35,9 @@ public class ControladorMaestro {
         this.catalogo = new CatalogoPersonajes();
         
         VistaMenu vistaMenu = new VistaMenu();
+        // Aplicamos la escala obtenida de la ventana principal para cargar las imágenes de los botones del menú
+        vistaMenu.aplicarEscala(ventana.getEscala());
+
         VistaSeleccion vistaSeleccion = new VistaSeleccion();
         VistaMazmorra vistaMazmorra = new VistaMazmorra();
 
@@ -117,6 +120,8 @@ public class ControladorMaestro {
                 irAExploracion("Avanzas sin contratiempos a la siguiente sala.");
             }
         } else {
+            // Al volver al menú principal, refrescamos la escala de los botones por si acaso
+            ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
             ventana.cambiarPantalla(MENU, () -> {}, null);
         }
     }
@@ -151,6 +156,7 @@ public class ControladorMaestro {
         if (ganoHeroe) {
             avanzarSala();
         } else {
+            ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
             ventana.cambiarPantalla(MENU, () -> {}, null);
         }
     }
