@@ -21,7 +21,7 @@ public class CatalogoPersonajes {
         heroes.put("CABALLERO", () -> new Heroe.Builder("Caballero")
                 .vida(600).ataque(35)
                 .maxHabilidades(1) 
-                .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 70, 3))
+                .habilidad(new HabilidadGolpe("Embestida", "Golpe con el escudo", 170, 1))
                 .build());
 
         // EL MAGO: Solo curación
@@ -35,7 +35,7 @@ public class CatalogoPersonajes {
         heroes.put("ARQUERO", () -> new Heroe.Builder("Arquero")
                 .vida(450).ataque(45)
                 .maxHabilidades(1)
-                .habilidad(new HabilidadGolpe("Lluvia de Flechas", "Daño ráfaga", 80, 2))
+                .habilidad(new HabilidadGolpe("Lluvia de Flechas", "Daño ráfaga", 110, 2))
                 .build());
     }
 

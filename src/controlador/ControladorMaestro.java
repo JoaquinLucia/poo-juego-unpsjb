@@ -35,7 +35,6 @@ public class ControladorMaestro {
         this.catalogo = new CatalogoPersonajes();
         
         VistaMenu vistaMenu = new VistaMenu();
-        // Aplicamos la escala obtenida de la ventana principal para cargar las imágenes de los botones del menú
         vistaMenu.aplicarEscala(ventana.getEscala());
 
         VistaSeleccion vistaSeleccion = new VistaSeleccion();
@@ -59,45 +58,6 @@ public class ControladorMaestro {
         ventana.cambiarPantalla(SELECCION, () -> {}, null);
     }
 
-    public void personajeSeleccionado(Arquetipo arquetipoElegido) {
-        this.heroe = catalogo.crearHeroe(arquetipoElegido);
-        
-        // Creamos los escenarios usando los métodos estáticos de Escenario.java
-        Escenario escenarioBosque = Escenario.salaNormal(
-            "bosque", 
-            "/recursos/mazmorra/bosque.png", 
-            "Te encuentras en los senderos oscuros del bosque.", 
-            "Ir por la senda izquierda.", 
-            "Seguir al frente entre los árboles.", 
-            "Tomar el sendero derecho."
-        );
-        
-        Escenario escenarioCatacumbas = Escenario.salaNormal(
-            "catacumbas", 
-            "/recursos/mazmorra/catacumbas.png", 
-            "El aire es pesado en las catacumbas.", 
-            "Bajar por el pasillo izquierdo.", 
-            "Continuar por el corredor principal.", 
-            "Explorar la cripta derecha."
-        );
-        
-        Escenario escenarioJefe = Escenario.salaDelJefe(
-            "jefe", 
-            "/recursos/mazmorra/jefe.png", 
-            "Has llegado a la cámara final.", 
-            "Enfrentar al Guardián de las Cenizas."
-        );
-
-        // Construimos el nivel con el Builder pasando las instancias de los escenarios
-        this.nivel = new Nivel.Builder("Senderos de las Cenizas")
-                .sala(escenarioBosque, "esclavo")
-                .sala(escenarioCatacumbas, "guardia_hueco")
-                .jefe(escenarioJefe, "guardian_cenizas")
-                .build();
-                
-        irAExploracion("¡Comienza tu aventura en los Senderos de las Cenizas!");
-    }
-
     private void irAExploracion(String mensajePrevio) {
         String encabezado = nivel.getNombre() + " - Sala " + nivel.getNumeroSala() + 
                 " de " + nivel.getCantidadSalas() + 
@@ -110,35 +70,36 @@ public class ControladorMaestro {
         }, null);
     }
 
-    public void avanzarSala() {
-        if (nivel.haySiguiente()) {
-            nivel.avanzar();
-            
-            if (nivel.getSalaActual().getIdEnemigo() != null && !nivel.getSalaActual().getIdEnemigo().isEmpty()) {
-                irABatalla();
-            } else {
-                irAExploracion("Avanzas sin contratiempos a la siguiente sala.");
-            }
-        } else {
-            // Al volver al menú principal, refrescamos la escala de los botones por si acaso
-            ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
-            ventana.cambiarPantalla(MENU, () -> {}, null);
-        }
-    }
-
-    public void caminoElegido(Camino camino) {
-        avanzarSala();
-    }
-
     private void irABatalla() {
         ventana.cambiarPantalla(BATALLA, () -> {
             cerrarBatalla();
+            
+            // Creamos el enemigo de la sala actual
             Enemigo enemigo = catalogo.crearEnemigo(nivel.getSalaActual().getIdEnemigo());
             Batalla batalla = new Batalla(heroe, enemigo);
             
             heroe.reiniciarTodasLasHabilidades();
             
-            ctrlBatalla = new ControladorBatalla(new VistaBatalla(), batalla, this);
+            VistaBatalla vistaBatalla = new VistaBatalla();
+            
+            // Determinamos la ruta del retrato del héroe según su nombre o arquetipo
+            String rutaHeroeImg = "/recursos/Artorias.jpg"; 
+            if (heroe.getNombre().equalsIgnoreCase("Mago")) {
+                rutaHeroeImg = "/recursos/mago.png"; 
+            } else if (heroe.getNombre().equalsIgnoreCase("Arquero")) {
+                rutaHeroeImg = "/recursos/arquero_icono.png"; 
+            }
+            
+            // Extraemos la ruta del enemigo directamente desde el modelo del enemigo creado
+            String rutaEnemigoImg = enemigo.getRutaImagen();
+            if (rutaEnemigoImg == null || rutaEnemigoImg.isEmpty()) {
+                rutaEnemigoImg = "/recursos/Esclavo.jpg"; // Valor por defecto de seguridad
+            }
+
+            // Actualizamos los retratos inferiores en la vista de batalla
+            vistaBatalla.actualizarRetratos(rutaHeroeImg, rutaEnemigoImg);
+            
+            ctrlBatalla = new ControladorBatalla(vistaBatalla, batalla, this);
             ventana.agregarPantalla(BATALLA, ctrlBatalla.getVista());
             ctrlBatalla.iniciar();
         }, null);
@@ -152,9 +113,88 @@ public class ControladorMaestro {
         }
     }
 
+    public void personajeSeleccionado(Arquetipo arquetipoElegido) {
+        this.heroe = catalogo.crearHeroe(arquetipoElegido);
+        
+        // Creamos los escenarios para cada zona de la mazmorra
+        Escenario escenarioBosque = Escenario.salaNormal(
+            "bosque", 
+            "/recursos/mazmorra/bosque.gif", 
+            "Te encuentras en los senderos oscuros del bosque.", 
+            "Ir por la senda izquierda.", 
+            "Seguir al frente entre los árboles.", 
+            "Tomar el sendero derecho."
+        );
+        
+        Escenario escenarioCatacumbas = Escenario.salaNormal(
+            "mazmorraa", 
+            "/recursos/mazmorra/mazmorra.gif", 
+            "El aire es pesado en las catacumbas.", 
+            "Bajar por el pasillo izquierdo.", 
+            "Continuar por el corredor principal.", 
+            "Explorar la cripta derecha."
+        );
+        
+        Escenario escenarioCueva = Escenario.salaNormal(
+            "cueva", 
+            "/recursos/mazmorra/cueva.gif", 
+            "Te adentras en una profunda cueva rocosa.", 
+            "Tomar la grieta angosta.", 
+            "Avanzar por el centro.", 
+            "Subir por las rocas."
+        );
+        
+        Escenario escenarioJefe = Escenario.salaDelJefe(
+            "jefe", 
+            "/recursos/mazmorra/jefe_puerta.gif", 
+            "Has llegado a la cámara final.", 
+            "Enfrentar al Guardián de las Cenizas."
+        );
+
+        // Construimos el nivel con los 3 enemigos y el jefe final en orden
+        this.nivel = new Nivel.Builder("Senderos de las Cenizas")
+                .sala(escenarioBosque, "esclavo")         // 1. Bruto de las Estepas (¡Primer combate!)
+                .sala(escenarioCatacumbas, "guardia_hueco") // 2. Víbora del Foso
+                .sala(escenarioCueva, "sacerdotisa")      // 3. Viuda de Sangre
+                .jefe(escenarioJefe, "guardian_cenizas")    // 4. Guardia Infernal (Jefe)
+                .build();
+                
+        // Al comenzar, entramos directamente a la batalla contra el Bruto de las Estepas en la Sala 1
+        irABatalla();
+    }
+
+    public void avanzarSala() {
+        if (nivel.haySiguiente()) {
+            nivel.avanzar(); // Avanza a la siguiente sala en la lista
+            
+            // Verificamos si la nueva sala tiene un enemigo o es de exploración
+            if (nivel.getSalaActual().getIdEnemigo() != null && !nivel.getSalaActual().getIdEnemigo().isEmpty()) {
+                irABatalla();
+            } else {
+                irAExploracion("Avanzas a una nueva zona de la mazmorra.");
+            }
+        } else {
+            // Si ya no hay más salas (fin del juego / victoria total tras el jefe)
+            ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
+            ventana.cambiarPantalla(MENU, () -> {}, null);
+        }
+    }
+
+    public void caminoElegido(Camino camino) {
+        // Cuando el jugador elige un camino en la pantalla de exploración, avanzamos a la batalla de esa sala
+        avanzarSala();
+    }
+
     public void batallaTerminada(boolean ganoHeroe) {
         if (ganoHeroe) {
-            avanzarSala();
+            // Si ganamos, verificamos si hay más salas por delante o si era el jefe final
+            if (nivel.haySiguiente()) {
+                irAExploracion("¡Has derrotado al enemigo! Elige tu siguiente camino.");
+            } else {
+                // ¡Derrotaste al jefe final! Volvemos al menú principal
+                ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
+                ventana.cambiarPantalla(MENU, () -> {}, null);
+            }
         } else {
             ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
             ventana.cambiarPantalla(MENU, () -> {}, null);

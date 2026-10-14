@@ -11,13 +11,16 @@ public class PanelInferior extends JPanel {
     private final JButton defenderse;
     private final JLabel etiquetaResultado;
     private final JLabel etiquetaTurno;
+    
+    private final JLabel personajeHeroe;
+    private final JLabel personajeEnemigo;
 
-    // Constructor por defecto (para compatibilidad)
+    // Constructor por defecto
     public PanelInferior() {
         this("/recursos/Artorias.jpg", "/recursos/Esclavo.jpg");
     }
 
-    // Constructor dinámico de Joaquín
+    // Constructor dinámico
     public PanelInferior(String rutaRetratoString, String rutaEnemigoString) {
         this.atacar = new JButton("⚔ Atacar");
         this.habilidad = new JButton("✦ Habilidad");
@@ -37,26 +40,16 @@ public class PanelInferior extends JPanel {
         etiquetaTurno.setHorizontalAlignment(JLabel.CENTER);
         etiquetaTurno.setFont(new Font("Serif", Font.BOLD, 25));
 
-        JLabel personajeHeroe = new JLabel();
-        JLabel personajeEnemigo = new JLabel();
+        this.personajeHeroe = new JLabel();
+        this.personajeEnemigo = new JLabel();
         
-        // Carga segura de retratos con rutas dinámicas
-        URL url1 = getClass().getResource(rutaRetratoString);
-        URL url2 = getClass().getResource(rutaEnemigoString);
-        
-        if (url1 != null) {
-            Image img1 = new ImageIcon(url1).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
-            personajeHeroe.setIcon(new ImageIcon(img1));
-        }
-        if (url2 != null) {
-            Image img2 = new ImageIcon(url2).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
-            personajeEnemigo.setIcon(new ImageIcon(img2));
-        }
-
         personajeHeroe.setHorizontalAlignment(JLabel.CENTER);
         personajeHeroe.setVerticalAlignment(JLabel.CENTER);
         personajeEnemigo.setHorizontalAlignment(JLabel.CENTER);
         personajeEnemigo.setVerticalAlignment(JLabel.CENTER);
+
+        // Cargamos las imágenes iniciales
+        actualizarRetratos(rutaRetratoString, rutaEnemigoString);
 
         this.setLayout(new BorderLayout(15, 10)); 
         this.setPreferredSize(new Dimension(0, 230));
@@ -73,12 +66,27 @@ public class PanelInferior extends JPanel {
         panelBotones.add(this.defenderse);
 
         panelBatalla.add(etiquetaTurno, BorderLayout.NORTH);
-        panelBatalla.add(panelBotones,BorderLayout.CENTER);
-        panelBatalla.add(etiquetaResultado,BorderLayout.SOUTH);
+        panelBatalla.add(panelBotones, BorderLayout.CENTER);
+        panelBatalla.add(etiquetaResultado, BorderLayout.SOUTH);
 
         this.add(personajeHeroe, BorderLayout.WEST);
         this.add(panelBatalla, BorderLayout.CENTER);
         this.add(personajeEnemigo, BorderLayout.EAST);
+    }
+    
+    // Método para actualizar los retratos dinámicamente según el héroe y el enemigo en combate
+    public void actualizarRetratos(String rutaRetratoString, String rutaEnemigoString) {
+        URL url1 = getClass().getResource(rutaRetratoString);
+        URL url2 = getClass().getResource(rutaEnemigoString);
+        
+        if (url1 != null) {
+            Image img1 = new ImageIcon(url1).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
+            personajeHeroe.setIcon(new ImageIcon(img1));
+        }
+        if (url2 != null) {
+            Image img2 = new ImageIcon(url2).getImage().getScaledInstance(-1, 180, Image.SCALE_SMOOTH);
+            personajeEnemigo.setIcon(new ImageIcon(img2));
+        }
     }
     
     public void setBotonesHabilitados(boolean estado) {

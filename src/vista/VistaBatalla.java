@@ -76,4 +76,8 @@ public class VistaBatalla extends JPanel {
     public void onDefenderse(ActionListener listener) {
         panelInferior.getBotonDefenderse().addActionListener(listener);
     }
+
+    public void actualizarRetratos(String rutaHeroe, String rutaEnemigo) {
+        panelInferior.actualizarRetratos(rutaHeroe, rutaEnemigo);
+    }
 }

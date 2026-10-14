@@ -22,20 +22,20 @@ public class PanelBatalla extends JPanel {
             imagen = new ImageIcon(urlFondo).getImage();
         }
 
-        // BARRAS DE VIDA (Arrancan en 100 por defecto, se ajustan solas en el primer turno)
+        // BARRAS DE VIDA
         vidaHeroe = new JProgressBar(0, 100);
         vidaEnemigo = new JProgressBar(0, 100);
         
-        // Le agregamos texto a las barras para ver los números de HP
         vidaHeroe.setStringPainted(true);
         vidaEnemigo.setStringPainted(true);
         vidaHeroe.setForeground(new Color(50, 200, 50)); // Verde
         vidaEnemigo.setForeground(new Color(200, 50, 50)); // Rojo
 
-        JPanel panelVida = new JPanel(new GridLayout(1, 2, 40, 0));
+        // Panel principal que divide la parte superior en 2 mitades (Héroe y Enemigo)
+        JPanel panelVida = new JPanel(new GridLayout(1, 2, 60, 0));
         panelVida.setOpaque(false);
 
-        // PANEL DEL HEROE
+        // PANEL DEL HEROE (Izquierda)
         JPanel panelHeroe = new JPanel(new BorderLayout(0, 5));
         panelHeroe.setOpaque(false);
         nombreHeroe = new JLabel("HÉROE");
@@ -44,18 +44,21 @@ public class PanelBatalla extends JPanel {
         panelHeroe.add(nombreHeroe, BorderLayout.NORTH);
         panelHeroe.add(vidaHeroe, BorderLayout.CENTER);
 
-        // PANEL DEL ENEMIGO
+        // PANEL DEL ENEMIGO (Derecha)
         JPanel panelEnemigo = new JPanel(new BorderLayout(0, 5));
         panelEnemigo.setOpaque(false);
+        
         nombreEnemigo = new JLabel("ENEMIGO");
         nombreEnemigo.setForeground(Color.WHITE);
         nombreEnemigo.setFont(new Font("Serif", Font.BOLD, 18));
+
         panelEnemigo.add(nombreEnemigo, BorderLayout.NORTH);
         panelEnemigo.add(vidaEnemigo, BorderLayout.CENTER);
 
         panelVida.add(panelHeroe);
         panelVida.add(panelEnemigo);
 
+        // Layout general del panel de fondo para fijar las barras arriba con sus márgenes
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0; gbc.gridy = 0;
@@ -72,7 +75,6 @@ public class PanelBatalla extends JPanel {
         nombreEnemigo.setText(nomEnemigo.toUpperCase());
 
         if (primeraVez) {
-            // Fija el tope EXACTO de la barra con la vida con la que inician la pelea
             vidaHeroe.setMaximum(Math.max(1, hpHeroe));
             vidaEnemigo.setMaximum(Math.max(1, hpEnemigo));
 
@@ -84,11 +86,9 @@ public class PanelBatalla extends JPanel {
             
             primeraVez = false;
         } else {
-            // Si alguien se cura por encima de su límite original, empujamos el tope visual
             if (hpHeroe > vidaHeroe.getMaximum()) vidaHeroe.setMaximum(hpHeroe);
             if (hpEnemigo > vidaEnemigo.getMaximum()) vidaEnemigo.setMaximum(hpEnemigo);
 
-            // Animación suave durante el combate
             animarBarraVida(vidaHeroe, Math.max(0, hpHeroe));
             animarBarraVida(vidaEnemigo, Math.max(0, hpEnemigo));
         }
@@ -100,7 +100,6 @@ public class PanelBatalla extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int valorActual = barra.getValue();
-                
                 int diferencia = Math.abs(valorActual - nuevaVida);
                 int paso = Math.max(1, diferencia / 30); 
 
