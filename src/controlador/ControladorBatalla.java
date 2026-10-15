@@ -5,10 +5,10 @@ import javax.swing.Timer;
 import modelo.Batalla;
 import modelo.Habilidad;
 import vista.VistaBatalla;
+import vista.ReproductorSonido;
 
 public class ControladorBatalla {
     private static final int PAUSA_FIN_BATALLA_MS = 2000;
-
     private final VistaBatalla vista;
     private final Batalla batalla;
     private final ControladorMaestro maestro;
@@ -21,19 +21,21 @@ public class ControladorBatalla {
 
         this.timerEnemigo = new Timer(1500, (ActionEvent e) -> turnoEnemigo());
         this.timerEnemigo.setRepeats(false);
+// Listeners    
+    this.vista.onAtacar(e -> {
+        ReproductorSonido.reproducirClick(); 
+        accionJugador_Atacar();
+});
 
-        // Listeners limpios sin IFs (el modelo se encarga de saber si estás aturdido)
-        this.vista.onAtacar(e -> {
-            accionJugador_Atacar();
-        });
+    this.vista.onHabilidad(e -> {
+        ReproductorSonido.reproducirClick();
+        mostrarMenuHabilidades(); 
+});
 
-this.vista.onHabilidad(e -> {
-            mostrarMenuHabilidades(); // Despliega el JPopupMenu
-        });
-
-        this.vista.onDefenderse(e-> {
-            accionJugador_Defender();
-        });
+    this.vista.onDefenderse(e -> {
+        ReproductorSonido.reproducirClick();
+        accionJugador_Defender();
+});
 
         actualizarVista();
     }
