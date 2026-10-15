@@ -62,6 +62,9 @@ Por otra parte, tenemos en consideración implementar varias interfaces que nos 
 
 Patron de Diseño : Factory 
 
+Problema: En nuestro RPG, cada nivel tiene un enemigo preestablecido que debe crearse al iniciar el combate. Si la lógica de niveles o de batalla se encargara directamente de instanciar cada enemigo, tendría que conocer sus clases concretas y cómo configurarlos. A medida que se agreguen nuevos enemigos, sería necesario modificar esa lógica, aumentando el acoplamiento y dificultando el mantenimiento del sistema.
+
+Solución: Se utilizará el patrón Factory para centralizar la creación y configuración de los enemigos, separándola de la lógica de niveles y combates. Así, el sistema podrá solicitar el enemigo correspondiente sin encargarse directamente de instanciarlo.
 
 ## 3. Arquitectura y Diseño
 
