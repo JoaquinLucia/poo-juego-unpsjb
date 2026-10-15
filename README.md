@@ -60,6 +60,9 @@ Los personajes representados por éstas clases tendrán comportamientos y caract
 Por una parte, esto hace referencia al polimorfismo, ya que en la forma que se utiliza herencia permite que las subclases puedan utilizar los comportamientos de la clase padre, aplicados a su propia manera.
 Por otra parte, tenemos en consideración implementar varias interfaces que nos permitan reutilizar código mediante el polimorfismo, así poder  aplicar los comportamientos asociados a éstos a distintas clases que lo requieran.
 
+Patron de Diseño : Factory 
+
+
 ## 3. Arquitectura y Diseño
 
 ### Patrón de Diseño Adicional:
