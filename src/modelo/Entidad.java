@@ -10,8 +10,9 @@ public abstract class Entidad {
     private  int cantidadHabilidadMax;
     private boolean aturdir;
     private boolean defendiendo = false;
+    protected int vidaMaxima;
     //private boolean estaVivo; tenemos un metodo que nos dice que esta vivo
-    public Entidad(String nombre, int vida, int ataque, int cantidadHabilidadMax) {
+public Entidad(String nombre, int vida, int ataque, int cantidadHabilidadMax) {
         if (vida <= 0) {
             throw new IllegalArgumentException("La vida debe ser mayor a 0");
         }
@@ -19,9 +20,7 @@ public abstract class Entidad {
             throw new IllegalArgumentException("El ataque no puede ser negativo");
         }
         if (cantidadHabilidadMax < 1) {
-            throw new IllegalArgumentException(
-                "La entidad debe poder llevar al menos una habilidad"
-            );
+            throw new IllegalArgumentException("La entidad debe poder llevar al menos una habilidad");
         }
 
         this.nombre = nombre;
@@ -29,6 +28,7 @@ public abstract class Entidad {
         this.ataque = ataque;
         this.cantidadHabilidadMax = cantidadHabilidadMax;
         this.habilidades = new ArrayList<>(cantidadHabilidadMax);
+        this.vidaMaxima = vida; 
     }
 
 
@@ -100,8 +100,13 @@ public void recibirDanio(int danio) {
     public boolean  getaturdir() { return this.aturdir;}
 
     //set 
-    public void sumarVida(int cantidad)      { 
-        this.vida+=cantidad;
+public void sumarVida(int cantidad) {
+        this.vida += cantidad;
+        
+        // Le ponemos un tope para que no se pase del máximo
+        if (this.vida > this.vidaMaxima) {
+            this.vida = this.vidaMaxima;
+        }
     }
     public void sacarAturdimiento(){
         this.aturdir=false;

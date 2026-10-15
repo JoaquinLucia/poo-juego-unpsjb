@@ -2,14 +2,12 @@ package controlador;
 
 import java.awt.event.ActionEvent;
 import javax.swing.Timer;
-
 import modelo.Batalla;
-import modelo.Entidad;
 import modelo.Habilidad;
 import vista.VistaBatalla;
 
 public class ControladorBatalla {
-    private static final int PAUSA_FIN_BATALLA_MS = 2000; // tiempo para leer el resultado
+    private static final int PAUSA_FIN_BATALLA_MS = 2000;
 
     private final VistaBatalla vista;
     private final Batalla batalla;
@@ -21,52 +19,70 @@ public class ControladorBatalla {
         this.batalla = batalla;
         this.maestro = maestro;
 
-        // Configuramos el temporizador para el turno del enemigo (1.5 segundos de pausa)
         this.timerEnemigo = new Timer(1500, (ActionEvent e) -> turnoEnemigo());
         this.timerEnemigo.setRepeats(false);
 
-        // Enganchamos los botones de la vista
+        // Listeners limpios sin IFs (el modelo se encarga de saber si estás aturdido)
         this.vista.onAtacar(e -> {
-            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
-                accionJugador_Atacar();
-            }
+            accionJugador_Atacar();
         });
 
-        this.vista.onDefenderse(e -> {
-            // Verificamos que el héroe esté en condiciones de actuar
-            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
-                accionJugador_Defender(); 
-            }
+this.vista.onHabilidad(e -> {
+            mostrarMenuHabilidades(); // Despliega el JPopupMenu
         });
 
-        this.vista.onHabilidad(e -> {
-            if (batalla.getHeroe().estaVivo() && !batalla.getHeroe().getaturdir()) {
-                accionJugador_Habilidad();
-            }
+        this.vista.onDefenderse(e-> {
+            accionJugador_Defender();
         });
 
-        // Actualización inicial al entrar a la pantalla
         actualizarVista();
     }
 
-    /** Muestra la pantalla de batalla. */
     public void iniciar() {
         vista.mostrarResultado("¡Un " + batalla.getEnemigo().getNombre() + " se interpone en tu camino!");
         vista.mostrar();
     }
 
-    /** Cierra la ventana de esta batalla (cada batalla tiene la suya). */
     public void cerrar() {
         timerEnemigo.stop();
         vista.cerrar();
     }
 
-    /** Deja ver el resultado unos segundos y le avisa al maestro. */
-    private void terminarBatalla(boolean ganoHeroe) {
+private void terminarBatalla(boolean ganoHeroe) {
         vista.setBotonesHabilitados(false);
-        Timer pausa = new Timer(PAUSA_FIN_BATALLA_MS, e -> maestro.batallaTerminada(ganoHeroe));
-        pausa.setRepeats(false);
-        pausa.start();
+        
+        if (ganoHeroe) {
+            modelo.Heroe heroe = batalla.getHeroe();
+            modelo.Enemigo enemigo = batalla.getEnemigo();
+            
+            // 1. Robar habilidad del enemigo (tomamos la primera que tenga)
+            if (enemigo.getCantidadHabilidades() > 0) {
+                modelo.Habilidad robada = enemigo.getHabilidad(0);
+                while (!robada.getCdListo()) {
+    robada.cronoCooldown();
+}
+                heroe.aprenderHabilidad(robada);
+                vista.mostrarResultado("¡Has robado la habilidad: " + robada.getNombreHabilidad() + "!");
+            }
+
+            // 2. Esperamos un toque para que leas el mensaje y vemos qué pasa
+            javax.swing.Timer pausa = new javax.swing.Timer(2500, e -> {
+                if (heroe.getHabilidadesConocidas().size() > 2) {
+                    mostrarDialogoSeleccionHabilidades(heroe);
+                } else {
+                    // Si tiene 2 o menos, las equipa automáticamente
+                    heroe.equiparHabilidades(heroe.getHabilidadesConocidas());
+                    maestro.batallaTerminada(true);
+                }
+            });
+            pausa.setRepeats(false);
+            pausa.start();
+        } else {
+            // Si pierdes, directo al Game Over
+            javax.swing.Timer pausa = new javax.swing.Timer(2000, e -> maestro.batallaTerminada(false));
+            pausa.setRepeats(false);
+            pausa.start();
+        }
     }
 
     private void actualizarVista() {
@@ -77,161 +93,195 @@ public class ControladorBatalla {
     }
 
     private void accionJugador_Atacar() {
-        batalla.getHeroe().atacar(batalla.getEnemigo());
-        vista.mostrarResultado(batalla.getHeroe().getNombre() + " asestó un golpe básico!");
+        String resultado = batalla.ejecutarAtaqueHeroe(); // Delega al modelo
         
-        vista.efectoTemblor(); // Hace temblar la pantalla un poquito
-        
-        finalizarTurnoJugador();
-    }
-
-    public void accionJugador_Defender() {
-        Entidad heroe = batalla.getHeroe();
-        
-        // 1. El héroe levanta el escudo
-        heroe.setDefendiendo(true);
-        
-        // 2. Bloqueamos botones y mostramos el mensaje
-        vista.setBotonesHabilitados(false);
-        vista.mostrarResultado(heroe.getNombre() + " adopta una postura defensiva.");
-        
-        // 3. Pasamos el turno al enemigo después de una breve pausa
-        javax.swing.Timer timer = new javax.swing.Timer(1500, ev -> turnoEnemigo());
-        timer.setRepeats(false);
-        timer.start();
-    }
-
-    private void accionJugador_Habilidad() {
-        if (batalla.getHeroe().getCantidadHabilidades() > 0) {
-            Habilidad hab = batalla.getHeroe().getHabilidad(0);
-            
-            if (hab.getCdListo()) {
-                hab.ejecutarHabilidad(batalla.getHeroe(), batalla.getEnemigo());
-                vista.mostrarResultado("¡" + batalla.getHeroe().getNombre() + " usó " + hab.getNombreHabilidad() + "!");
-                
-                vista.efectoTemblor(); // Tiembla cuando usás la habilidad
-                
-                finalizarTurnoJugador();
-            } else {
-                vista.mostrarResultado("Habilidad en enfriamiento (" + hab.getCooldownActual() + " turnos)");
-            }
-        } else {
-            vista.mostrarResultado("El héroe no tiene habilidades.");
-        }
-    }
-
-    private void finalizarTurnoJugador() {
+        vista.mostrarResultado(resultado);
+        vista.efectoTemblor();
         actualizarVista();
-        vista.setBotonesHabilitados(false); // Bloqueamos los botones para no hacer trampa
-        
-        reducirCooldowns(batalla.getHeroe());
+        vista.setBotonesHabilitados(false);
 
-        if (!batalla.getEnemigo().estaVivo()) {
-            vista.mostrarResultado("¡Victoria! Has derrotado al " + batalla.getEnemigo().getNombre());
-            terminarBatalla(true);
-            return; // Acá termina la pelea
-        }
-
-        // Si el enemigo sigue vivo, chequeamos si lo aturdiste con la habilidad
-        if (batalla.getEnemigo().getaturdir()) {
-            vista.mostrarResultado("El " + batalla.getEnemigo().getNombre() + " está aturdido y pierde su turno.");
-            batalla.getEnemigo().sacarAturdimiento(); 
-            
-            // Pausa cortita y te devuelve el turno a vos
-            Timer timerRecuperacion = new Timer(1500, e -> {
-                vista.setBotonesHabilitados(true);
-                vista.mostrarResultado("¡Es tu turno!");
-            });
-            timerRecuperacion.setRepeats(false);
-            timerRecuperacion.start();
-            
+        if (batalla.estaTerminada()) {
+            terminarBatalla(batalla.ganoHeroe());
         } else {
-            // Si no está aturdido, arranca el timer del enemigo para que te devuelva el golpe
             this.timerEnemigo.start();
         }
     }
 
-private void turnoEnemigo() {
-        if (!batalla.getEnemigo().estaVivo()) return;
-
-        Entidad enemigo = batalla.getEnemigo();
-        Entidad heroe = batalla.getHeroe();
-
-        // 1. Verificar si el enemigo está aturdido
-        if (enemigo.getaturdir()) {
-            vista.mostrarResultado(enemigo.getNombre() + " está aturdido y pierde su turno.");
-            enemigo.sacarAturdimiento();
-            reducirCooldowns(enemigo);
-            actualizarVista();
-            
-            // Hacemos una pausa de 2 segundos para que leas que está aturdido
-            javax.swing.Timer timerAturdido = new javax.swing.Timer(2000, e -> {
-                vista.setBotonesHabilitados(true);
-                vista.mostrarResultado("¡Es tu turno!");
-            });
-            timerAturdido.setRepeats(false);
-            timerAturdido.start();
-            
-            return; // Cortamos la ejecución acá
-        }
-
-        // 2. Pensamiento del enemigo: ¿Tiene habilidades especiales listas?
-        boolean usoHabilidad = false;
-        for (modelo.Habilidad hab : enemigo.getHabilidades()) {
-            if (hab.getCdListo()) {
-                hab.ejecutarHabilidad(enemigo, heroe);
-                vista.mostrarResultado("¡" + enemigo.getNombre() + " usó " + hab.getNombreHabilidad() + "!");
-                usoHabilidad = true;
-                break;
-            }
-        }
-
-        // Si ninguna habilidad estaba lista, ataca normal
-        if (!usoHabilidad) {
-            enemigo.atacar(heroe);
-            vista.mostrarResultado("El " + enemigo.getNombre() + " te atacó ferozmente.");
-        }
-
-        // 3. Efectos visuales instantáneos tras el ataque
+private void accionJugador_Habilidad(int indiceFija) {
+        String resultado = batalla.ejecutarHabilidadHeroe(indiceFija);
+        vista.mostrarResultado(resultado);
         vista.efectoTemblor();
-        reducirCooldowns(enemigo);
+        actualizarVista();
+        vista.setBotonesHabilitados(false);
+
+        if (batalla.estaTerminada()) {
+            terminarBatalla(batalla.ganoHeroe());
+        } else {
+            this.timerEnemigo.start();
+        }
+    }
+
+    private void accionJugador_Defender() {
+        String resultado = batalla.ejecutarDefensaHeroe(); // Delega al modelo
+        
+        vista.mostrarResultado(resultado);
+        actualizarVista();
+        vista.setBotonesHabilitados(false);
+
+        if (batalla.estaTerminada()) {
+            terminarBatalla(batalla.ganoHeroe());
+        } else {
+            this.timerEnemigo.start();
+        }
+    }
+
+    private void turnoEnemigo() {
+        // Toda la IA (estrategia, stuns, daño) ocurre adentro del modelo
+        String mensajeAccion = batalla.ejecutarTurnoEnemigo(); 
+        
+        vista.mostrarResultado(mensajeAccion);
+        vista.efectoTemblor();
         actualizarVista();
 
-        // 4. EL SECRETO DEL RITMO: Pausa de 2.5 segundos (2500 ms) antes de chequear el estado y devolverte el turno
-        javax.swing.Timer timerEspera = new javax.swing.Timer(2500, e -> {
-            if (!heroe.estaVivo()) {
-                vista.mostrarResultado("¡Has sido derrotado por el " + enemigo.getNombre() + "!");
-                terminarBatalla(false);
+        if (batalla.estaTerminada()) {
+            terminarBatalla(batalla.ganoHeroe());
+        } else {
+            // Evaluamos si el enemigo te aturdió para manejar el timer visual
+            if (batalla.getHeroe().getaturdir()) {
+                vista.mostrarResultado("¡Estás aturdido! Pierdes tu turno.");
+                
+                // Si el héroe está aturdido, el enemigo vuelve a jugar después de una pausa
+                Timer timerDobleAtaque = new Timer(2000, ev -> {
+                    batalla.getHeroe().sacarAturdimiento(); // Limpiamos el stun
+                    turnoEnemigo(); // Vuelve a jugar el enemigo
+                });
+                timerDobleAtaque.setRepeats(false);
+                timerDobleAtaque.start();
             } else {
-                // Verificamos si el golpe del enemigo te aturdió
-                if (heroe.getaturdir()) {
-                    vista.mostrarResultado("¡Estás aturdido! Pierdes tu turno.");
-                    heroe.sacarAturdimiento();
-                    reducirCooldowns(heroe);
-                    
-                    // Pausa adicional para leer que te aturdieron, y el enemigo repite turno
-                    javax.swing.Timer timerDobleAtaque = new javax.swing.Timer(2000, ev -> turnoEnemigo());
-                    timerDobleAtaque.setRepeats(false);
-                    timerDobleAtaque.start();
-                } else {
-                    // Flujo normal: estás vivo y no estás aturdido. Te devuelve los controles.
-                    heroe.setDefendiendo(false); 
-                    vista.setBotonesHabilitados(true); 
+                // Flujo normal: te devuelve los controles
+                batalla.getHeroe().setDefendiendo(false); // Sacamos la defensa al volver tu turno
+                Timer timerEspera = new Timer(1500, e -> {
+                    vista.setBotonesHabilitados(true);
                     vista.mostrarResultado("¡Es tu turno!");
-                    vista.setBotonesHabilitados(true); 
-                    vista.mostrarResultado("¡Es tu turno!");
-                }
-            }
-        });
-        timerEspera.setRepeats(false);
-        timerEspera.start();
-    }
-    
-    private void reducirCooldowns(Entidad entidad) {
-        for (Habilidad h : entidad.getHabilidades()) {
-            if (h != null) {
-                h.cronoCooldown();
+                });
+                timerEspera.setRepeats(false);
+                timerEspera.start();
             }
         }
+        }
+    private void mostrarDialogoSeleccionHabilidades(modelo.Heroe heroe) {
+        javax.swing.JDialog dialogo = new javax.swing.JDialog((java.awt.Frame)null, true);
+        dialogo.setUndecorated(true); // ¡ESTO LE QUITA LA BARRA DE WINDOWS! Da aspecto de juego 100%
+        
+        // Creamos un panel principal que sirva de "fondo" para todo el cartel
+        javax.swing.JPanel panelPrincipal = new javax.swing.JPanel(new java.awt.BorderLayout());
+        panelPrincipal.setBackground(new java.awt.Color(15, 15, 15)); // Negro/Gris muy oscuro
+        panelPrincipal.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(100, 80, 50), 3)); // Borde dorado opaco
+
+        // Título con estética medieval
+        javax.swing.JLabel lblTitulo = new javax.swing.JLabel(" HAS APRENDIDO DEMASIADO. ELIGE 2 HABILIDADES ", javax.swing.SwingConstants.CENTER);
+        lblTitulo.setForeground(new java.awt.Color(220, 200, 150)); // Color pergamino/dorado
+        lblTitulo.setFont(new java.awt.Font("Serif", java.awt.Font.BOLD, 18));
+        lblTitulo.setBorder(javax.swing.BorderFactory.createEmptyBorder(20, 10, 15, 10));
+        panelPrincipal.add(lblTitulo, java.awt.BorderLayout.NORTH);
+        
+        // Contenedor de las casillas de elección
+        javax.swing.JPanel panelChecks = new javax.swing.JPanel(new java.awt.GridLayout(0, 1, 5, 5));
+        panelChecks.setBackground(new java.awt.Color(15, 15, 15));
+        panelChecks.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 50, 20, 50));
+        
+        java.util.List<javax.swing.JCheckBox> checks = new java.util.ArrayList<>();
+        
+        for (modelo.Habilidad h : heroe.getHabilidadesConocidas()) {
+            javax.swing.JCheckBox cb = new javax.swing.JCheckBox(h.getNombreHabilidad());
+            
+            // --- ESTÉTICA DE LOS CHECKBOXES ---
+            cb.setBackground(new java.awt.Color(25, 25, 25));
+            cb.setForeground(java.awt.Color.WHITE);
+            cb.setFont(new java.awt.Font("Serif", java.awt.Font.PLAIN, 16));
+            cb.setFocusPainted(false); // Le saca el cuadradito punteado feo de selección
+            
+            if (heroe.getHabilidades().contains(h)) {
+                cb.setSelected(true);
+            }
+            checks.add(cb);
+            panelChecks.add(cb);
+        }
+        
+        // Botón de confirmar estilo "Sangre/Fuego"
+        javax.swing.JButton btnConfirmar = new javax.swing.JButton("SELLAR VÍNCULO");
+        btnConfirmar.setBackground(new java.awt.Color(60, 15, 15)); // Rojo muy oscuro
+        btnConfirmar.setForeground(java.awt.Color.WHITE);
+        btnConfirmar.setFont(new java.awt.Font("Serif", java.awt.Font.BOLD, 16));
+        btnConfirmar.setFocusPainted(false);
+        btnConfirmar.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 10, 12, 10));
+        
+        btnConfirmar.addActionListener(e -> {
+            java.util.List<modelo.Habilidad> seleccionadas = new java.util.ArrayList<>();
+            for (int i = 0; i < checks.size(); i++) {
+                if (checks.get(i).isSelected()) {
+                    seleccionadas.add(heroe.getHabilidadesConocidas().get(i));
+                }
+            }
+            
+            if (seleccionadas.size() > 2) {
+                javax.swing.JOptionPane.showMessageDialog(dialogo, "El límite de tu cuerpo soporta solo 2 habilidades.");
+            } else if (seleccionadas.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(dialogo, "Debes aferrarte a por lo menos 1 habilidad.");
+            } else {
+                heroe.equiparHabilidades(seleccionadas);
+                dialogo.dispose(); 
+                maestro.batallaTerminada(true); 
+            }
+        });
+        
+        panelPrincipal.add(panelChecks, java.awt.BorderLayout.CENTER);
+        panelPrincipal.add(btnConfirmar, java.awt.BorderLayout.SOUTH);
+        
+        dialogo.add(panelPrincipal);
+        dialogo.pack(); 
+        dialogo.setLocationRelativeTo(null); 
+        dialogo.setVisible(true); 
+    }
+private void mostrarMenuHabilidades() {
+        javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+        
+        // Colores extraídos de la estética de tu panel inferior
+        java.awt.Color fondoMarron = new java.awt.Color(38, 33, 28);
+        java.awt.Color textoDorado = new java.awt.Color(220, 185, 115);
+        java.awt.Color bordeDorado = new java.awt.Color(166, 131, 71);
+
+        menu.setBackground(fondoMarron);
+        menu.setBorder(javax.swing.BorderFactory.createLineBorder(bordeDorado, 1));
+
+        if (batalla.getHeroe().getCantidadHabilidades() == 0) {
+            vista.mostrarResultado("El héroe no tiene habilidades equipadas.");
+            return;
+        }
+
+        for (int i = 0; i < batalla.getHeroe().getCantidadHabilidades(); i++) {
+            modelo.Habilidad hab = batalla.getHeroe().getHabilidad(i);
+            
+            // Creamos un ÚNICO ítem por habilidad
+            javax.swing.JMenuItem item = new javax.swing.JMenuItem("✦ " + hab.getNombreHabilidad());
+            
+            item.setBackground(fondoMarron);
+            item.setForeground(textoDorado);
+            item.setFont(new java.awt.Font("Serif", java.awt.Font.BOLD, 15));
+            item.setOpaque(true);
+
+            if (!hab.getCdListo()) {
+                item.setEnabled(false);
+                // Si el LookAndFeel de Java te pone feo el texto deshabilitado, forzamos el color con HTML
+                item.setText("<html><font color='#808080'>✦ " + hab.getNombreHabilidad() + " (CD: " + hab.getCooldownActual() + ")</font></html>");
+            }
+            
+            final int indice = i;
+            item.addActionListener(ev -> accionJugador_Habilidad(indice));
+            
+            menu.add(item);
+        }
+        
+        vista.mostrarMenuHabilidades(menu); 
     }
 }

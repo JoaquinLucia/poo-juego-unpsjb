@@ -89,4 +89,11 @@ public VistaBatalla(Arquetipo arquetipo, Enemigo enemigo) {
     public void onDefenderse(ActionListener listener) {
         panelInferior.getBotonDefenderse().addActionListener(listener);
     }
+    public void mostrarMenuHabilidades(javax.swing.JPopupMenu menu) {
+        // Como estamos en la VistaBatalla, acá sí existe el panelInferior
+        javax.swing.JButton btnHabilidad = panelInferior.getBotonHabilidad();
+        
+        // Despliega el menú justo arriba del botón
+        menu.show(btnHabilidad, 0, -menu.getPreferredSize().height);
+    }
 }

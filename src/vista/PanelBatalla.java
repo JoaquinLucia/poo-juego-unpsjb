@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 import javax.swing.*;
+import java.util.Map;
+import java.util.HashMap;
 
 public class PanelBatalla extends JPanel {
     private Image Imagen; // <-- Solo necesitamos la imagen original
@@ -12,7 +14,7 @@ public class PanelBatalla extends JPanel {
     private final JProgressBar vidaEnemigo;
     private final JLabel nombreHeroe;
     private final JLabel nombreEnemigo;
-    
+    private Map<JProgressBar, Timer> timersAnimacion = new HashMap<>();
     private boolean primeraVez = true;
 
     public PanelBatalla() {
@@ -94,29 +96,44 @@ public class PanelBatalla extends JPanel {
         }
     }
 
-    private void animarBarraVida(JProgressBar barra, int nuevaVida) {
-        // Aumentamos el tiempo a 30 milisegundos para ralentizar la animación general
+   private void animarBarraVida(JProgressBar barra, int nuevaVida) {
+        // 1. Si la barra ya tenía una animación corriendo, LA FRENA en seco.
+        if (timersAnimacion.containsKey(barra)) {
+            timersAnimacion.get(barra).stop();
+        }
+
+        // 2. Aumentamos el tiempo a 30 milisegundos para ralentizar la animación general
         Timer timer = new Timer(30, null);
+        
+        // 3. Guardamos este nuevo Timer en el mapa para tenerlo controlado
+        timersAnimacion.put(barra, timer);
+
         timer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int valorActual = barra.getValue();
                 
-                // Dividimos por 30 (antes 10) para que reste fragmentos más pequeños y tarde más en llegar
+                // Si ya llegamos a la vida destino, apagamos el timer y salimos
+                if (valorActual == nuevaVida) {
+                    ((Timer) e.getSource()).stop();
+                    timersAnimacion.remove(barra);
+                    return;
+                }
+                
+                // Dividimos por 30 para que reste fragmentos más pequeños y tarde más en llegar
                 int diferencia = Math.abs(valorActual - nuevaVida);
                 int paso = Math.max(1, diferencia / 30); 
 
                 if (valorActual > nuevaVida) {
                     barra.setValue(Math.max(nuevaVida, valorActual - paso)); // Resta vida lentamente
-                } else if (valorActual < nuevaVida) {
-                    barra.setValue(Math.min(nuevaVida, valorActual + paso)); // Suma vida lentamente
                 } else {
-                    ((Timer) e.getSource()).stop(); // Se detiene exacto en el valor
+                    barra.setValue(Math.min(nuevaVida, valorActual + paso)); // Suma vida lentamente
                 }
                 
                 barra.setString(barra.getValue() + " HP");
             }
         });
+        
         timer.start();
     }
 

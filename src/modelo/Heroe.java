@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Heroe extends Entidad {
     private int nivel;
-
+    private java.util.List<Habilidad> habilidadesConocidas = new java.util.ArrayList<>();
     public Heroe(String nombre, int vida, int ataque, int nivel, int cantidadHabilidadMax) {
         super(nombre, vida, ataque,cantidadHabilidadMax);
         if (nivel < 1) {
@@ -20,6 +20,27 @@ public class Heroe extends Entidad {
 
     public void subirNivel(){
         this.nivel++;
+    }
+    public void aprenderHabilidad(Habilidad nuevaHabilidad) {
+        // Chequeamos que no la tenga repetida (por nombre)
+        boolean yaLaTiene = habilidadesConocidas.stream()
+            .anyMatch(h -> h.getNombreHabilidad().equals(nuevaHabilidad.getNombreHabilidad()));
+        
+        if (!yaLaTiene) {
+            habilidadesConocidas.add(nuevaHabilidad);
+        }
+    }
+
+    public java.util.List<Habilidad> getHabilidadesConocidas() {
+        return habilidadesConocidas;
+    }
+
+    public void equiparHabilidades(java.util.List<Habilidad> elegidas) {
+        // Limpiamos las habilidades activas de Entidad
+        this.getHabilidades().clear();
+        for (Habilidad h : elegidas) {
+            this.agregarHabilidad(h); // Método de la clase padre Entidad
+        }
     }
 
 

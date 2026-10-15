@@ -3,96 +3,90 @@ package modelo;
 public class Batalla {
     private Heroe heroe;
     private Enemigo enemigo;
-    private Turno turnoActual;
-
-    public enum Turno {
-        HEROE,
-        ENEMIGO
-    }
+    private FaseTurno faseActual;
+    private EstrategiaAtaque estrategiaEnemigo;
 
     public Batalla(Heroe heroe, Enemigo enemigo) {
         this.heroe = heroe;
         this.enemigo = enemigo;
-        this.turnoActual = Turno.HEROE;
+        // Arrancamos la batalla en el turno del jugador usando el Patrón State
+        this.faseActual = new TurnoJugador();
+        // Asignamos por defecto la estrategia táctica (o agresiva) al enemigo (Patrón Strategy)
+        this.estrategiaEnemigo = new EstrategiaTactica();
+    }
+
+    // Método clave para el Patrón State (¡Este es el que te marcaba en rojo!)
+    public void cambiarFase(FaseTurno nuevaFase) {
+        this.faseActual = nuevaFase;
     }
 
     public String ejecutarAtaqueHeroe() {
-        if (turnoActual != Turno.HEROE || !heroe.estaVivo()) {
-            return "No es el turno del héroe.";
-        }
-
-        if (heroe.getaturdir()) {
-            heroe.sacarAturdimiento();
-            pasarTurno();
-            return heroe.getNombre() + " está aturdido y pierde su turno.";
-        }
-
-        heroe.atacar(enemigo);
-        String mensaje = heroe.getNombre() + " atacó a " + enemigo.getNombre() + " causando " + heroe.getAtaque() + " de daño.";
-        pasarTurno();
-        return mensaje;
+        if (!heroe.estaVivo()) return "El héroe está derrotado.";
+        String resultado = faseActual.atacar(this);
+        reducirCooldownsHeroe();
+        return resultado;
     }
 
     public String ejecutarHabilidadHeroe(int indiceHabilidad) {
-        if (turnoActual != Turno.HEROE || !heroe.estaVivo()) {
-            return "No es el turno del héroe.";
+        if (!heroe.estaVivo()) return "El héroe está derrotado.";
+        
+        // Validación para evitar errores si no hay habilidad asignada
+        if (heroe.getHabilidades() == null || heroe.getCantidadHabilidades() <= indiceHabilidad || heroe.getHabilidad(indiceHabilidad) == null) {
+            return "No hay habilidad en ese espacio.";
         }
 
-        if (heroe.getaturdir()) {
-            heroe.sacarAturdimiento();
-            pasarTurno();
-            return heroe.getNombre() + " está aturdido y pierde su turno.";
-        }
+        String resultado = faseActual.usarHabilidad(this, indiceHabilidad);
+        reducirCooldownsHeroe();
+        return resultado;
+    }
 
-        Habilidad habilidad = heroe.getHabilidad(indiceHabilidad);
-        if (!habilidad.getCdListo()) {
-            return "Habilidad en cooldown (" + habilidad.getCooldownActual() + " turnos restantes).";
-        }
-
-        habilidad.ejecutarHabilidad(heroe, enemigo);
-        String mensaje = heroe.getNombre() + " usó " + habilidad.getNombreHabilidad() + ".";
-        pasarTurno();
-        return mensaje;
+    public String ejecutarDefensaHeroe() {
+        if (!heroe.estaVivo()) return "El héroe está derrotado.";
+        String resultado = faseActual.defender(this);
+        reducirCooldownsHeroe();
+        return resultado;
     }
 
     public String ejecutarTurnoEnemigo() {
-        if (turnoActual != Turno.ENEMIGO || !enemigo.estaVivo()) {
-            return "";
-        }
+        if (!enemigo.estaVivo()) return "";
 
+        // Si el enemigo está aturdido, pierde su turno de forma limpia
         if (enemigo.getaturdir()) {
             enemigo.sacarAturdimiento();
-            pasarTurno();
+            cambiarFase(new TurnoJugador());
             return enemigo.getNombre() + " está aturdido y pierde su turno.";
         }
 
+        // Usamos la estrategia para decidir la acción
+        Habilidad habilidadElegida = estrategiaEnemigo.elegirAccion(enemigo, heroe);
         String mensaje;
-        Habilidad habilidad = enemigo.getCantidadHabilidades() > 0 ? enemigo.getHabilidad(0) : null;
 
-        if (habilidad != null && habilidad.getCdListo()) {
-            habilidad.ejecutarHabilidad(enemigo, heroe);
-            mensaje = enemigo.getNombre() + " usó su habilidad " + habilidad.getNombreHabilidad() + ".";
+        if (habilidadElegida != null && habilidadElegida.getCdListo()) {
+            habilidadElegida.ejecutarHabilidad(enemigo, heroe);
+            mensaje = enemigo.getNombre() + " usó su habilidad " + habilidadElegida.getNombreHabilidad() + ".";
         } else {
             enemigo.atacar(heroe);
             mensaje = enemigo.getNombre() + " atacó a " + heroe.getNombre() + " causando " + enemigo.getAtaque() + " de daño.";
         }
 
-        pasarTurno();
+        reducirCooldownsEnemigo();
+        cambiarFase(new TurnoJugador());
+        
         return mensaje;
     }
 
-    private void pasarTurno() {
-        if (turnoActual == Turno.HEROE) {
-            turnoActual = Turno.ENEMIGO;
-            // Reducir cooldowns del héroe al terminar su turno
+    private void reducirCooldownsHeroe() {
+        if (heroe.getHabilidades() != null) {
             for (Habilidad h : heroe.getHabilidades()) {
-                h.cronoCooldown();
+                if (h != null) h.cronoCooldown();
             }
-        } else {
-            turnoActual = Turno.HEROE;
-            // Reducir cooldowns del enemigo al terminar su turno
+        }
+    }
+
+    private void reducirCooldownsEnemigo() {
+        if (enemigo.getHabilidades() != null) {
             for (Habilidad h : enemigo.getHabilidades()) {
-                h.cronoCooldown();
+                if (h != null) h.cronoCooldown();
             }
         }
     }
@@ -105,7 +99,8 @@ public class Batalla {
         return heroe.estaVivo() && !enemigo.estaVivo();
     }
 
+    // Getters
     public Heroe getHeroe() { return heroe; }
     public Enemigo getEnemigo() { return enemigo; }
-    public Turno getTurnoActual() { return turnoActual; }
+    public FaseTurno getFaseActual() { return faseActual; }
 }

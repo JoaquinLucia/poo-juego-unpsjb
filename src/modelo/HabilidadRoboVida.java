@@ -1,19 +1,20 @@
 package modelo;
 
 public class HabilidadRoboVida extends Habilidad {
-    private final int danio;
 
-    public HabilidadRoboVida(String nombre, String descripcion, int danio, int cooldown) {
-        super(nombre, descripcion, danio, cooldown);
-        this.danio = danio;
+    public HabilidadRoboVida(String nombre, String descripcion, int valorDanio, int cooldown) {
+        super(nombre, descripcion, valorDanio, cooldown);
     }
 
     @Override
-    public void ejecutarHabilidad(Entidad atacante, Entidad objetivo) {
-        // Le resta vida al objetivo
-        objetivo.recibirDanio(danio);
-        // Le suma esa misma vida al atacante (chupavidas)
-        atacante.sumarVida(danio);
+    public void ejecutarHabilidad(Entidad lanzador, Entidad objetivo) {
+        // 1. Causamos daño al objetivo
+        objetivo.recibirDanio(getValorBase());
+        
+        // 2. Curamos al lanzador usando tu método existente sumarVida()
+        lanzador.sumarVida(getValorBase());
+        
+        // 3. Activamos el enfriamiento
         activarcooldown();
     }
 }
