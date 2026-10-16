@@ -27,11 +27,11 @@ public class ControladorMazmorra {
         vista.limpiarCarteles();
         vista.cambiarFondo(escenario.getRutaImagen());
 
-        // Reproducir la música ambiental de exploración de forma segura (si falla, no congela el juego)
+        // Reproducir la música unificada de exploración/menús en bucle
         try {
-            GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/mazmorra_theme.wav");
+            GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav");
         } catch (Exception e) {
-            System.err.println("Aviso: No se pudo reproducir 'mazmorra_theme.wav', continuando sin audio de fondo.");
+            System.err.println("Aviso: No se pudo reproducir 'juego_musica.wav', continuando sin audio de fondo.");
         }
 
         for (Camino camino : escenario.getCaminos()) {
@@ -73,7 +73,7 @@ public class ControladorMazmorra {
 
     public void ocultar() {
         try {
-            GestorDeSonido.getInstancia().detenerAudio("recursos/sonidos/mazmorra_theme.wav");
+            GestorDeSonido.getInstancia().detenerAudio("recursos/sonidos/juego_musica.wav");
         } catch (Exception ignored) {}
     }
 }
