@@ -15,9 +15,8 @@ public class PanelInferior extends JPanel {
     private final JLabel personajeHeroe;
     private final JLabel personajeEnemigo;
 
-    // Constructor por defecto
     public PanelInferior() {
-        this("/recursos/Artorias.jpg", "/recursos/Esclavo.jpg");
+        this("/recursos/batalla/caballero_icono.png", "/recursos/Esclavo.jpg");
     }
 
     // Constructor dinámico
@@ -76,6 +75,18 @@ public class PanelInferior extends JPanel {
     
     // Método para actualizar los retratos dinámicamente según el héroe y el enemigo en combate
     public void actualizarRetratos(String rutaRetratoString, String rutaEnemigoString) {
+        // Mapeo automático según el héroe seleccionado
+        if (rutaRetratoString != null) {
+            String rutaMinuscula = rutaRetratoString.toLowerCase();
+            if (rutaMinuscula.contains("mago")) {
+                rutaRetratoString = "/recursos/batalla/mago_icono.png";
+            } else if (rutaMinuscula.contains("arquero")) {
+                rutaRetratoString = "/recursos/batalla/arquero_icono.png";
+            } else if (rutaMinuscula.contains("caballero")) {
+                rutaRetratoString = "/recursos/batalla/caballero_icono.png";
+            }
+        }
+
         URL url1 = getClass().getResource(rutaRetratoString);
         URL url2 = getClass().getResource(rutaEnemigoString);
         

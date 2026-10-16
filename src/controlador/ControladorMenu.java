@@ -39,6 +39,8 @@ public class ControladorMenu {
 
     public void mostrar() {
         vista.mostrarMenu();
+        // Reproducir la música del menú principal en bucle continuo
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/menu_theme.wav");
     }
 
     public VistaMenu getVista() {

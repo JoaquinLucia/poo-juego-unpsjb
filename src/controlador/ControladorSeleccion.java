@@ -14,7 +14,7 @@ import vista.VistaSeleccion;
 import controlador.utilidades.GestorDeSonido;
 
 /**
- * Maneja la lógica de interacción (teclado y mouse) para la selección de arquetipos.
+ * Maneja la interacción (teclado y mouse) para la selección de arquetipos.
  */
 public class ControladorSeleccion {
     private final VistaSeleccion vista;
@@ -32,6 +32,13 @@ public class ControladorSeleccion {
         this.arquetipos = Arquetipo.values();
 
         inicializarEventos();
+    }
+
+    /** Muestra la pantalla de selección y arranca su música en bucle. */
+    public void mostrar() {
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/seleccion_theme.wav");
+        actualizarVista();
+        vista.getPanelSeleccion().requestFocusInWindow();
     }
 
     public void reiniciar() {

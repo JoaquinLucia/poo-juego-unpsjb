@@ -14,6 +14,12 @@ import vista.VistaMenu;
 import vista.VistaSeleccion;
 import vista.VistaMazmorra;
 
+// Importaciones necesarias para manejar el audio
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import java.net.URL;
+
 public class ControladorMaestro {
     private final VentanaPrincipal ventana;
     private final CatalogoPersonajes catalogo;
@@ -24,6 +30,9 @@ public class ControladorMaestro {
     private ControladorSeleccion ctrlSeleccion;
     private ControladorMazmorra ctrlMazmorra;
     private ControladorBatalla ctrlBatalla;
+
+    // Reproductor para la música continua de menús / exploración
+    private Clip clipMenuMusica;
 
     private static final String MENU = "MENU";
     private static final String SELECCION = "SELECCION";
@@ -38,7 +47,7 @@ public class ControladorMaestro {
         vistaMenu.aplicarEscala(ventana.getEscala());
 
         VistaSeleccion vistaSeleccion = new VistaSeleccion();
-        VistaMazmorra vistaMazmorra = new VistaMazmorra();
+        VistaMazmorra vistaMazmorra = new VistaMazmorra(); // Instancia de la vista
 
         this.ctrlMenu = new ControladorMenu(vistaMenu, this);
         this.ctrlSeleccion = new ControladorSeleccion(vistaSeleccion, this, catalogo);
@@ -46,16 +55,47 @@ public class ControladorMaestro {
 
         ventana.agregarPantalla(MENU, vistaMenu);
         ventana.agregarPantalla(SELECCION, vistaSeleccion);
-        ventana.agregarPantalla(MAZMORRA, vistaMazmorra);
+        
+        // ¡IMPORTANTE! Asegúrate de registrar la vista de la mazmorra aquí:
+        ventana.agregarPantalla(MAZMORRA, vistaMazmorra); 
     }
 
     public void iniciar() {
+        reproducirMusicaMenu(); // <--- Inicia la música continua al abrir la aplicación
         ventana.mostrarDirecto(MENU);
     }
+
+    // --- Métodos de gestión de la música continua del menú/exploración ---
+    private void reproducirMusicaMenu() {
+        try {
+            if (clipMenuMusica != null && clipMenuMusica.isRunning()) {
+                return; // Si ya está sonando, no la reinicia para evitar cortes
+            }
+            URL url = getClass().getResource("/recursos/sonidos/juego_musica.wav");
+            if (url != null) {
+                AudioInputStream audioStream = AudioSystem.getAudioInputStream(url);
+                clipMenuMusica = AudioSystem.getClip();
+                clipMenuMusica.open(audioStream);
+                clipMenuMusica.start();
+                clipMenuMusica.loop(Clip.LOOP_CONTINUOUSLY); // Bucle infinito
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void detenerMusicaMenu() {
+        if (clipMenuMusica != null && clipMenuMusica.isRunning()) {
+            clipMenuMusica.stop();
+            clipMenuMusica.close();
+        }
+    }
+    // --------------------------------------------------------------------
 
     public void iniciarJuegoDesdeMenu() {
         ctrlSeleccion.reiniciar();
         ventana.cambiarPantalla(SELECCION, () -> {}, null);
+        // Nota: Como no detenemos la música acá, sigue sonando fluido al pasar a la selección de personaje.
     }
 
     private void irAExploracion(String mensajePrevio) {
@@ -64,6 +104,8 @@ public class ControladorMaestro {
                 " | " + heroe.getNombre() + ": " + heroe.getVida() + " de vida";
         String mensaje = mensajePrevio.isEmpty() ? encabezado : encabezado + "\n" + mensajePrevio;
 
+        reproducirMusicaMenu(); // Asegura que siga sonando la música de exploración/caminos
+
         ventana.cambiarPantalla(MAZMORRA, () -> {
             cerrarBatalla();
             ctrlMazmorra.mostrar(nivel.getSalaActual().getEscenario(), mensaje);
@@ -71,10 +113,12 @@ public class ControladorMaestro {
     }
 
     private void irABatalla() {
+        detenerMusicaMenu(); // <--- Apagamos la música del menú justo antes de entrar a pelear
+
         ventana.cambiarPantalla(BATALLA, () -> {
             cerrarBatalla();
             
-            // Creamos el enemigo de la sala actual
+            // Creamos el enemigo de la sala actual usando su clave
             Enemigo enemigo = catalogo.crearEnemigo(nivel.getSalaActual().getIdEnemigo());
             Batalla batalla = new Batalla(heroe, enemigo);
             
@@ -82,21 +126,20 @@ public class ControladorMaestro {
             
             VistaBatalla vistaBatalla = new VistaBatalla();
             
-            // Determinamos la ruta del retrato del héroe según su nombre o arquetipo
-            String rutaHeroeImg = "/recursos/Artorias.jpg"; 
+            // Determinamos la ruta del retrato del héroe de forma correcta
+            String rutaHeroeImg = "/recursos/batalla/caballero_icono.png"; // Valor por defecto para el Caballero
             if (heroe.getNombre().equalsIgnoreCase("Mago")) {
-                rutaHeroeImg = "/recursos/mago.png"; 
+                rutaHeroeImg = "/recursos/batalla/mago_icono.png"; 
             } else if (heroe.getNombre().equalsIgnoreCase("Arquero")) {
-                rutaHeroeImg = "/recursos/arquero_icono.png"; 
+                rutaHeroeImg = "/recursos/batalla/arquero_icono.png"; 
             }
             
-            // Extraemos la ruta del enemigo directamente desde el modelo del enemigo creado
+            // Extraemos la ruta del retrato del enemigo
             String rutaEnemigoImg = enemigo.getRutaImagen();
             if (rutaEnemigoImg == null || rutaEnemigoImg.isEmpty()) {
-                rutaEnemigoImg = "/recursos/Esclavo.jpg"; // Valor por defecto de seguridad
+                rutaEnemigoImg = "/recursos/batalla/bruto_icon.png"; // Valor de respaldo seguro
             }
 
-            // Actualizamos los retratos inferiores en la vista de batalla
             vistaBatalla.actualizarRetratos(rutaHeroeImg, rutaEnemigoImg);
             
             ctrlBatalla = new ControladorBatalla(vistaBatalla, batalla, this);
@@ -116,7 +159,7 @@ public class ControladorMaestro {
     public void personajeSeleccionado(Arquetipo arquetipoElegido) {
         this.heroe = catalogo.crearHeroe(arquetipoElegido);
         
-        // Creamos los escenarios para cada zona de la mazmorra
+        // 1. Escenario del Bosque
         Escenario escenarioBosque = Escenario.salaNormal(
             "bosque", 
             "/recursos/mazmorra/bosque.gif", 
@@ -126,6 +169,7 @@ public class ControladorMaestro {
             "Tomar el sendero derecho."
         );
         
+        // 2. Escenario de las Catacumbas/Mazmorra
         Escenario escenarioCatacumbas = Escenario.salaNormal(
             "mazmorraa", 
             "/recursos/mazmorra/mazmorra.gif", 
@@ -135,6 +179,7 @@ public class ControladorMaestro {
             "Explorar la cripta derecha."
         );
         
+        // 3. Escenario de la Cueva
         Escenario escenarioCueva = Escenario.salaNormal(
             "cueva", 
             "/recursos/mazmorra/cueva.gif", 
@@ -143,59 +188,67 @@ public class ControladorMaestro {
             "Avanzar por el centro.", 
             "Subir por las rocas."
         );
-        
-        Escenario escenarioJefe = Escenario.salaDelJefe(
+
+        // 4. Escenario del Guardián (usando .jefe para cumplir con el requisito del Builder)
+        Escenario escenarioGuardian = Escenario.salaDelJefe(
             "jefe", 
             "/recursos/mazmorra/jefe_puerta.gif", 
-            "Has llegado a la cámara final.", 
-            "Enfrentar al Guardián de las Cenizas."
+            "Te aproximas a un gran portal resguardado por una presencia imponente.", 
+            "Enfrentar al Guardian."
         );
 
-        // Construimos el nivel con los 3 enemigos y el jefe final en orden
+        // Construimos el nivel cumpliendo la estructura obligatoria del Builder
         this.nivel = new Nivel.Builder("Senderos de las Cenizas")
-                .sala(escenarioBosque, "esclavo")         // 1. Bruto de las Estepas (¡Primer combate!)
-                .sala(escenarioCatacumbas, "guardia_hueco") // 2. Víbora del Foso
-                .sala(escenarioCueva, "sacerdotisa")      // 3. Viuda de Sangre
-                .jefe(escenarioJefe, "guardian_cenizas")    // 4. Guardia Infernal (Jefe)
+                .sala(escenarioBosque, "bruto")     // 1. Bosque -> "bruto"
+                .sala(escenarioCatacumbas, "vibora") // 2. Catacumbas -> "vibora"
+                .sala(escenarioCueva, "viuda")       // 3. Cueva -> "viuda"
+                .jefe(escenarioGuardian, "guardian") // 4. Zona final -> "guardian"
                 .build();
                 
-        // Al comenzar, entramos directamente a la batalla contra el Bruto de las Estepas en la Sala 1
-        irABatalla();
+        // Muestra primero los caminos del Bosque
+        irAExploracion("");
     }
 
     public void avanzarSala() {
         if (nivel.haySiguiente()) {
-            nivel.avanzar(); // Avanza a la siguiente sala en la lista
+            nivel.avanzar();
             
-            // Verificamos si la nueva sala tiene un enemigo o es de exploración
             if (nivel.getSalaActual().getIdEnemigo() != null && !nivel.getSalaActual().getIdEnemigo().isEmpty()) {
                 irABatalla();
             } else {
                 irAExploracion("Avanzas a una nueva zona de la mazmorra.");
             }
         } else {
-            // Si ya no hay más salas (fin del juego / victoria total tras el jefe)
+            // Si termina la 4.ª sala (el Guardián), regresa al menú y reanuda la música de menú
+            reproducirMusicaMenu();
             ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
             ventana.cambiarPantalla(MENU, () -> {}, null);
         }
     }
 
     public void caminoElegido(Camino camino) {
-        // Cuando el jugador elige un camino en la pantalla de exploración, avanzamos a la batalla de esa sala
-        avanzarSala();
+        // Al elegir un camino en la exploración actual, va a la batalla de la sala donde está parado
+        if (nivel.getSalaActual().getIdEnemigo() != null && !nivel.getSalaActual().getIdEnemigo().isEmpty()) {
+            irABatalla();
+        } else {
+            avanzarSala();
+        }
     }
 
     public void batallaTerminada(boolean ganoHeroe) {
         if (ganoHeroe) {
-            // Si ganamos, verificamos si hay más salas por delante o si era el jefe final
             if (nivel.haySiguiente()) {
+                nivel.avanzar(); 
                 irAExploracion("¡Has derrotado al enemigo! Elige tu siguiente camino.");
             } else {
-                // ¡Derrotaste al jefe final! Volvemos al menú principal
+                // Derrotaste al Guardián (fin del recorrido)
+                reproducirMusicaMenu();
                 ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
                 ventana.cambiarPantalla(MENU, () -> {}, null);
             }
         } else {
+            // Si pierdes, vuelves al menú principal con su música
+            reproducirMusicaMenu();
             ctrlMenu.getVista().aplicarEscala(ventana.getEscala());
             ventana.cambiarPantalla(MENU, () -> {}, null);
         }

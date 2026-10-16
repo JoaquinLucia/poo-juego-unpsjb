@@ -23,7 +23,7 @@ public class GestorDeSonido {
         return instanciaUnica;
     }
 
-    // Método de instancia para reproducir sonidos
+    // Método para reproducir efectos cortos (ej. clics de botones, golpes) una sola vez
     public void reproducirEfecto(String rutaRelativa) {
         try {
             if (!cacheClips.containsKey(rutaRelativa)) {
@@ -32,6 +32,10 @@ public class GestorDeSonido {
 
             Clip clip = cacheClips.get(rutaRelativa);
             if (clip != null) {
+                // Si el efecto ya estaba sonando, lo reiniciamos desde el principio
+                if (clip.isRunning()) {
+                    clip.stop();
+                }
                 clip.setFramePosition(0);
                 clip.start();            
             }
@@ -41,15 +45,42 @@ public class GestorDeSonido {
         }
     }
 
+    // Método para reproducir música de fondo en bucle infinito (unificado)
+    public void reproducirMusicaEnBucle(String rutaRelativa) {
+        try {
+            if (!cacheClips.containsKey(rutaRelativa)) {
+                precargarEfecto(rutaRelativa);
+            }
+
+            Clip clip = cacheClips.get(rutaRelativa);
+            if (clip != null) {
+                if (clip.isRunning()) {
+                    clip.stop();
+                }
+                clip.setFramePosition(0);
+                clip.loop(Clip.LOOP_CONTINUOUSLY); // Bucle infinito para la pista solicitada
+            }
+        } catch (Exception e) {
+            System.err.println("No se pudo reproducir la música en bucle: " + rutaRelativa);
+            e.printStackTrace();
+        }
+    }
+
+    // NUEVO: Método para detener un audio específico (útil al cambiar de pantalla)
+    public void detenerAudio(String rutaRelativa) {
+        Clip clip = cacheClips.get(rutaRelativa);
+        if (clip != null) {
+            clip.stop();
+            clip.setFramePosition(0);
+        }
+    }
+
+    // Método privado para cargar el archivo desde los recursos del proyecto
     private void precargarEfecto(String rutaRelativa) {
         if (cacheClips.containsKey(rutaRelativa)) return;
         try {
-            URL url = null;
+            URL url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
             
-            //  Intenta buscar tal cual se pasó
-            url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);
-            
-        
             if (url == null) {
                 System.err.println("¡ERROR! No se encontró el archivo de audio en ninguna variante para: " + rutaRelativa);
                 return;

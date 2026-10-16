@@ -26,7 +26,7 @@ public class CatalogoPersonajes {
 
         // EL MAGO: Solo curación
         heroes.put("MAGO", () -> new Heroe.Builder("Mago")
-                .vida(350).ataque(20)
+                .vida(350).ataque(40)
                 .maxHabilidades(1)
                 .habilidad(new HabilidadCuracion("Luz Divina", "Curación profunda", 120, 4))
                 .build());
@@ -40,26 +40,26 @@ public class CatalogoPersonajes {
     }
 
     private void cargarEnemigos() {
-        enemigos.put("esclavo", () -> new Enemigo.Builder("Bruto de las Estepas")
-                .vida(180).ataque(20)
+        enemigos.put("bruto", () -> new Enemigo.Builder("Bruto")
+                .vida(180).ataque(20) // Ajustado a los 180 de HP ideales para el primer combate
                 .imagen("/recursos/batalla/bruto_icon.png")
                 .habilidad(new HabilidadAturdir("Golpe Sísmico", "Daña y aturde por 1 turno", 30, 4)) 
                 .build());
 
-        enemigos.put("guardia_hueco", () -> new Enemigo.Builder("Víbora del Foso")
-                .vida(200).ataque(30)
+        enemigos.put("vibora", () -> new Enemigo.Builder("Vibora")
+                .vida(250).ataque(30)
                 .imagen("/recursos/batalla/vibora_icon.png")
                 .habilidad(new HabilidadGolpe("Mordedura Letal", "Ataque perforante", 45, 2))
                 .build());
 
-        enemigos.put("sacerdotisa", () -> new Enemigo.Builder("Viuda de Sangre")
-                .vida(240).ataque(22)
+        enemigos.put("viuda", () -> new Enemigo.Builder("Viuda")
+                .vida(300).ataque(22)
                 .imagen("/recursos/batalla/viuda_icon.png")
                 .habilidad(new HabilidadRoboVida("Beso Venenoso", "Roba vida al héroe", 40, 3)) 
                 .build());
 
-        enemigos.put("guardian_cenizas", () -> new Enemigo.Builder("Guardia Infernal")
-                .vida(850).ataque(35)
+        enemigos.put("guardian", () -> new Enemigo.Builder("Guardian")
+                .vida(400).ataque(35)
                 .maxHabilidades(2)
                 .imagen("/recursos/batalla/guardia_infernal_icon.png")
                 .habilidad(new HabilidadAturdir("Empalamiento", "Daña fuertemente y aturde", 60, 4))

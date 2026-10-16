@@ -7,6 +7,7 @@ import modelo.Batalla;
 import modelo.Entidad;
 import modelo.Habilidad;
 import vista.VistaBatalla;
+import controlador.utilidades.GestorDeSonido;
 
 public class ControladorBatalla {
     private static final int PAUSA_FIN_BATALLA_MS = 2000; // tiempo para leer el resultado
@@ -15,6 +16,9 @@ public class ControladorBatalla {
     private final Batalla batalla;
     private final ControladorMaestro maestro;
     private final Timer timerEnemigo;
+    
+    // Guardamos la ruta del audio actual para poder detenerlo al finalizar la batalla
+    private String rutaMusicaActual;
 
     public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro maestro) {
         this.vista = vista;
@@ -48,24 +52,59 @@ public class ControladorBatalla {
         actualizarVista();
     }
 
-    /** Prepara el mensaje inicial de la pelea. */
+    /** Prepara el mensaje inicial de la pelea y la música específica del enemigo. */
     public void iniciar() {
-        vista.mostrarResultado("¡Un " + batalla.getEnemigo().getNombre() + " se interpone en tu camino!");
+        String nombreEnemigo = batalla.getEnemigo().getNombre();
+        vista.mostrarResultado("¡Un " + nombreEnemigo + " se interpone en tu camino!");
+    
+        // Seleccionamos la música según el nombre del enemigo
+        if (nombreEnemigo != null) {
+            String nombreMinuscula = nombreEnemigo.toLowerCase();
+            if (nombreMinuscula.contains("bruto")) {
+                rutaMusicaActual = "recursos/sonidos/bruto_musica.wav";
+            } else if (nombreMinuscula.contains("vibora")) {
+                rutaMusicaActual = "recursos/sonidos/vibora_musica.wav";
+            } else if (nombreMinuscula.contains("viuda")) {
+                rutaMusicaActual = "recursos/sonidos/viuda_musica.wav";
+            } else if (nombreMinuscula.contains("guardian")) {
+                rutaMusicaActual = "recursos/sonidos/guardian_musica.wav";
+            } else {
+                rutaMusicaActual = "recursos/sonidos/bruto_musica.wav";
+            }
+        } else {
+            rutaMusicaActual = "recursos/sonidos/bruto_musica.wav";
+        }
+    
+        // Reproducir la música en bucle continuo
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle(rutaMusicaActual);
     }
 
-    /** Detiene los temporizadores de esta batalla. */
+    /** Detiene los temporizadores y la música de fondo de esta batalla. */
     public void cerrar() {
         timerEnemigo.stop();
+        if (rutaMusicaActual != null) {
+            GestorDeSonido.getInstancia().detenerAudio(rutaMusicaActual);
+        }
     }
 
     public VistaBatalla getVista() {
         return vista;
     }
 
-    /** Deja ver el resultado unos segundos y le avisa al maestro. */
+    /** Deja ver el resultado unos segundos, detiene la música y le avisa al maestro. */
     private void terminarBatalla(boolean ganoHeroe) {
         vista.setBotonesHabilitados(false);
-        Timer pausa = new Timer(PAUSA_FIN_BATALLA_MS, e -> maestro.batallaTerminada(ganoHeroe));
+        
+        // Creamos el timer de pausa para leer el resultado y mantener la música viva durante este lapso
+        Timer pausa = new Timer(PAUSA_FIN_BATALLA_MS, e -> {
+            // Recién cuando termina la pausa y la animación, cortamos la música del enemigo
+            if (rutaMusicaActual != null) {
+                GestorDeSonido.getInstancia().detenerAudio(rutaMusicaActual);
+            }
+            // Y le avisamos al maestro que la batalla terminó oficialmente
+            maestro.batallaTerminada(ganoHeroe);
+        });
+        
         pausa.setRepeats(false);
         pausa.start();
     }
@@ -78,6 +117,7 @@ public class ControladorBatalla {
     }
 
     private void accionJugador_Atacar() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         batalla.getHeroe().atacar(batalla.getEnemigo());
         vista.mostrarResultado(batalla.getHeroe().getNombre() + " asestó un golpe básico!");
         vista.efectoTemblor(); 
@@ -85,6 +125,7 @@ public class ControladorBatalla {
     }
 
     public void accionJugador_Defender() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         Entidad heroe = batalla.getHeroe();
         heroe.setDefendiendo(true);
         vista.setBotonesHabilitados(false);
@@ -96,6 +137,7 @@ public class ControladorBatalla {
     }
 
     private void accionJugador_Habilidad() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         if (batalla.getHeroe().getCantidadHabilidades() > 0) {
             Habilidad hab = batalla.getHeroe().getHabilidad(0);
             

@@ -7,6 +7,7 @@ import javax.swing.JButton;
 import modelo.Camino;
 import modelo.Escenario;
 import vista.VistaMazmorra;
+import controlador.utilidades.GestorDeSonido;
 
 /**
  * Pantalla de exploración. Muestra el escenario que le indica el maestro
@@ -26,6 +27,13 @@ public class ControladorMazmorra {
         vista.limpiarCarteles();
         vista.cambiarFondo(escenario.getRutaImagen());
 
+        // Reproducir la música ambiental de exploración de forma segura (si falla, no congela el juego)
+        try {
+            GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/mazmorra_theme.wav");
+        } catch (Exception e) {
+            System.err.println("Aviso: No se pudo reproducir 'mazmorra_theme.wav', continuando sin audio de fondo.");
+        }
+
         for (Camino camino : escenario.getCaminos()) {
             JButton cartel = vista.agregarCartel(camino.getTextoCartel(), camino.getRutaIcono(),
                     camino.getPosX(), camino.getPosY());
@@ -43,8 +51,14 @@ public class ControladorMazmorra {
                 }
             });
 
-            // Click: se elige el camino y el maestro pasa al combate
-            cartel.addActionListener(e -> maestro.caminoElegido(camino));
+            // Click: se elige el camino, reproduce sonido de botón y el maestro pasa al combate
+            cartel.addActionListener(e -> {
+                try {
+                    GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+                } catch (Exception ignored) {}
+                
+                maestro.caminoElegido(camino);
+            });
         }
 
         String texto = mensajePrevio.isEmpty()
@@ -58,6 +72,8 @@ public class ControladorMazmorra {
     }
 
     public void ocultar() {
-        // En caso de requerirse ocultar o manejar visibilidad directa
+        try {
+            GestorDeSonido.getInstancia().detenerAudio("recursos/sonidos/mazmorra_theme.wav");
+        } catch (Exception ignored) {}
     }
 }
