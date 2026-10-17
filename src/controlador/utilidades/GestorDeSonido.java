@@ -11,19 +11,22 @@ public class GestorDeSonido {
 
     private static GestorDeSonido instanciaUnica;
     private final Map<String, Clip> cacheClips = new HashMap<>();
+    
+    // NUEVO: Variable para recordar qué música en bucle está sonando actualmente
+    private String musicaActualEnBucle = null;
 
     // Constructor privado (Patrón Singleton)
     private GestorDeSonido() {}
 
-    // Método global para obtener la única instancia
-    public static GestorDeSonido getInstancia() {
+    // Patrón Singleton seguro para hilos
+    public static synchronized GestorDeSonido getInstancia() {
         if (instanciaUnica == null) {
             instanciaUnica = new GestorDeSonido();
         }
         return instanciaUnica;
     }
 
-    // Método para reproducir efectos cortos (ej. clics de botones, golpes) una sola vez
+    // Método para reproducir efectos cortos (clics, golpes) una sola vez
     public void reproducirEfecto(String rutaRelativa) {
         try {
             if (!cacheClips.containsKey(rutaRelativa)) {
@@ -32,7 +35,6 @@ public class GestorDeSonido {
 
             Clip clip = cacheClips.get(rutaRelativa);
             if (clip != null) {
-                // Si el efecto ya estaba sonando, lo reiniciamos desde el principio
                 if (clip.isRunning()) {
                     clip.stop();
                 }
@@ -45,9 +47,14 @@ public class GestorDeSonido {
         }
     }
 
-    // Método para reproducir música de fondo en bucle infinito (unificado)
+    // Método para reproducir música de fondo en bucle infinito (ahora corta la anterior automáticamente)
     public void reproducirMusicaEnBucle(String rutaRelativa) {
         try {
+            // Si hay otra música sonando en bucle y es diferente, la detenemos primero
+            if (musicaActualEnBucle != null && !musicaActualEnBucle.equals(rutaRelativa)) {
+                detenerAudio(musicaActualEnBucle);
+            }
+
             if (!cacheClips.containsKey(rutaRelativa)) {
                 precargarEfecto(rutaRelativa);
             }
@@ -58,7 +65,8 @@ public class GestorDeSonido {
                     clip.stop();
                 }
                 clip.setFramePosition(0);
-                clip.loop(Clip.LOOP_CONTINUOUSLY); // Bucle infinito para la pista solicitada
+                clip.loop(Clip.LOOP_CONTINUOUSLY); // Reproducción continua en bucle
+                musicaActualEnBucle = rutaRelativa; // Actualizamos la pista actual activa
             }
         } catch (Exception e) {
             System.err.println("No se pudo reproducir la música en bucle: " + rutaRelativa);
@@ -66,12 +74,15 @@ public class GestorDeSonido {
         }
     }
 
-    // NUEVO: Método para detener un audio específico (útil al cambiar de pantalla)
+    // Método para detener un audio específico
     public void detenerAudio(String rutaRelativa) {
         Clip clip = cacheClips.get(rutaRelativa);
         if (clip != null) {
             clip.stop();
             clip.setFramePosition(0);
+        }
+        if (rutaRelativa.equals(musicaActualEnBucle)) {
+            musicaActualEnBucle = null;
         }
     }
 
