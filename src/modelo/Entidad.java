@@ -10,6 +10,7 @@ public abstract class Entidad {
     private int cantidadHabilidadMax;
     private boolean aturdir;
     private boolean defendiendo = false;
+    private boolean inmune = false; // Variable de inmunidad
 
     public Entidad(String nombre, int vida, int ataque, int cantidadHabilidadMax) {
         if (vida <= 0) {
@@ -32,15 +33,29 @@ public abstract class Entidad {
     }
 
     public void recibirDanio(int danio) {
-        if (this.defendiendo) {
-            danio = danio / 2; // Mitad de daño si se está defendiendo
-            System.out.println(this.nombre + " se defendió y redujo el daño recibido a " + danio);
+        // Verificamos si la entidad es inmune primero
+        if (this.inmune) {
+            danio = 0;
+            System.out.println(this.nombre + " es inmune y evitó todo el daño.");
+        } else if (this.defendiendo) {
+            double porcentajeReduccion = 0.4; // Valor por defecto
+        
+            // Asignamos la efectividad de la defensa según la clase
+            if (this.nombre.equalsIgnoreCase("Caballero")) {
+                porcentajeReduccion = 0.7; // 70% de reducción (Muy defensivo)
+            } else if (this.nombre.equalsIgnoreCase("Arquero")) {
+                porcentajeReduccion = 0.5; // 50% de reducción (Equilibrado)
+            } else if (this.nombre.equalsIgnoreCase("Mago")) {
+                porcentajeReduccion = 0.3; // 30% de reducción (Frágil, le cuesta defenderse)
+            }
+        
+            danio = (int) (danio * (1.0 - porcentajeReduccion));
+            System.out.println(this.nombre + " se defendió, mitigando parte del daño.");
         }
-        
+
         this.vida -= danio;
-        
         if (this.vida < 0) {
-            this.vida = 0;
+            this.vida = 0; // Evita que la vida sea negativa
         }
     }
 
@@ -116,5 +131,13 @@ public abstract class Entidad {
 
     public boolean isDefendiendo() {
         return this.defendiendo;
+    }
+
+    public void setInmune(boolean estado) {
+        this.inmune = estado;
+    }
+
+    public boolean isInmune() {
+        return this.inmune;
     }
 }

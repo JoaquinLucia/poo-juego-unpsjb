@@ -80,4 +80,9 @@ public class VistaBatalla extends JPanel {
     public void actualizarRetratos(String rutaHeroe, String rutaEnemigo) {
         panelInferior.actualizarRetratos(rutaHeroe, rutaEnemigo);
     }
+
+    public javax.swing.JButton getBotonHabilidad() {
+        return panelInferior.getBotonHabilidad();
+    }
+    
 }
