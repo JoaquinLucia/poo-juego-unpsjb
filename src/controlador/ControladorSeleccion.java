@@ -1,125 +1,82 @@
 package controlador;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.function.Consumer;
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
-import javax.swing.KeyStroke;
-import modelo.Arquetipo;
-import modelo.ModeloMenu;
-import vista.PanelSeleccionPersonaje;
-import vista.PanelSeleccionPersonaje.Zona;
+import modelo.Heroe;
+import modelo.SeleccionHeroe;
+import vista.paneles.PanelControles;
+import vista.paneles.PanelSeleccionPersonaje;
 
-/**
- * Controles de la pantalla de selección de personaje.
- *
- * Escucha el teclado y el mouse sobre el panel, actualiza el modelo y le dice
- * a la vista qué mostrar. La vista no toma decisiones: solo dibuja e informa
- * qué hay bajo el puntero.
- *
- * Teclas: Enter / Espacio comenzar, Esc volver, ← → (o A / D) cambiar de personaje.
+/*
+ * Controla la selección de héroe. Cuando el jugador confirma o vuelve,
+ * se lo avisa al mediador; el mediador le pide el héroe con getHeroeElegido().
  */
 public class ControladorSeleccion {
 
-    private final ModeloMenu modelo;
-    private final PanelSeleccionPersonaje panel;
-    private final Runnable alVolver;
-    private final Consumer<Arquetipo> alConfirmar;
+    private final PanelSeleccionPersonaje vista;
+    private final SeleccionHeroe modelo;
+    private final ControladorMaestro controlador;
 
-    public ControladorSeleccion(ModeloMenu modelo, PanelSeleccionPersonaje panel,
-                                Runnable alVolver, Consumer<Arquetipo> alConfirmar) {
+    public ControladorSeleccion(PanelSeleccionPersonaje vista, SeleccionHeroe modelo, ControladorMaestro controlador) {
+        this.vista = vista;
         this.modelo = modelo;
-        this.panel = panel;
-        this.alVolver = alVolver;
-        this.alConfirmar = alConfirmar;
-
-        configurarTeclado();
-        configurarMouse();
+        this.controlador = controlador;
+        configurarBotones();
         actualizarVista();
     }
 
-    /** Se llama cada vez que se entra a la pantalla de selección. */
-    public void entrar() {
-        modelo.reiniciarSeleccion();
-        panel.setHover(Zona.NINGUNA);
-        actualizarVista();
+    /** Lo consulta el mediador después de recibir HEROE_ELEGIDO. */
+    public Heroe getHeroeElegido() {
+        return modelo.getHeroeElegido();
+    }
+
+    // ---------- Botones ----------
+
+    private void configurarBotones() {
+        PanelControles controles = vista.getPanelControles();
+        controles.getAnterior().addActionListener(e -> anterior());
+        controles.getSiguiente().addActionListener(e -> siguiente());
+        controles.getElegir().addActionListener(e -> confirmar());
+        controles.getVolver().addActionListener(e -> controlador.volverAlMenu());
     }
 
     // ---------- Acciones ----------
 
-    private void mover(int direccion) {
-        if (modelo.getCantidadPersonajes() > 1) {
-            modelo.moverSeleccion(direccion);
-            actualizarVista();
-        }
+    private void anterior() {
+        modelo.anterior();
+        actualizarVista();
+    }
+
+    private void siguiente() {
+        modelo.siguiente();
+        actualizarVista();
     }
 
     private void confirmar() {
-        Arquetipo elegido = modelo.getPersonajeActual();
-        modelo.setPersonajeElegido(elegido);
-        alConfirmar.accept(elegido);
+        modelo.confirmar();
+        controlador.heroeElegido();
     }
 
-    private void volver() {
-        alVolver.run();
-    }
-
+    /** Toma los datos del héroe actual del modelo y se los pasa a la vista. */
     private void actualizarVista() {
-        panel.mostrarPersonaje(modelo.getPersonajeActual(), modelo.getCantidadPersonajes() > 1);
+        Heroe h = modelo.getActual();
+
+        String habilidad = h.getCantidadHabilidades() > 0
+                ? h.getHabilidad(0).getNombreHabilidad()
+                : "-";
+
+        vista.getPanelDatos().mostrarDatos(
+                h.getNombre(),
+                h.getDescripcion(),   // se muestra en "Clase:"
+                h.getNivel(),
+                h.getVida(),
+                h.getAtaque(),
+                0,                    // Entidad todavía no tiene defensa
+                habilidad);
+
+        vista.getPanelImagen().mostrarImagen(h.getSprite());
+
+        boolean varios = modelo.hayVarios();
+        vista.getPanelControles().getAnterior().setEnabled(varios);
+        vista.getPanelControles().getSiguiente().setEnabled(varios);
     }
 
-    // ---------- Teclado ----------
-
-    private void configurarTeclado() {
-        InputMap im = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap am = panel.getActionMap();
-        vincular(im, am, "seleccionComenzar", this::confirmar, KeyEvent.VK_ENTER, KeyEvent.VK_SPACE);
-        vincular(im, am, "seleccionVolver", this::volver, KeyEvent.VK_ESCAPE);
-        vincular(im, am, "seleccionIzquierda", () -> mover(-1), KeyEvent.VK_LEFT, KeyEvent.VK_A);
-        vincular(im, am, "seleccionDerecha", () -> mover(+1), KeyEvent.VK_RIGHT, KeyEvent.VK_D);
-    }
-
-    private void vincular(InputMap im, ActionMap am, String nombre, Runnable accion, int... teclas) {
-        for (int tecla : teclas) {
-            im.put(KeyStroke.getKeyStroke(tecla, 0), nombre);
-        }
-        am.put(nombre, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Con CardLayout el panel sigue en la ventana aunque esté oculto
-                if (panel.isShowing()) {
-                    accion.run();
-                }
-            }
-        });
-    }
-
-    // ---------- Mouse ----------
-
-    private void configurarMouse() {
-        MouseAdapter mouse = new MouseAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                panel.setHover(panel.zonaEn(e.getPoint()));
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                switch (panel.zonaEn(e.getPoint())) {
-                    case COMENZAR:   confirmar(); break;
-                    case VOLVER:     volver();    break;
-                    case FLECHA_IZQ: mover(-1);   break;
-                    case FLECHA_DER: mover(+1);   break;
-                    default:         break;
-                }
-            }
-        };
-        panel.addMouseListener(mouse);
-        panel.addMouseMotionListener(mouse);
-    }
 }

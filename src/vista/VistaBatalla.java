@@ -1,73 +1,91 @@
 package vista;
-
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.Timer;
+import vista.paneles.PanelBatalla;
+import vista.paneles.PanelInferior; 
 
-public class VistaBatalla {
-    private final JFrame ventana;
-    private final PanelBatalla panelFondo;
-    private final PanelInferior panelInferior;
+ // Pantalla de combate. Es un panel dentro de VentanaPrincipal
 
-    public VistaBatalla() {
-        this.ventana = new JFrame("Combate");
-        this.ventana.setExtendedState(JFrame.MAXIMIZED_BOTH); // Se abre en pantalla completa
-        this.ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.ventana.setLocationRelativeTo(null);
-        this.ventana.setLayout(new BorderLayout(0, 0));
+public class VistaBatalla extends JPanel{
+    private final PanelBatalla panelFondo= new PanelBatalla();
+    private final PanelInferior panelInferior = new PanelInferior();
+    private Timer timerTemblor;
+    private int pasosTemblor;
 
-        this.panelFondo = new PanelBatalla();
-        this.panelInferior = new PanelInferior();
 
-        this.ventana.add(panelFondo, BorderLayout.CENTER);
-        this.ventana.add(panelInferior, BorderLayout.SOUTH);
-    }
-
-    public void mostrar() {
-        this.ventana.setVisible(true);
+    public VistaBatalla() {        
+        super(new BorderLayout(0, 0));
+        add(panelFondo, BorderLayout.CENTER);
+        add(panelInferior, BorderLayout.SOUTH);
     }
 
     // --- EFECTOS VISUALES ---
-
     public void efectoTemblor() {
-        int xOriginal = panelFondo.getX();
-        int yOriginal = panelFondo.getY();
+        if (timerTemblor != null && timerTemblor.isRunning()) {
+            return;
+        }
+        int x = panelFondo.getX();
+        int y = panelFondo.getY();
+        pasosTemblor = 0;
 
-        Timer timer = new Timer(20, null);
-        timer.addActionListener(new ActionListener() {
-            int contador = 0;
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                contador++;
-                if (contador >= 8) { // Más cortito (8 en vez de 15)
-                    panelFondo.setLocation(xOriginal, yOriginal);
-                    ((Timer) e.getSource()).stop();
-                } else {
-                    // Mueve apenas entre -3 y 3 píxeles (mucho más suave)
-                    int offsetX = (int) (Math.random() * 6 - 3);
-                    int offsetY = (int) (Math.random() * 6 - 3);
-                    panelFondo.setLocation(xOriginal + offsetX, yOriginal + offsetY);
-                }
+        timerTemblor = new Timer(20, e -> {
+            if (++pasosTemblor >= 8) {
+                panelFondo.setLocation(x, y);   // vuelve a su lugar
+                timerTemblor.stop();
+            } else {
+                panelFondo.setLocation(x + (int) (Math.random() * 6 - 3),
+                                       y + (int) (Math.random() * 6 - 3));
             }
         });
-        timer.start();
+        timerTemblor.start();
     }
-
     // --- MÉTODOS PARA QUE EL CONTROLADOR ACTUALICE LA INTERFAZ ---
-
     public void actualizarEstadisticas(String nombreHeroe, int vidaHeroe, String nombreEnemigo, int vidaEnemigo) {
         panelFondo.actualizarBarras(nombreHeroe, vidaHeroe, nombreEnemigo, vidaEnemigo);
+    }
+    public void mostrarResultado(boolean gano) {
+        mostrarResultado(gano ? "¡Victoria!" : "Derrota...");
     }
 
     public void mostrarResultado(String mensaje) {
         panelInferior.mostrarResultado(mensaje);
     }
+    
+    public void mostrarAtaque(String atacante, String objetivo, int danio) {
+        mostrarResultado(atacante + " atacó a " + objetivo + " e hizo " + danio + " de daño");
+    }
+
+    public void mostrarHabilidad(String atacante, String habilidad, String objetivo, int danio) {
+        mostrarResultado(atacante + " usó " + habilidad + " sobre " + objetivo + " (" + danio + " de daño)");
+    }
+
+    public void mostrarTurno(String nombre) {
+        panelInferior.mostrarTurno("Turno de " + nombre);
+    }
 
     public void setBotonesHabilitados(boolean estado) {
         panelInferior.setBotonesHabilitados(estado);
     }
+    public void mostrarRetratos(String rutaHeroe, String rutaEnemigo) {
+        panelInferior.setRetratos(rutaHeroe, rutaEnemigo);
+    }
+    /** Muestra el resultado final y pide el nombre del jugador. Devuelve null si cancela. */
+    public String pedirNombreFinal(boolean derrotoAlJefe, int puntos) {
+        String titulo = derrotoAlJefe ? "¡Derrotaste al jefe!" : "Has caído en la mazmorra...";
+        String mensaje = titulo + "\nPuntaje: " + puntos + "\n\nIngresá tu nombre:";
+        return javax.swing.JOptionPane.showInputDialog(this, mensaje, "Fin de la partida",
+                javax.swing.JOptionPane.PLAIN_MESSAGE);
+    }
+    //nuevo revisa 
+    // /** Muestra el resultado final y pide el nombre del jugador. Devuelve null si cancela. */
+    // public String pedirNombreFinal(boolean derrotoAlJefe, int puntos) {
+    //     String titulo = derrotoAlJefe ? "¡Derrotaste al jefe!" : "Has caído en la mazmorra...";
+    //     return JOptionPane.showInputDialog(this,
+    //             titulo + "\nPuntaje: " + puntos + "\n\nIngresá tu nombre:",
+    //             "Fin de la partida", JOptionPane.PLAIN_MESSAGE);
+    // }
 
     // --- ENGANCHES DE BOTONES PARA EL CONTROLADOR ---
 

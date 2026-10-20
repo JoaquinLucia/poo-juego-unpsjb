@@ -1,83 +1,53 @@
 package controlador;
 
-import modelo.Arquetipo;
-import modelo.ModeloMenu;
-import modelo.Batalla;
-import modelo.Enemigo;
-import modelo.EnemigoEliteFactory; 
-import modelo.EnemigoFactory;
-import modelo.Heroe;
-import modelo.HeroeFactory;
-import modelo.CaballeroFactory;
-import modelo.MagoFactory;
-import modelo.ArqueroFactory;
-import modelo.ModeloTablaPuntuacion;
-import vista.VistaBatalla;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+import modelo.Puntaje;
+import modelo.PuntajeDAO;
+import persistencia.ConexionBD;
 import vista.VistaMenu;
-import vista.VistaPuntuaciones;
+import vista.paneles.PanelPuntuaciones;
 
+/*
+ * Controla el menú principal. Lo que lleva a otra pantalla se lo avisa al mediador;
+ * lo que se resuelve dentro del menú (puntajes, opciones, salir) lo hace solo.
+ * Recibe el DAO como interfaz: no sabe en qué base se guardan los puntajes.
+ */
 public class ControladorMenu {
 
     private final VistaMenu vista;
-    private final ModeloTablaPuntuacion tablaPuntuaciones;
-    private final ModeloMenu modeloMenu;
-    private ControladorSeleccion controladorSeleccion;
-
-    public ControladorMenu(VistaMenu vista, ModeloTablaPuntuacion tablaPuntuaciones) {
+    private final PuntajeDAO puntajeDAO;
+    private final ControladorMaestro controlador;
+    public ControladorMenu(VistaMenu vista, PuntajeDAO puntajeDAO, ControladorMaestro controlador) {
+        
         this.vista = vista;
-        this.tablaPuntuaciones = tablaPuntuaciones;
-        this.modeloMenu = new ModeloMenu();
-
-        // Inicializamos el sub-controlador de la interfaz nueva
-        this.controladorSeleccion = new ControladorSeleccion(
-            modeloMenu, 
-            vista.getPanelSeleccion(), 
-            () -> vista.mostrarMenu(), // Qué hacer al tocar "Volver"
-            (arquetipoElegido) -> iniciarBatalla(arquetipoElegido) // Qué hacer al tocar "Comenzar"
-        );
-
-        // Botones del menú principal
-        vista.onComenzar(e -> iniciarSeleccionPersonaje()); 
+        this.puntajeDAO = puntajeDAO;
+        this.controlador = controlador;
+        vista.onComenzar(e -> controlador.comenzar());
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());
         vista.onSalir(e -> salir());
     }
 
-    public void iniciar() {
-        vista.setVisible(true);
-    }
-
-    private void iniciarSeleccionPersonaje() {
-        controladorSeleccion.entrar();
-        vista.mostrarSeleccion();
-    }
-
-    private void iniciarBatalla(Arquetipo arquetipoElegido) {
-        vista.dispose(); 
-        
-        // Conectamos el Arquetipo visual con tus Fábricas lógicas
-        HeroeFactory fabricaHeroe = switch (arquetipoElegido.name()) {
-            case "CABALLERO" -> new CaballeroFactory();
-            case "MAGO" -> new MagoFactory(); 
-            case "ARQUERO" -> new ArqueroFactory();
-            default -> new CaballeroFactory();
-        };
-
-        Heroe heroe = fabricaHeroe.crearHeroe();
-        EnemigoFactory fabricaEnemigo = new EnemigoEliteFactory(); 
-        Enemigo enemigo = fabricaEnemigo.crearEnemigo();
-        
-        Batalla batalla = new Batalla(heroe, enemigo);
-        VistaBatalla vistaBatalla = new VistaBatalla();
-        new ControladorBatalla(vistaBatalla, batalla);
-        vistaBatalla.mostrarResultado("¡Un " + enemigo.getNombre() + " se interpone en tu camino!");
-        vistaBatalla.mostrar();
+    /** Deja el menú principal en primer plano. */
+    public void mostrar() {
+        vista.mostrarMenu();
     }
 
     private void mostrarPuntuaciones() {
-        VistaPuntuaciones modal = new VistaPuntuaciones(vista);
-        modal.cargarPuntuaciones(tablaPuntuaciones.getPuntuacionesOrdenadas());
-        modal.setVisible(true); 
+        JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
+        PanelPuntuaciones modal = new PanelPuntuaciones(ventana);
+
+        modal.limpiarPuntajes();
+        int posicion = 1;
+        for (Puntaje p : puntajeDAO.mejores(100)) {
+            modal.agregarPuntaje(posicion++, p.getJugador(), p.getPuntos());
+        }
+        modal.onCerrar(e -> modal.dispose());
+
+        vista.setVisible(false);   // esconde el menú de fondo
+        modal.setVisible(true);    // se frena acá hasta que se cierra
+        vista.setVisible(true);
     }
 
     private void mostrarOpciones() {
@@ -86,8 +56,9 @@ public class ControladorMenu {
 
     private void salir() {
         if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
-            vista.dispose();
+            ConexionBD.cerrar();
             System.exit(0);
         }
     }
+
 }
