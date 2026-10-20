@@ -1,11 +1,19 @@
 package controlador;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 
 import modelo.Batalla;
 import modelo.Entidad;
 import modelo.Habilidad;
+import vista.AnimacionSprite;
 import vista.VistaBatalla;
 import controlador.utilidades.GestorDeSonido;
 
@@ -118,6 +126,20 @@ public class ControladorBatalla {
     private void accionJugador_Atacar() {
         GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         
+        // Seleccionamos dinámicamente el sprite de ataque según el héroe actual
+        String nombreHeroe = batalla.getHeroe().getNombre().toLowerCase();
+        String rutaAtaque = "/recursos/sprites/arquero_ataque.png"; // por defecto
+        
+        if (nombreHeroe.contains("caballero")) {
+            rutaAtaque = "/recursos/sprites/caballero_ataque.png";
+        } else if (nombreHeroe.contains("mago")) {
+            rutaAtaque = "/recursos/sprites/mago_ataque.png";
+        }
+
+        Image[] framesAtaque = vista.recortarSpriteSheet(rutaAtaque, 4);
+        AnimacionSprite animAtaque = new AnimacionSprite(framesAtaque, 120, null);
+        vista.reproducirAnimacion(animAtaque);
+
         boolean eraInmune = batalla.getEnemigo().isInmune();
         batalla.getHeroe().atacar(batalla.getEnemigo());
         
@@ -157,20 +179,34 @@ public class ControladorBatalla {
         if (heroe.getCantidadHabilidades() == 1) {
             ejecutarHabilidad(0);
         } else {
-            javax.swing.JPopupMenu menuHabilidades = new javax.swing.JPopupMenu();
+            JPopupMenu menuHabilidades = new JPopupMenu();
+            menuHabilidades.setBackground(new Color(40, 30, 20));
+            menuHabilidades.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 90), 2));
+            
+            // Obtenemos el botón de habilidad para medir su ancho exacto
+            JButton botonHab = vista.getBotonHabilidad();
+            int anchoBoton = botonHab != null ? botonHab.getWidth() : 200;
             
             for (int i = 0; i < heroe.getCantidadHabilidades(); i++) {
                 final int index = i;
                 Habilidad hab = heroe.getHabilidad(i);
                 
                 String estadoCd = hab.getCdListo() ? " [Lista]" : " (CD: " + hab.getCooldownActual() + ")";
-                javax.swing.JMenuItem item = new javax.swing.JMenuItem(hab.getNombreHabilidad() + estadoCd);
+                JMenuItem item = new JMenuItem("✦ " + hab.getNombreHabilidad() + estadoCd);
+                
+                item.setBackground(new Color(50, 35, 20));
+                item.setForeground(new Color(245, 222, 179));
+                item.setFont(new Font("SansSerif", Font.BOLD, 13));
+                item.setOpaque(true);
+                item.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+                
+                // Forzamos a que cada opción tenga el ancho del botón inferior
+                item.setPreferredSize(new java.awt.Dimension(anchoBoton, item.getPreferredSize().height));
                 
                 item.addActionListener(e -> ejecutarHabilidad(index));
                 menuHabilidades.add(item);
             }
             
-            javax.swing.JButton botonHab = vista.getBotonHabilidad();
             menuHabilidades.show(botonHab, 0, -menuHabilidades.getPreferredSize().height);
         }
     }
@@ -267,7 +303,7 @@ public class ControladorBatalla {
 
         vista.efectoTemblor();
         reducirCooldowns(enemigo);
-        actualizarVista(); // <--- Forzamos actualización inmediata tras la acción del enemigo
+        actualizarVista();
 
         Timer timerEspera = new Timer(2500, e -> {
             actualizarVista();

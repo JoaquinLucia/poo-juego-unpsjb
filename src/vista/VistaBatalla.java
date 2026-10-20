@@ -6,6 +6,8 @@ import java.awt.event.ActionListener;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import java.awt.Image;
+
 /**
  * Pantalla de combate. Es un panel dentro de VentanaPrincipal.
  */
@@ -85,4 +87,12 @@ public class VistaBatalla extends JPanel {
         return panelInferior.getBotonHabilidad();
     }
     
+
+    public void reproducirAnimacion(AnimacionSprite animacion) {
+        panelFondo.reproducirAnimacion(animacion);
+    }
+
+    public Image[] recortarSpriteSheet(String ruta, int totalFrames) {
+        return panelFondo.recortarSpriteSheet(ruta, totalFrames);
+    }
 }

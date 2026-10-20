@@ -3,7 +3,9 @@ package vista;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.net.URL;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public class PanelBatalla extends JPanel {
@@ -14,6 +16,12 @@ public class PanelBatalla extends JPanel {
     private final JLabel nombreEnemigo;
     
     private boolean primeraVez = true;
+
+    // Guardamos el nombre del héroe actual para saber qué sprite mostrar
+    private String nombreHeroeActual = "arquero";
+
+    // Gestor de la animación actual del personaje
+    private AnimacionSprite animacionActual;
 
     public PanelBatalla() {
         // Carga segura de la imagen de fondo
@@ -70,9 +78,28 @@ public class PanelBatalla extends JPanel {
         add(panelVida, gbc);
     }
 
+    /** Permite configurar el héroe actual para que el panel sepa qué sprite cargar en reposo */
+    public void setNombreHeroeActual(String nombre) {
+        if (nombre != null) {
+            this.nombreHeroeActual = nombre.toLowerCase();
+            repaint();
+        }
+    }
+
+    /** Permite asignar y reproducir una animación de sprite en el panel */
+    public void reproducirAnimacion(AnimacionSprite animacion) {
+        this.animacionActual = animacion;
+        if (this.animacionActual != null) {
+            this.animacionActual.iniciar();
+        }
+    }
+
     public void actualizarBarras(String nomHeroe, int hpHeroe, String nomEnemigo, int hpEnemigo) {
         nombreHeroe.setText(nomHeroe.toUpperCase());
         nombreEnemigo.setText(nomEnemigo.toUpperCase());
+
+        // Actualizamos dinámicamente el nombre del héroe para los sprites
+        setNombreHeroeActual(nomHeroe);
 
         if (primeraVez) {
             vidaHeroe.setMaximum(Math.max(1, hpHeroe));
@@ -117,11 +144,92 @@ public class PanelBatalla extends JPanel {
         timer.start();
     }
 
+/** Recorta automáticamente los sprites ajustando los márgenes para eliminar el sobrante del caballero */
+    public Image[] recortarSpriteSheet(String rutaRelativa, int totalFrames) {
+        try {
+            java.net.URL urlImagen = getClass().getResource(rutaRelativa);
+            if (urlImagen == null) {
+                System.err.println("No se encontró la imagen en la ruta: " + rutaRelativa);
+                return null;
+            }
+            BufferedImage spriteSheet = javax.imageio.ImageIO.read(urlImagen);
+            
+            int anchoFrame = spriteSheet.getWidth() / totalFrames;
+            int altoFrame = spriteSheet.getHeight();
+            
+            int margenX = 15; 
+            int anchoRecorte = anchoFrame - 60;
+            
+            // Ajustamos el recorte para el caballero
+            if (nombreHeroeActual.contains("caballero")) {
+                margenX = 20;           
+                anchoRecorte = anchoFrame - 95; 
+            } else if (nombreHeroeActual.contains("mago")) {
+                margenX = 15;
+                anchoRecorte = anchoFrame - 60;
+            }
+            
+            Image[] frames = new Image[totalFrames];
+            for (int i = 0; i < totalFrames; i++) {
+                frames[i] = spriteSheet.getSubimage(i * anchoFrame + margenX, 0, anchoRecorte, altoFrame);
+            }
+            return frames;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        
+        // 1. Dibujamos la imagen de fondo de la mazmorra
         if (imagen != null) {
             g.drawImage(imagen, 0, 0, getWidth(), getHeight(), this);
+        }
+
+        // 2. Determinamos qué imagen mostrar en pantalla según el héroe seleccionado
+        Image frameParaDibujar = null;
+
+        if (animacionActual != null && animacionActual.isEnReproduccion()) {
+            frameParaDibujar = animacionActual.getFotogramaActual();
+            repaint(); 
+        } else {
+            String rutaSprite = "/recursos/sprites/arquero_ataque.png";
+            
+            if (nombreHeroeActual.contains("caballero")) {
+                rutaSprite = "/recursos/sprites/caballero_ataque.png";
+            } else if (nombreHeroeActual.contains("mago")) {
+                rutaSprite = "/recursos/sprites/mago_ataque.png";
+            }
+
+            Image[] framesEstaticos = recortarSpriteSheet(rutaSprite, 4);
+            if (framesEstaticos != null && framesEstaticos.length > 0) {
+                frameParaDibujar = framesEstaticos[0]; 
+            }
+        }
+
+        // 3. Dibujamos al héroe con el ancho ajustado y limpio de artefactos
+        if (frameParaDibujar != null) {
+            int x = 160;
+            int y = 10;
+            int ancho = 300; 
+            int alto = 920;  
+            
+            if (nombreHeroeActual.contains("caballero")) {
+                ancho = 265; 
+                alto = 580;  
+                x = 175;     
+                y = 220;     
+            } else if (nombreHeroeActual.contains("mago")) {
+                ancho = 300;
+                alto = 920;
+                x = 160;
+                y = 10;
+            }
+
+            g.drawImage(frameParaDibujar, x, y, ancho, alto, this);
         }
     }
 }
