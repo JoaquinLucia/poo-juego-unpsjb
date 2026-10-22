@@ -13,6 +13,7 @@ public abstract class Entidad {
     private int cantidadHabilidadMax;
     private String sprite;
     private String spriteFrontal;
+    private boolean defendiendo = false; // para implementar la defensa
 
     private boolean aturdida = false;
     private final List<EfectoPorTurno> efectos = new ArrayList<>(); // efectos que tiene ENCIMA
@@ -39,7 +40,12 @@ public abstract class Entidad {
     }
 
     // ---------- Combate ----------
+// En Entidad.java
     public void recibirDanio(int danio) {
+        if (this.defendiendo) {
+            danio /= 2;               // Reduce a la mitad
+            this.defendiendo = false; // Se gasta el efecto
+        }
         this.vida -= danio;
         if (this.vida < 0) {
             this.vida = 0;
@@ -60,6 +66,9 @@ public abstract class Entidad {
         int vidaAntes = vida;
         vida = Math.min(vida + cantidad, vidaMaxima);
         return vida - vidaAntes;
+    }
+    public void defenderse() {
+        this.defendiendo = true;
     }
 
     // ---------- Habilidades ----------

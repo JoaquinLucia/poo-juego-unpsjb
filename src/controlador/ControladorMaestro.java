@@ -214,17 +214,19 @@ public class ControladorMaestro {
     }
 
     /** Los héroes disponibles. Cada vez se crean nuevos, con vida llena y habilidades sin cooldown. */
-    private List<Heroe> crearHeroes() {
+private List<Heroe> crearHeroes() {
         List<Heroe> heroes = new ArrayList<>();
 
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
         habilidadesArtorias.add(fabricaHabilidad.crearHabilidad("golpe_aturdidor"));
-        heroes.add(new Heroe("Artorias", 600, 1, 4, habilidadesArtorias,
+        
+        heroes.add(new Heroe("Artorias", 600, 40, 3, habilidadesArtorias,
                 "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
         habilidadesMerlin.add(fabricaHabilidad.crearHabilidad("dardo_venenoso"));
-        heroes.add(new Heroe("Merlin", 450, 65, 4, habilidadesMerlin,
+        
+        heroes.add(new Heroe("Merlin", 450, 65, 3, habilidadesMerlin,
                 "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Escolta de Gwyn"));
 
         return heroes;

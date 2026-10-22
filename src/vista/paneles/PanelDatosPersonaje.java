@@ -84,7 +84,7 @@ public class PanelDatosPersonaje extends JPanel {
         ataque.setText("Ataque: " + valor);
     }
 
-    public void setDefensa(int valor) {
+public void setDefensa(String valor) {
         defensa.setText("Defensa: " + valor);
     }
 
@@ -93,7 +93,7 @@ public class PanelDatosPersonaje extends JPanel {
     }
 
     /** Actualiza todos los datos de una sola vez. */
-    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, int defensa, String habilidad) {
+    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, String defensa, String habilidad) {
         setNombre(nombre);
         setClase(clase);
         setNivel(nivel);

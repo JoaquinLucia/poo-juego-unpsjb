@@ -1,45 +1,27 @@
-/* 
-// public class App {
-//     public static void main(String[] args) {
-       
-      
-//     }
-// }
-import controlador.ControladorBatalla;
-import java.util.List;
-import javax.swing.JFrame;
+import controlador.ControladorMaestro;
 import javax.swing.SwingUtilities;
-import modelo.Batalla;
-import modelo.Enemigo;
-import modelo.Heroe;
-import modelo.factory.FabricaHeroe;
-import vista.VistaBatalla;
+import modelo.PuntajeDAO;
+import persistencia.ConexionBD;
+import persistencia.PuntajeDAOSQLite;
 
 public class App {
     public static void main(String[] args) {
+        // 1. Arrancamos la conexión a la base de datos (crea el archivo y tabla si no existen)
+        try {
+            ConexionBD.getInstancia();
+        } catch (Exception e) {
+            System.err.println("Advertencia: No se pudo conectar a la base de datos - " + e.getMessage());
+        }
+
+        // 2. Ejecutamos el juego en el hilo seguro de Swing
         SwingUtilities.invokeLater(() -> {
-            // --- Modelo ---
-            FabricaHeroe fabrica = new FabricaHeroe();
-            Heroe heroe = fabrica.crearPersonaje("caballero");
-            Enemigo enemigo = new Enemigo("Lobo", 60, 8, 1, List.of());
-            Batalla batalla = new Batalla(heroe, enemigo);
-
-            // --- Vista ---
-            VistaBatalla vista = new VistaBatalla();
-
-            // --- Controlador (se registra como observador de la batalla) ---
-            ControladorBatalla controlador = new ControladorBatalla(vista, batalla);
-
-            // --- Ventana ---
-            JFrame ventana = new JFrame("Senderos de las Cenizas - Batalla");
-            ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            ventana.setContentPane(vista);
-            ventana.setSize(800, 600);
-            ventana.setLocationRelativeTo(null);
-            ventana.setVisible(true);
-
-            // --- Arranque: primer dibujo y botones habilitados ---
+            // Instanciamos la persistencia
+            PuntajeDAO dao = new PuntajeDAOSQLite();
+            
+            // Creamos al orquestador principal inyectándole la base de datos
+            ControladorMaestro controlador = new ControladorMaestro(dao);
+            
             controlador.iniciar();
         });
     }
-}*/
+}

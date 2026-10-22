@@ -46,6 +46,18 @@ public class Batalla {
         return true;
     }
 
+    public void ejecutarDefensaHeroe() {
+        if (turnoActual != Turno.HEROE || batallaTerminada()) return;
+
+        if (heroe.puedeActuar()) {
+            heroe.defenderse();
+            ultimoDanio = 0; 
+        } else {
+            perderTurno(heroe);
+        }
+        terminarAccion();
+    }
+
     public void ejecutarTurnoEnemigo() {
         if (turnoActual != Turno.ENEMIGO || batallaTerminada()) return;
 
