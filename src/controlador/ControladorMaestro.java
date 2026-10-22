@@ -4,6 +4,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import modelo.Batalla;
+import modelo.CatalogoEnemigos;
 import modelo.Dificultad;
 import modelo.Enemigo;
 import modelo.Habilidad;
@@ -13,7 +14,6 @@ import modelo.Partida;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import modelo.SeleccionHeroe;
-import modelo.factory.FabricaEnemigo;
 import modelo.factory.FabricaHabilidad;
 import persistencia.ConexionBD;
 import vista.VentanaPrincipal;
@@ -44,7 +44,7 @@ public class ControladorMaestro {
 
     private final VentanaPrincipal ventana = new VentanaPrincipal();
     private final FabricaHabilidad fabricaHabilidad = new FabricaHabilidad();
-    private final FabricaEnemigo fabricaEnemigo = new FabricaEnemigo(fabricaHabilidad);
+    private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(fabricaHabilidad);
     private final PuntajeDAO puntajeDAO;   // interfaz: la implementación (SQLite) la elige el main
 
     // ---- Controladores de cada pantalla ----
@@ -165,20 +165,19 @@ public class ControladorMaestro {
 
     /**
      * Batalla contra el enemigo del lugar actual (en la sala del jefe, el jefe).
-     * La fábrica crea el enemigo con sus valores base y después se ajusta a la dificultad.
+     * El catálogo crea el enemigo con sus estadísticas ya ajustadas a la dificultad.
      */
     private void iniciarBatalla(Dificultad dificultad) {
         Lugar lugar = partida.getCamino().getLugarActual();
 
-        Enemigo enemigo = fabricaEnemigo.crearPersonaje(lugar.getTipoEnemigo());
-        enemigo.aplicarDificultad(dificultad);
+        Enemigo enemigo = catalogoEnemigos.crearPersonaje(lugar.getTipoEnemigo(), dificultad);
 
         // Pantalla de batalla nueva para cada pelea
         if (vistaBatalla != null) {
             ventana.quitarPantalla(vistaBatalla);
         }
         vistaBatalla = new VistaBatalla();
-        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partida.getHeroe(), enemigo), this);
+        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partida.getHeroe(), enemigo, lugar), this);
         ventana.agregarPantalla(pantallaBatalla, vistaBatalla);
 
         ventana.cambiarPantalla(pantallaBatalla, null, null);
@@ -219,13 +218,13 @@ public class ControladorMaestro {
 
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
         habilidadesArtorias.add(fabricaHabilidad.crearHabilidad("golpe_aturdidor"));
-        heroes.add(new Heroe("Artorias", 600, 1, 4, habilidadesArtorias,
+        heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
                 "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
         habilidadesMerlin.add(fabricaHabilidad.crearHabilidad("dardo_venenoso"));
-        heroes.add(new Heroe("Merlin", 450, 65, 4, habilidadesMerlin,
-                "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Escolta de Gwyn"));
+        heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
+                "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Mago de Gwyn"));
 
         return heroes;
     }

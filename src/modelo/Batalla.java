@@ -8,12 +8,14 @@ public class Batalla {
 
     private final Heroe heroe;
     private final Enemigo enemigo;
-    private int ultimoDanio;
     private Turno turnoActual = Turno.HEROE;
+    private int ultimoDanio;   // daño de la última acción (0 si perdió el turno)
+    private final Lugar lugar;
 
-    public Batalla(Heroe heroe, Enemigo enemigo) {
+    public Batalla(Heroe heroe, Enemigo enemigo, Lugar lugar) {
         this.heroe = heroe;
         this.enemigo = enemigo;
+        this.lugar = lugar;
         // Que no queden efectos ni cooldowns de una batalla anterior
         heroe.prepararParaBatalla();
         enemigo.prepararParaBatalla();
@@ -23,12 +25,12 @@ public class Batalla {
         if (turnoActual != Turno.HEROE || batallaTerminada()) return;
 
         if (heroe.puedeActuar()) {
-            heroe.atacar(enemigo);
+            ultimoDanio = heroe.atacar(enemigo);
         } else {
-            perderTurno(heroe);
+            ultimoDanio = 0;   // aturdido: pierde el turno
         }
         terminarAccion();
-    }
+        }
 
     /** Devuelve false si la habilidad está en cooldown (el turno NO se gasta). */
     public boolean ejecutarHabilidadHeroe(int indiceHabilidad) {
@@ -38,29 +40,25 @@ public class Batalla {
             if (!heroe.puedeUsarHabilidad(indiceHabilidad)) {
                 return false; // la interfaz avisa "en enfriamiento"
             }
-            heroe.usarHabilidad(indiceHabilidad, enemigo);
+            ultimoDanio = heroe.usarHabilidad(indiceHabilidad, enemigo);
         } else {
-            perderTurno(heroe);
+            ultimoDanio = 0;   // aturdido: pierde el turno
         }
         terminarAccion();
         return true;
-    }
+}
 
     public void ejecutarTurnoEnemigo() {
         if (turnoActual != Turno.ENEMIGO || batallaTerminada()) return;
 
         if (enemigo.puedeActuar()) {
-            enemigo.actuarEnemigo(heroe);
+            ultimoDanio = enemigo.actuarEnemigo(heroe);
         } else {
-            perderTurno(enemigo);
+            ultimoDanio = 0;   // aturdido: pierde el turno
         }
         terminarAccion();
     }
 
-    private void perderTurno(Entidad entidad) {
-        ultimoDanio = 0;
-        System.out.println(entidad.getNombre() + " está aturdido y pierde 1 turno");
-    }
 
     /** Al final del turno de cada uno, se procesan los efectos que tiene encima. */
     private void pasarTurno() {
@@ -79,7 +77,7 @@ public class Batalla {
         }
     }
 
-    // el int devuelve el último daño que se realizó, lo usamos para imprimir en consola por cada turno
+    /** Daño que hizo la última acción (ataque o habilidad). */
     public int getUltimoDanio() { return ultimoDanio; }
 
     /** Al que le toca ahora está aturdido (sirve para avisarle al jugador). */
@@ -108,4 +106,5 @@ public class Batalla {
     public Heroe getHeroe()         { return heroe; }
     public Enemigo getEnemigo()     { return enemigo; }
     public Turno getTurnoActual()   { return turnoActual; }
+    public Lugar getLugar()         { return lugar; }
 }

@@ -42,6 +42,11 @@ public class VistaBatalla extends JPanel{
         timerTemblor.start();
     }
     // --- MÉTODOS PARA QUE EL CONTROLADOR ACTUALICE LA INTERFAZ ---
+    public void mostrarFondo(String rutaFondo) {
+        panelFondo.reiniciar();
+        panelFondo.setFondo(rutaFondo);
+    }
+
     public void actualizarEstadisticas(String nombreHeroe, int vidaHeroe, String nombreEnemigo, int vidaEnemigo) {
         panelFondo.actualizarBarras(nombreHeroe, vidaHeroe, nombreEnemigo, vidaEnemigo);
     }
@@ -59,6 +64,11 @@ public class VistaBatalla extends JPanel{
 
     public void mostrarHabilidad(String atacante, String habilidad, String objetivo, int danio) {
         mostrarResultado(atacante + " usó " + habilidad + " sobre " + objetivo + " (" + danio + " de daño)");
+    }
+
+    public void mostrarEnfriamiento(String habilidad, int turnos) {
+        String unidad = (turnos == 1) ? "turno" : "turnos";
+        mostrarResultado(habilidad + " está en enfriamiento (" + turnos + " " + unidad + ")");
     }
 
     public void mostrarTurno(String nombre) {
@@ -86,14 +96,24 @@ public class VistaBatalla extends JPanel{
     //             titulo + "\nPuntaje: " + puntos + "\n\nIngresá tu nombre:",
     //             "Fin de la partida", JOptionPane.PLAIN_MESSAGE);
     // }
+    public void mostrarAturdido(String nombre) {
+        mostrarResultado(nombre + " está aturdido y pierde el turno");
+    }
 
     // --- ENGANCHES DE BOTONES PARA EL CONTROLADOR ---
 
     public void onAtacar(ActionListener listener) {
-        panelInferior.getBotonAtacar().addActionListener(listener);
+        var boton = panelInferior.getBotonAtacar();
+        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
+        boton.addActionListener(listener);
+       // panelInferior.getBotonHabilidad().addActionListener(listener);
+
     }
 
     public void onHabilidad(ActionListener listener) {
-        panelInferior.getBotonHabilidad().addActionListener(listener);
+         var boton = panelInferior.getBotonHabilidad();
+        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
+        boton.addActionListener(listener);
+        //panelInferior.getBotonHabilidad().addActionListener(listener);
     }
 }

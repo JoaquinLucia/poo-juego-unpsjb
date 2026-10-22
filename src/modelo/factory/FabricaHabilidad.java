@@ -6,10 +6,10 @@ import modelo.habilidades.HabilidadCurar;
 import modelo.habilidades.HabilidadDesangrar;
 import modelo.habilidades.HabilidadVeneno;
 
-public class FabricaHabilidad implements FabricaHabilidades {
+public class FabricaHabilidad  {
 
     /** Cada llamada crea una instancia nueva: nunca compartir habilidades entre entidades. */
-    @Override
+  
     public Habilidad crearHabilidad(String id) {
         return switch (id.toLowerCase()) {
 

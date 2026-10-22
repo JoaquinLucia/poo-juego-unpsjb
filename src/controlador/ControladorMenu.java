@@ -17,12 +17,12 @@ public class ControladorMenu {
 
     private final VistaMenu vista;
     private final PuntajeDAO puntajeDAO;
-    private final ControladorMaestro controlador;
+    private final ControladorMaestro controladorM;
     public ControladorMenu(VistaMenu vista, PuntajeDAO puntajeDAO, ControladorMaestro controlador) {
         
         this.vista = vista;
         this.puntajeDAO = puntajeDAO;
-        this.controlador = controlador;
+        this.controladorM = controlador;
         vista.onComenzar(e -> controlador.comenzar());
         vista.onVerPuntuaciones(e -> mostrarPuntuaciones());
         vista.onOpciones(e -> mostrarOpciones());

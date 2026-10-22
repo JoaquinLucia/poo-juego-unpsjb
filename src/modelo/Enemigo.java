@@ -4,24 +4,36 @@ import java.util.List;
 
 public class Enemigo extends Entidad {
 
-    public Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax, List<Habilidad> habilidades, String sprite,String sprite_Frontal) {
-        super(nombre, vida, ataque, cantidadHabilidadMax, habilidades,sprite,sprite_Frontal);
-        
-    }
-    public void actuarEnemigo(Entidad objetivo){
-        for (int i = 0; i < getCantidadHabilidades(); i++) {
-            if (puedeUsarHabilidad(i)) {
-                usarHabilidad(i, objetivo);
-                return;
-            }
-        }
-        this.atacar(objetivo);
+    private String nombreUltimaHabilidad;   // null = hizo un ataque común
+
+    public Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax,
+                   List<Habilidad> habilidades, String sprite, String spriteFrontal,
+                   Dificultad dificultad) {
+        super(nombre,
+              dificultad.ajustarVida(vida),
+              dificultad.ajustarAtaque(ataque),
+              cantidadHabilidadMax, habilidades, sprite, spriteFrontal);
     }
 
-    public void aplicarDificultad(Dificultad dificultad) {
-        vida = dificultad.ajustarVida(vida);
-        vidaActual = vida;
-        ataque = dificultad.ajustarAtaque(ataque);
+    /** Usa la primera habilidad lista; si no hay ninguna, ataca. Devuelve el daño que hizo. */
+    public int actuarEnemigo(Entidad objetivo) {
+        nombreUltimaHabilidad = null;
+        for (int i = 0; i < getCantidadHabilidades(); i++) {
+            if (puedeUsarHabilidad(i)) {
+                nombreUltimaHabilidad = getHabilidad(i).getNombreHabilidad();
+                return usarHabilidad(i, objetivo);
+            }
+        }
+        return this.atacar(objetivo);
+    }
+
+    /** True si en su último turno usó una habilidad (false = ataque común). */
+    public boolean usoHabilidad() {
+        return nombreUltimaHabilidad != null;
+    }
+
+    public String getNombreUltimaHabilidad() {
+        return nombreUltimaHabilidad;
     }
 
 }

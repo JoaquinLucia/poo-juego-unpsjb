@@ -17,7 +17,6 @@ public class PanelDatosPersonaje extends JPanel {
     private final JLabel nivel;
     private final JLabel vida;
     private final JLabel ataque;
-    private final JLabel defensa;
     private final JLabel habilidad;
 
     public PanelDatosPersonaje() {
@@ -39,7 +38,6 @@ public class PanelDatosPersonaje extends JPanel {
         nivel = crearEtiqueta("Nivel: ", 18, TEXTO);
         vida = crearEtiqueta("Vida: ", 18, TEXTO);
         ataque = crearEtiqueta("Ataque: ", 18, TEXTO);
-        defensa = crearEtiqueta("Defensa: ", 18, TEXTO);
         habilidad = crearEtiqueta("Habilidad: ", 18, TEXTO);
 
         informacion.add(nombre);
@@ -47,7 +45,6 @@ public class PanelDatosPersonaje extends JPanel {
         informacion.add(nivel);
         informacion.add(vida);
         informacion.add(ataque);
-        informacion.add(defensa);
         informacion.add(habilidad);
 
         add(informacion, BorderLayout.CENTER);
@@ -84,22 +81,17 @@ public class PanelDatosPersonaje extends JPanel {
         ataque.setText("Ataque: " + valor);
     }
 
-    public void setDefensa(int valor) {
-        defensa.setText("Defensa: " + valor);
-    }
-
     public void setHabilidad(String valor) {
         habilidad.setText("Habilidad: " + valor);
     }
 
     /** Actualiza todos los datos de una sola vez. */
-    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, int defensa, String habilidad) {
+    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, String habilidad) {
         setNombre(nombre);
         setClase(clase);
         setNivel(nivel);
         setVida(vida);
         setAtaque(ataque);
-        setDefensa(defensa);
         setHabilidad(habilidad);
     }
  
@@ -110,7 +102,6 @@ public class PanelDatosPersonaje extends JPanel {
         nivel.setText("Nivel: ");
         vida.setText("Vida: ");
         ataque.setText("Ataque: ");
-        defensa.setText("Defensa: ");
         habilidad.setText("Habilidad: ");
     }
  
@@ -132,10 +123,6 @@ public class PanelDatosPersonaje extends JPanel {
 
     public JLabel getAtaque() {
         return ataque;
-    }
-
-    public JLabel getDefensa() {
-        return defensa;
     }
 
     public JLabel getHabilidad() {

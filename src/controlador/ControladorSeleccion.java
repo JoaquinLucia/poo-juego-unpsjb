@@ -69,7 +69,6 @@ public class ControladorSeleccion {
                 h.getNivel(),
                 h.getVida(),
                 h.getAtaque(),
-                0,                    // Entidad todavía no tiene defensa
                 habilidad);
 
         vista.getPanelImagen().mostrarImagen(h.getSprite());

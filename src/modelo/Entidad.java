@@ -5,10 +5,9 @@ import java.util.List;
 
 public abstract class Entidad {
     private String nombre;
-    protected int vida;
-    protected int vidaActual;
+    private int vida;
     private final int vidaMaxima; // la vida con la que arranca; tope para las curaciones
-    protected int ataque;
+    private int ataque;
     private List<Habilidad> habilidades;
     private int cantidadHabilidadMax;
     private String sprite;
@@ -39,15 +38,16 @@ public abstract class Entidad {
     }
 
     // ---------- Combate ----------
-    public void recibirDanio(int danio) {
-        this.vida -= danio;
-        if (this.vida < 0) {
-            this.vida = 0;
-        }
+    /** Resta vida y devuelve el daño que recibió realmente (no baja de 0). */
+    public int recibirDanio(int danio) {
+        int vidaAntes = vida;
+        vida = Math.max(0, vida - danio);
+        return vidaAntes - vida;
     }
 
-    public void atacar(Entidad objetivo) {
-        objetivo.recibirDanio(this.ataque);
+    /** Devuelve el daño que hizo. */
+    public int atacar(Entidad objetivo) {   
+        return objetivo.recibirDanio(this.ataque);
     }
 
     public boolean estaVivo() {
@@ -63,7 +63,22 @@ public abstract class Entidad {
     }
 
     // ---------- Habilidades ----------
-    public void agregarHabilidad(Habilidad habilidad) {
+   
+
+    /** Devuelve el daño que le hizo al objetivo. */
+    public int usarHabilidad(int posicion, Entidad objetivo) {
+      if (posicion < 0 || posicion >= getCantidadHabilidades()) {
+          throw new IllegalArgumentException("Habilidad inválida");
+      }
+      return habilidades.get(posicion).ejecutarHabilidad(this, objetivo);
+  }
+
+    public boolean puedeUsarHabilidad(int posicion) {
+        return posicion >= 0 && posicion < getCantidadHabilidades()
+            && habilidades.get(posicion).getCdListo();
+    }
+
+     public void agregarHabilidad(Habilidad habilidad) {
         if (habilidad == null) {
             throw new IllegalArgumentException("La habilidad no puede ser null");
         }
@@ -71,18 +86,6 @@ public abstract class Entidad {
             throw new IllegalStateException(getNombre() + " ya tiene el máximo de habilidades");
         }
         habilidades.add(habilidad);
-    }
-
-    public void usarHabilidad(int posicion, Entidad objetivo) {
-        if (posicion < 0 || posicion >= getCantidadHabilidades()) {
-            throw new IllegalArgumentException("Habilidad inválida");
-        }
-        habilidades.get(posicion).ejecutarHabilidad(this, objetivo);
-    }
-
-    public boolean puedeUsarHabilidad(int posicion) {
-        return posicion >= 0 && posicion < getCantidadHabilidades()
-            && habilidades.get(posicion).getCdListo();
     }
 
     public void reducirCooldowns() {
@@ -145,7 +148,6 @@ public abstract class Entidad {
     // ---------- Getters ----------
     public String getNombre()          { return this.nombre; }
     public int getVida()               { return this.vida; }
-    public int getVidaActual()         { return this.vidaActual; }
     public int getVidaMaxima()         { return this.vidaMaxima; }
     public String getSprite()          { return sprite; }
     public String getSpriteFrontal()   { return spriteFrontal; }

@@ -31,11 +31,13 @@ public class ControladorBatalla {
 
     /** Muestra el estado inicial de la pelea. */
     public void iniciar() {
-            vista.mostrarRetratos(batalla.getHeroe().getSpriteFrontal(),batalla.getEnemigo().getSpriteFrontal());
+        vista.mostrarFondo(batalla.getLugar().getRutaCombate());
+        vista.mostrarRetratos(batalla.getHeroe().getSpriteFrontal(),
+                            batalla.getEnemigo().getSpriteFrontal());
         actualizar();
     }
 
-    /** Lo consulta el mediador después de recibir BATALLA_TERMINADA. */
+    /** Lo consulta el controlador maestro después de recibir BATALLA_TERMINADA. */
     public boolean gano() {
         return batalla.resultadoBatalla();
     }
@@ -54,6 +56,8 @@ public class ControladorBatalla {
             vista.efectoTemblor();
             vista.mostrarAtaque(getNombreHeroe(),getNombreEnemigo(),  // <-- nuevo
             batalla.getUltimoDanio());
+        } else {
+            vista.mostrarAturdido(getNombreHeroe());
         }
         actualizar();
     }
@@ -63,12 +67,15 @@ public class ControladorBatalla {
 
         boolean aturdido = batalla.heroeAturdido();
         if (!aturdido && !batalla.getHeroe().puedeUsarHabilidad(indice)) {
+            vista.mostrarEnfriamiento(getNombreHabilidad(indice), getTurnosEnfriamiento(indice));
             return;   // habilidad en enfriamiento: no se gasta el turno
         }
         batalla.ejecutarHabilidadHeroe(indice);
         if (!aturdido) {
             vista.efectoTemblor();
             vista.mostrarHabilidad(getNombreHeroe(), getNombreHabilidad(indice),getNombreEnemigo(), batalla.getUltimoDanio());// <-- nuevo
+        } else {
+            vista.mostrarAturdido(getNombreHeroe());
         }
         actualizar();
     }
@@ -77,30 +84,42 @@ public class ControladorBatalla {
      /** Refleja el estado de la batalla y decide qué sigue. */
     private void actualizar() {
         vista.actualizarEstadisticas(
-                getNombreHeroe(), batalla.getHeroe().getVida(),// <-- nuevo
-                getNombreEnemigo(), batalla.getEnemigo().getVida());// <-- nuevo
+                getNombreHeroe(), batalla.getHeroe().getVida(),
+                getNombreEnemigo(), batalla.getEnemigo().getVida());
  
         if (batalla.batallaTerminada()) {
             terminar();
         } else if (batalla.getTurnoActual() == Batalla.Turno.ENEMIGO) {
-            vista.mostrarTurno(getNombreEnemigo());   // <-- nuevo
+            vista.mostrarTurno(getNombreEnemigo());   
             vista.setBotonesHabilitados(false);
             programarTurnoEnemigo();
         } else {
-            vista.mostrarTurno(getNombreHeroe());   // <-- nuevo
+            vista.mostrarTurno(getNombreHeroe()); 
             vista.setBotonesHabilitados(true);   // si está aturdido, al tocar un botón pierde el turno
         }
     }
 
-    /** El enemigo juega después de una pausa (una sola vez por turno). */
-    /** El enemigo juega después de una pausa. */
+    /** El enemigo juega después de una pausa y se muestra en el log qué hizo. */
     private void programarTurnoEnemigo() {
         Timer espera = new Timer(pausaEnemigoMs, e -> {
-            vista.efectoTemblor();
+            boolean aturdido = !batalla.getEnemigo().puedeActuar();   // se pregunta antes de ejecutar
             batalla.ejecutarTurnoEnemigo();
+
+            if (aturdido) {
+                vista.mostrarAturdido(getNombreEnemigo());
+            } else {
+                vista.efectoTemblor();
+                if (batalla.getEnemigo().usoHabilidad()) {
+                    vista.mostrarHabilidad(getNombreEnemigo(),
+                            batalla.getEnemigo().getNombreUltimaHabilidad(),
+                            getNombreHeroe(), batalla.getUltimoDanio());
+                } else {
+                    vista.mostrarAtaque(getNombreEnemigo(), getNombreHeroe(),
+                                        batalla.getUltimoDanio());
+                }
+            }
             actualizar();
         });
-
         espera.setRepeats(false);
         espera.start();
     }
@@ -120,8 +139,7 @@ public class ControladorBatalla {
         timer.setRepeats(false);
         timer.start();
     }
-    ///////// GET  
-    /// get para ller mas facil 
+    ///////// GET para leer mas facil 
     public String getNombreHeroe(){
         return batalla.getHeroe().getNombre();
     }
@@ -130,5 +148,8 @@ public class ControladorBatalla {
     }
     public String getNombreHabilidad(int indice){
         return batalla.getHeroe().getHabilidad(indice).getNombreHabilidad();
+    }
+    public int getTurnosEnfriamiento(int indice) {
+        return batalla.getHeroe().getHabilidad(indice).getCooldownActual();
     }
 }

@@ -3,7 +3,7 @@ package modelo;
 /**
  * Una partida en curso: el héroe elegido, el recorrido por la mazmorra
  * y los puntos que se van ganando.
- * No sabe nada de pantallas.
+ * Calcula los puntajes de acuerdo al camino elegido por dificultad.
  */
 public class Partida {
 
