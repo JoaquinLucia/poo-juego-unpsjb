@@ -1,4 +1,4 @@
-package modelo.factory;
+package modelo.catalogos;
 
 import modelo.Habilidad;
 import modelo.habilidades.HabilidadAturdir;
@@ -6,7 +6,7 @@ import modelo.habilidades.HabilidadCurar;
 import modelo.habilidades.HabilidadDesangrar;
 import modelo.habilidades.HabilidadVeneno;
 
-public class FabricaHabilidad  {
+public class CatalogoHabilidades  {
 
     /** Cada llamada crea una instancia nueva: nunca compartir habilidades entre entidades. */
   
@@ -30,7 +30,7 @@ public class FabricaHabilidad  {
 
             case "grito" -> new HabilidadAturdir(
                     "Grito aterrador", "Aturde al enemigo sin dañarlo.",
-                    0, 4, 1);
+                    0, 4, 2);
 
             case "curacion" -> new HabilidadCurar(
                     "Curación", "Recupera 25 de vida.",

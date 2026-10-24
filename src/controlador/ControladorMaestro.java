@@ -1,10 +1,12 @@
 package controlador;
 
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFrame;
 import modelo.Batalla;
-import modelo.CatalogoEnemigos;
 import modelo.Dificultad;
 import modelo.Enemigo;
 import modelo.Habilidad;
@@ -14,7 +16,8 @@ import modelo.Partida;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import modelo.SeleccionHeroe;
-import modelo.factory.FabricaHabilidad;
+import modelo.catalogos.CatalogoEnemigos;
+import modelo.catalogos.CatalogoHabilidades;
 import persistencia.ConexionBD;
 import vista.VentanaPrincipal;
 import vista.VistaBatalla;
@@ -43,8 +46,8 @@ public class ControladorMaestro {
     private final String pantallaBatalla = "batalla";
 
     private final VentanaPrincipal ventana = new VentanaPrincipal();
-    private final FabricaHabilidad fabricaHabilidad = new FabricaHabilidad();
-    private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(fabricaHabilidad);
+    private final CatalogoHabilidades catalogoHabilidades = new CatalogoHabilidades();
+    private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(catalogoHabilidades);
     private final PuntajeDAO puntajeDAO;   // interfaz: la implementación (SQLite) la elige el main
 
     // ---- Controladores de cada pantalla ----
@@ -74,6 +77,15 @@ public class ControladorMaestro {
         ventana.registrarTecla(KeyEvent.VK_ESCAPE, "pausa",
                 () -> abrirPausa(),
                 () -> partida != null && !ventana.enTransicion());
+
+        // Cerrar con la X también pasa por salirDelJuego(), así la conexión se cierra siempre
+        ventana.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        ventana.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                salirDelJuego();
+            }
+        });
     }
 
     /** Arranca el juego mostrando el menú. */
@@ -217,12 +229,12 @@ public class ControladorMaestro {
         List<Heroe> heroes = new ArrayList<>();
 
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
-        habilidadesArtorias.add(fabricaHabilidad.crearHabilidad("golpe_aturdidor"));
+        habilidadesArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
         heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
                 "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
-        habilidadesMerlin.add(fabricaHabilidad.crearHabilidad("dardo_venenoso"));
+        habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
         heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
                 "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Mago de Gwyn"));
 

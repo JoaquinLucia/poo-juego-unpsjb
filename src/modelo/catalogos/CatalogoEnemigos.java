@@ -1,15 +1,17 @@
-package modelo;
+package modelo.catalogos;
 
 import java.util.List;
-import modelo.factory.FabricaHabilidad;
+
+import modelo.Dificultad;
+import modelo.Enemigo;
 
 // Se puede prescindir del factory de enemigos y solo hacer un switch; el resto es sobreingeniería
 public class CatalogoEnemigos {
 
-    private final FabricaHabilidad fabricaHabilidad;
+    private final CatalogoHabilidades habilidades;
 
-    public CatalogoEnemigos(FabricaHabilidad fabricaHabilidad) {
-        this.fabricaHabilidad = fabricaHabilidad;
+    public CatalogoEnemigos(CatalogoHabilidades habilidades) {
+        this.habilidades = habilidades;
     }
 
     /** Crea el enemigo con sus estadísticas ya ajustadas a la dificultad. */
@@ -22,20 +24,20 @@ public class CatalogoEnemigos {
         }
         return switch (tipo.toLowerCase()) {
             case "esclavo" -> new Enemigo("Esclavo", 80, 8, 1,
-                    List.of(fabricaHabilidad.crearHabilidad("grito")),
+                    List.of(habilidades.crearHabilidad("grito")),
                     "/recursos/personajes/mago.png", "/recursos/esclavoFrontal.jpg",
                     dificultad);
             case "cazador" -> new Enemigo("Cazador", 60, 10, 1,
-                    List.of(fabricaHabilidad.crearHabilidad("corte_profundo")),
+                    List.of(habilidades.crearHabilidad("corte_profundo")),
                     "/recursos/personajes/mago.png", "/recursos/cazadorFrontal.jpg",
                     dificultad);
             case "jester" -> new Enemigo("Jestar", 60, 10, 1,
-                    List.of(fabricaHabilidad.crearHabilidad("dardo_venenoso")),
+                    List.of(habilidades.crearHabilidad("dardo_venenoso")),
                     "/recursos/personajes/mago.png", "/recursos/jesterFrontal.jpg",
                     dificultad);
             case "akuma" -> new Enemigo("Akuma", 300, 20, 2,
-                    List.of(fabricaHabilidad.crearHabilidad("golpe_aturdidor"),
-                            fabricaHabilidad.crearHabilidad("corte_profundo")),
+                    List.of(habilidades.crearHabilidad("golpe_aturdidor"),
+                            habilidades.crearHabilidad("corte_profundo")),
                     "/recursos/personajes/mago.png", "/recursos/akumaFrontal.jpg",
                     dificultad);
             default -> throw new IllegalArgumentException("Enemigo desconocido: " + tipo);

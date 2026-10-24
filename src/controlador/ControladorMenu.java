@@ -4,7 +4,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
-import persistencia.ConexionBD;
 import vista.VistaMenu;
 import vista.paneles.PanelPuntuaciones;
 
@@ -55,10 +54,8 @@ public class ControladorMenu {
     }
 
     private void salir() {
-        if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
-            ConexionBD.cerrar();
-            System.exit(0);
-        }
+    if (vista.confirmar("¿Seguro que querés salir?", "Salir")) {
+        controladorM.salirDelJuego();
     }
-
+}
 }

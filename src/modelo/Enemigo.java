@@ -4,8 +4,6 @@ import java.util.List;
 
 public class Enemigo extends Entidad {
 
-    private String nombreUltimaHabilidad;   // null = hizo un ataque común
-
     public Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax,
                    List<Habilidad> habilidades, String sprite, String spriteFrontal,
                    Dificultad dificultad) {
@@ -15,25 +13,16 @@ public class Enemigo extends Entidad {
               cantidadHabilidadMax, habilidades, sprite, spriteFrontal);
     }
 
-    /** Usa la primera habilidad lista; si no hay ninguna, ataca. Devuelve el daño que hizo. */
-    public int actuarEnemigo(Entidad objetivo) {
-        nombreUltimaHabilidad = null;
+    /**
+     * Decide qué hacer en su turno: devuelve la posición de la primera habilidad lista,
+     * o -1 si no hay ninguna (entonces hace un ataque común). No ejecuta nada.
+     */
+    public int elegirHabilidad() {
         for (int i = 0; i < getCantidadHabilidades(); i++) {
             if (puedeUsarHabilidad(i)) {
-                nombreUltimaHabilidad = getHabilidad(i).getNombreHabilidad();
-                return usarHabilidad(i, objetivo);
+                return i;
             }
         }
-        return this.atacar(objetivo);
+        return -1;
     }
-
-    /** True si en su último turno usó una habilidad (false = ataque común). */
-    public boolean usoHabilidad() {
-        return nombreUltimaHabilidad != null;
-    }
-
-    public String getNombreUltimaHabilidad() {
-        return nombreUltimaHabilidad;
-    }
-
 }
