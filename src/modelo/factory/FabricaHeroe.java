@@ -1,35 +1,37 @@
-// package modelo.factory;
- 
-// import java.util.ArrayList;
-// import java.util.List;
-// import modelo.DatosEntidad;
-// import modelo.Habilidad;
-// import modelo.Heroe;
- 
-// /**
-//  * Crea héroes a partir de sus datos (DatosEntidad).
-//  *
-//  * Solo crea: no guarda datos, no lee la base y no conoce el DAO.
-//  * Los datos se los pasa quien la usa (por ejemplo, el héroe elegido en la selección).
-//  */
-// public class FabricaHeroe implements FabricaPersonaje {
- 
-//     private FabricaHabilidades fabricaHabilidad;
- 
-//     public FabricaHeroe(FabricaHabilidades fabricaHabilidad) {
-//         this.fabricaHabilidad = fabricaHabilidad;
-//     }
- 
-//     @Override
-//     public Heroe crearPersonaje(DatosEntidad datos) {
-//         List<Habilidad> habilidades = new ArrayList<>();
-//         for (String idHabilidad : datos.habilidades()) {
-//             habilidades.add(fabricaHabilidad.crearHabilidad(idHabilidad));
-//         }
- 
-//         return new Heroe(datos.nombre(), datos.vida(), datos.ataque(),
-//                 datos.maxHabilidades(), habilidades);
-//     }
+package modelo.factory;
 
-// }
+import java.util.ArrayList;
+import java.util.List;
+import modelo.Habilidad;
+import modelo.Heroe;
+
+/**
+ * Crea héroes a partir de su tipo en texto.
+ */
+public class FabricaHeroe implements FabricaPersonaje {
+
+    private FabricaHabilidad fabricaHabilidad;
+
+    public FabricaHeroe() {
+        this.fabricaHabilidad = new FabricaHabilidad();
+    }
+
+    public FabricaHeroe(FabricaHabilidad fabricaHabilidad) {
+        this.fabricaHabilidad = fabricaHabilidad;
+    }
+
+    @Override
+    public Heroe crearPersonaje(String tipo) {
+        List<Habilidad> habilidades = new ArrayList<>();
+        
+        if (tipo.equalsIgnoreCase("caballero")) {
+            habilidades.add(fabricaHabilidad.crearHabilidad("golpe_aturdidor"));
+            return new Heroe("Artorias", 9999, 1, 4, habilidades, 
+                    "/recursos/personajes/caballero.png", 
+                    "/recursos/artoriasFrontal.jpg", "Caballero de Gwyn");
+        }
+        
+        return null;
+    }
+}
  

@@ -30,6 +30,7 @@ public abstract class Entidad {
         }
         this.nombre = nombre;
         this.vida = vida;
+        this.vidaActual = vida;
         this.vidaMaxima = vida;
         this.ataque = ataque;
         this.cantidadHabilidadMax = cantidadHabilidadMax;
@@ -44,6 +45,7 @@ public abstract class Entidad {
         if (this.vida < 0) {
             this.vida = 0;
         }
+        this.vidaActual = this.vida; // Sincronizamos con vidaActual
     }
 
     public void atacar(Entidad objetivo) {
@@ -59,6 +61,7 @@ public abstract class Entidad {
         if (cantidad <= 0 || !estaVivo()) return 0;
         int vidaAntes = vida;
         vida = Math.min(vida + cantidad, vidaMaxima);
+        this.vidaActual = this.vida; // Sincronizamos con vidaActual
         return vida - vidaAntes;
     }
 
@@ -143,7 +146,7 @@ public abstract class Entidad {
     }
 
     // ---------- Getters ----------
-    public String getNombre()          { return this.nombre; }
+    public String getNombre()           { return this.nombre; }
     public int getVida()               { return this.vida; }
     public int getVidaActual()         { return this.vidaActual; }
     public int getVidaMaxima()         { return this.vidaMaxima; }

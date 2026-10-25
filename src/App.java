@@ -1,45 +1,29 @@
-/* 
-// public class App {
-//     public static void main(String[] args) {
-       
-      
-//     }
-// }
-import controlador.ControladorBatalla;
-import java.util.List;
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import modelo.Batalla;
-import modelo.Enemigo;
-import modelo.Heroe;
-import modelo.factory.FabricaHeroe;
-import vista.VistaBatalla;
+import vista.VentanaPrincipal;
+import vista.VistaMenu;
+// import controlador.ControladorMenu; // Descomenta e importa cuando tengas tu controlador del menú
 
 public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // --- Modelo ---
-            FabricaHeroe fabrica = new FabricaHeroe();
-            Heroe heroe = fabrica.crearPersonaje("caballero");
-            Enemigo enemigo = new Enemigo("Lobo", 60, 8, 1, List.of());
-            Batalla batalla = new Batalla(heroe, enemigo);
+            // 1. Crear la ventana principal única del juego (en pantalla completa sin bordes)
+            VentanaPrincipal ventana = new VentanaPrincipal();
 
-            // --- Vista ---
-            VistaBatalla vista = new VistaBatalla();
+            // 2. Crear la vista del menú principal
+            VistaMenu vistaMenu = new VistaMenu();
 
-            // --- Controlador (se registra como observador de la batalla) ---
-            ControladorBatalla controlador = new ControladorBatalla(vista, batalla);
+            // 3. Agregar la vista al sistema de tarjetas (CardLayout) de la ventana
+            ventana.agregarPantalla("menu", vistaMenu);
 
-            // --- Ventana ---
-            JFrame ventana = new JFrame("Senderos de las Cenizas - Batalla");
-            ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            ventana.setContentPane(vista);
-            ventana.setSize(800, 600);
-            ventana.setLocationRelativeTo(null);
-            ventana.setVisible(true);
+            // 4. Mostrar el menú directamente al arrancar (sin animación de fundido inicial)
+            ventana.mostrarDirecto("menu");
 
-            // --- Arranque: primer dibujo y botones habilitados ---
-            controlador.iniciar();
+            // 5. Ajustar la escala gráfica del menú según la resolución de la pantalla
+            vistaMenu.aplicarEscala(ventana.getEscala());
+
+            // 6. Inicializar el controlador del menú para darle vida a los botones
+            // ControladorMenu controlador = new ControladorMenu(ventana, vistaMenu);
+            // controlador.iniciar();
         });
     }
-}*/
+}
