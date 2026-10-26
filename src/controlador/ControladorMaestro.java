@@ -31,7 +31,7 @@ import vista.paneles.PanelSeleccionPersonaje;
  *   Menú → Selección → Camino → Batalla → Camino → Batalla → Camino → Batalla
  *        → Sala del jefe → Pelea final → Puntaje → Menú
  *
- * Durante la partida, Esc abre el menú de pausa.
+ * Durante la partidaActual, Esc abre el menú de pausa.
  *
  * Crea a los controladores de cada pantalla y se pasa a sí mismo por constructor.
  * Los controladores no se conocen entre sí: cuando pasa algo que cambia de pantalla,
@@ -45,7 +45,7 @@ public class ControladorMaestro {
     private final String pantallaCamino = "camino";
     private final String pantallaBatalla = "batalla";
 
-    private final VentanaPrincipal ventana = new VentanaPrincipal();
+    private final VentanaPrincipal ventanaPrincipal  = new VentanaPrincipal();
     private final CatalogoHabilidades catalogoHabilidades = new CatalogoHabilidades();
     private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(catalogoHabilidades);
     private final PuntajeDAO puntajeDAO;   // interfaz: la implementación (SQLite) la elige el main
@@ -55,7 +55,7 @@ public class ControladorMaestro {
     private final ControladorMenu controladorMenu;
     private final ControladorPausa controladorPausa;
 
-    // Se crean de nuevo en cada partida / batalla
+    // Se crean de nuevo en cada partidaActual / batalla
     private PanelSeleccionPersonaje vistaSeleccion;
     private ControladorSeleccion controladorSeleccion;
     private VistaCaminoMazmorra vistaCamino;
@@ -63,24 +63,24 @@ public class ControladorMaestro {
     private VistaBatalla vistaBatalla;
     private ControladorBatalla controladorBatalla;
 
-    private Partida partida;
+    private Partida partidaActual;
 
     public ControladorMaestro(PuntajeDAO puntajeDAO) {
         this.puntajeDAO = puntajeDAO;
 
-        vistaMenu.aplicarEscala(ventana.getEscala());
+        vistaMenu.aplicarEscala(ventanaPrincipal .getEscala());
         controladorMenu = new ControladorMenu(vistaMenu, puntajeDAO, this);
-        ventana.agregarPantalla(pantallaMenu, vistaMenu);
+        ventanaPrincipal .agregarPantalla(pantallaMenu, vistaMenu);
 
-        // Menú de pausa: se crea una sola vez y se abre con Esc mientras hay partida
-        controladorPausa = new ControladorPausa(new PanelPausa(ventana), this);
-        ventana.registrarTecla(KeyEvent.VK_ESCAPE, "pausa",
+        // Menú de pausa: se crea una sola vez y se abre con Esc mientras hay partidaActual
+        controladorPausa = new ControladorPausa(new PanelPausa(ventanaPrincipal ), this);
+        ventanaPrincipal .registrarTecla(KeyEvent.VK_ESCAPE, "pausa",
                 () -> abrirPausa(),
-                () -> partida != null && !ventana.enTransicion());
+                () -> partidaActual != null && !ventanaPrincipal .enTransicion());
 
         // Cerrar con la X también pasa por salirDelJuego(), así la conexión se cierra siempre
-        ventana.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        ventana.addWindowListener(new WindowAdapter() {
+        ventanaPrincipal .setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        ventanaPrincipal .addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 salirDelJuego();
@@ -89,41 +89,41 @@ public class ControladorMaestro {
     }
 
     /** Arranca el juego mostrando el menú. */
-    public void iniciar() {
+    public void iniciarJuego() {
         controladorMenu.mostrar();
-        ventana.mostrarDirecto(pantallaMenu);
+        ventanaPrincipal .mostrarDirecto(pantallaMenu);
     }
 
     // ---------- Lo que pueden pedir los controladores de cada pantalla ----------
 
     /** ControladorMenu: botón "Comenzar". Pantalla de selección nueva cada vez. */
     public void comenzar() {
-        quitarSeleccion();
+        quitarPantallaSeleccion();
         vistaSeleccion = new PanelSeleccionPersonaje();
         controladorSeleccion = new ControladorSeleccion(vistaSeleccion, new SeleccionHeroe(crearHeroes()), this);
-        ventana.agregarPantalla(pantallaSeleccion, vistaSeleccion);
-        ventana.cambiarPantalla(pantallaSeleccion, null, null);
+        ventanaPrincipal .agregarPantalla(pantallaSeleccion, vistaSeleccion);
+        ventanaPrincipal .cambiarPantalla(pantallaSeleccion, null, null);
     }
 
     /** ControladorSeleccion: botón "Volver". */
     public void volverAlMenu() {
-        ventana.cambiarPantalla(pantallaMenu, null, () -> quitarSeleccion());
+        ventanaPrincipal .cambiarPantalla(pantallaMenu, null, () -> quitarPantallaSeleccion());
     }
 
-    /** ControladorSeleccion: botón "Elegir héroe". Empieza la partida en el primer camino. */
+    /** ControladorSeleccion: botón "Elegir héroe". Empieza la partidaActual en el primer camino. */
     public void heroeElegido() {
-        partida = new Partida(controladorSeleccion.getHeroeElegido());
+        partidaActual = new Partida(controladorSeleccion.getHeroeElegido());
 
-        // Pantalla del camino nueva para cada partida (así no se acumulan listeners)
+        // Pantalla del camino nueva para cada partidaActual (así no se acumulan listeners)
         if (vistaCamino != null) {
-            ventana.quitarPantalla(vistaCamino);
+            ventanaPrincipal .quitarPantalla(vistaCamino);
         }
         vistaCamino = new VistaCaminoMazmorra();
-        controladorCamino = new ControladorCaminoMazmorra(partida.getCamino(), vistaCamino, this);
-        ventana.agregarPantalla(pantallaCamino, vistaCamino);
+        controladorCamino = new ControladorCaminoMazmorra(partidaActual.getCamino(), vistaCamino, this);
+        ventanaPrincipal.agregarPantalla(pantallaCamino, vistaCamino);
 
         // La selección se quita cuando el fundido ya terminó (si se quita antes, se ve el salto)
-        ventana.cambiarPantalla(pantallaCamino, null, () -> quitarSeleccion());
+        ventanaPrincipal.cambiarPantalla(pantallaCamino, null, () -> quitarPantallaSeleccion());
     }
 
     /** ControladorCaminoMazmorra: se eligió una flecha. */
@@ -138,33 +138,33 @@ public class ControladorMaestro {
 
     /** ControladorBatalla: alguien quedó sin vida. */
     public void batallaTerminada() {
-        if (partida == null) {
-            return;   // la partida se abandonó desde la pausa mientras terminaba la pelea
+        if (partidaActual == null) {
+            return;   // la partidaActual se abandonó desde la pausa mientras terminaba la pelea
         }
-        boolean gano = controladorBatalla.gano();
+        boolean gano = controladorBatalla.heroeGano();
 
         if (!gano) {
             terminarPartida(false);
-        } else if (partida.getCamino().llegoAlJefe()) {
-            partida.registrarVictoriaJefe();
+        } else if (partidaActual.getCamino().llegoAlJefe()) {
+            partidaActual.registrarVictoriaJefe();
             terminarPartida(true);
         } else {
-            partida.registrarVictoria();
+            partidaActual.registrarVictoria();
             controladorCamino.volverDeBatalla();   // pasa al lugar siguiente
-            ventana.cambiarPantalla(pantallaCamino, null, null);
+            ventanaPrincipal.cambiarPantalla(pantallaCamino, null, null);
         }
     }
 
     /** ControladorPausa: botón "Volver al juego". */
-    public void reanudar() {
-        ventana.atenuar(false);
+    public void reanudarPartida() {
+        ventanaPrincipal.atenuar(false);
     }
 
-    /** ControladorPausa: botón "Volver al título". Se descarta la partida sin guardar puntaje. */
+    /** ControladorPausa: botón "Volver al título". Se descarta la partidaActual sin guardar puntaje. */
     public void abandonarPartida() {
-        ventana.atenuar(false);
-        partida = null;
-        ventana.cambiarPantalla(pantallaMenu, null, null);
+        ventanaPrincipal.atenuar(false);
+        partidaActual = null;
+        ventanaPrincipal.cambiarPantalla(pantallaMenu, null, null);
     }
 
     /** ControladorPausa: botón "Salir del juego". */
@@ -180,45 +180,45 @@ public class ControladorMaestro {
      * El catálogo crea el enemigo con sus estadísticas ya ajustadas a la dificultad.
      */
     private void iniciarBatalla(Dificultad dificultad) {
-        Lugar lugar = partida.getCamino().getLugarActual();
+        Lugar lugar = partidaActual.getCamino().getLugarActual();
 
         Enemigo enemigo = catalogoEnemigos.crearPersonaje(lugar.getTipoEnemigo(), dificultad);
 
         // Pantalla de batalla nueva para cada pelea
         if (vistaBatalla != null) {
-            ventana.quitarPantalla(vistaBatalla);
+            ventanaPrincipal.quitarPantalla(vistaBatalla);
         }
         vistaBatalla = new VistaBatalla();
-        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partida.getHeroe(), enemigo, lugar), this);
-        ventana.agregarPantalla(pantallaBatalla, vistaBatalla);
+        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partidaActual.getHeroe(), enemigo, lugar), this);
+        ventanaPrincipal.agregarPantalla(pantallaBatalla, vistaBatalla);
 
-        ventana.cambiarPantalla(pantallaBatalla, null, null);
-        controladorBatalla.iniciar();
+        ventanaPrincipal.cambiarPantalla(pantallaBatalla, null, null);
+        controladorBatalla.iniciarBatalla();
     }
 
-    /** Esc durante la partida: oscurece el juego y abre el menú de pausa. */
+    /** Esc durante la partidaActual: oscurece el juego y abre el menú de pausa. */
     private void abrirPausa() {
-        ventana.atenuar(true);
+        ventanaPrincipal.atenuar(true);
         controladorPausa.mostrar();
     }
 
     // ---------- Auxiliares ----------
 
-    /** Pide el nombre, guarda el puntaje y vuelve al menú. */
+    /** Pide el nombreJugador, guarda el puntaje y vuelve al menú. */
     private void terminarPartida(boolean derrotoAlJefe) {
-        int puntos = partida.calcularPuntajeFinal();
-        String nombre = vistaBatalla.pedirNombreFinal(derrotoAlJefe, puntos);   // el texto lo arma la vista
-        if (nombre != null && !nombre.isBlank()) {
-            puntajeDAO.guardar(new Puntaje(nombre, partida.getHeroe().getNombre(), puntos));
+        int puntos = partidaActual.calcularPuntajeFinal();
+        String nombreJugador = vistaBatalla.pedirNombreFinal(derrotoAlJefe, puntos);   // el texto lo arma la vista
+        if (nombreJugador != null && !nombreJugador.isBlank()) {
+            puntajeDAO.guardar(new Puntaje(nombreJugador, partidaActual.getHeroe().getNombre(), puntos));
         }
-        partida = null;
-        ventana.cambiarPantalla(pantallaMenu, null, null);
+        partidaActual = null;
+        ventanaPrincipal.cambiarPantalla(pantallaMenu, null, null);
     }
 
     /** Saca la pantalla de selección de la ventana (ya no se necesita). */
-    private void quitarSeleccion() {
+    private void quitarPantallaSeleccion() {
         if (vistaSeleccion != null) {
-            ventana.quitarPantalla(vistaSeleccion);
+            ventanaPrincipal.quitarPantalla(vistaSeleccion);
             vistaSeleccion = null;
             controladorSeleccion = null;
         }
@@ -228,14 +228,14 @@ public class ControladorMaestro {
     private List<Heroe> crearHeroes() {
         List<Heroe> heroes = new ArrayList<>();
 
-        List<Habilidad> habilidadesArtorias = new ArrayList<>();
-        habilidadesArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
-        heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
+        List<Habilidad> habilidadesDeArtorias = new ArrayList<>();
+        habilidadesDeArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
+        heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesDeArtorias,
                 "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
 
-        List<Habilidad> habilidadesMerlin = new ArrayList<>();
-        habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
-        heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
+        List<Habilidad> habilidadesDeMerlin = new ArrayList<>();
+        habilidadesDeMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
+        heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesDeMerlin,
                 "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Mago de Gwyn"));
 
         return heroes;
