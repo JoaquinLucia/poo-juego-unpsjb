@@ -2,133 +2,188 @@ package controlador;
 
 import javax.swing.Timer;
 import modelo.Batalla;
+import modelo.Entidad;
+import modelo.ObservadorBatalla;
 import vista.VistaBatalla;
 
 /*
- * Controla la pantalla de combate. Las reglas (turnos, estados, cooldowns)
- * viven en modelo.Batalla; este controlador traduce los botones en pedidos
- * a Batalla y refleja en la vista lo que pasó.
- * Cuando la pelea termina, se lo avisa al mediador; el mediador pregunta gano().
+ * Controla la pantalla de combate. Es un Observador de Batalla: no pregunta
+ * "¿terminó?" ni "¿está aturdido?", Batalla le avisa y él lo refleja en la vista.
+ * Los botones se traducen en pedidos a Batalla.
  */
-public class ControladorBatalla {
+public class ControladorBatalla implements ObservadorBatalla {
 
     private final VistaBatalla vista;
     private final Batalla batalla;
-    
     private final ControladorMaestro controlador;
 
-    private final int pausaEnemigoMs = 800;    // para que se vea qué hizo cada uno
+    private final int pausaEnemigoMs = 2500;    // para que se vea qué hizo cada uno
     private final int pausaFinalMs = 1500;     // para que se vea el resultado antes de cambiar de pantalla
-    private boolean terminada = false;
 
     public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro controlador) {
         this.vista = vista;
         this.batalla = batalla;
         this.controlador = controlador;
-        vista.onAtacar(e -> atacar());
-        vista.onHabilidad(e -> usarHabilidad(0));
+
+        batalla.suscribir(this);
+        
+        // Conectado con animación previa al ataque o habilidad del héroe
+        vista.onAtacar(e -> ejecutarAtaqueHeroeConAnimacion());
+        vista.onHabilidad(e -> usarHabilidadHeroeConAnimacion(0));
     }
 
-    /** Muestra el estado inicial de la pelea. */
+    /** Muestra el estado inicial y arranca la pelea. */
     public void iniciar() {
-            vista.mostrarRetratos(batalla.getHeroe().getSpriteFrontal(),batalla.getEnemigo().getSpriteFrontal());
-        actualizar();
+        vista.mostrarFondo(batalla.getLugar().getRutaCombate());
+        vista.mostrarRetratos(batalla.getHeroe().getSpriteFrontal(),
+                            batalla.getEnemigo().getSpriteFrontal());
+        
+        // Carga el sprite inicial del enemigo en reposo (primer frame)
+        String rutaSpriteEnemigo = obtenerRutaSpriteAtaque(batalla.getEnemigo().getNombre());
+        vista.mostrarSpriteEnemigo(rutaSpriteEnemigo);
+
+        // Carga el sprite inicial del héroe en reposo (primer frame)
+        String rutaSpriteHeroe = obtenerRutaSpriteHeroe(batalla.getHeroe().getNombre());
+        vista.mostrarSpriteHeroe(rutaSpriteHeroe);
+
+        refrescarVidas();
+        batalla.comenzar();   // llega turnoCambiado con el primer turno
     }
 
-    /** Lo consulta el mediador después de recibir BATALLA_TERMINADA. */
+    /** Lo consulta el controlador maestro después de recibir BATALLA_TERMINADA. */
     public boolean gano() {
         return batalla.resultadoBatalla();
     }
 
-    // ---------- Acciones del héroe ----------
-    private boolean puedeActuar() { // <-- nuevo
-        return batalla.getTurnoActual() == Batalla.Turno.HEROE && !batalla.batallaTerminada();
+    private void ejecutarAtaqueHeroeConAnimacion() {
+        vista.setBotonesHabilitados(false);
+        String rutaHeroe = obtenerRutaSpriteHeroe(batalla.getHeroe().getNombre());
+        
+        vista.animarAtaqueHeroe(rutaHeroe, () -> {
+            batalla.ejecutarAtaqueHeroe();
+        });
     }
 
-    private void atacar() {
-        if (!puedeActuar()) return;
+    private void usarHabilidadHeroeConAnimacion(int indice) {
+        if (getTurnosEnfriamiento(indice) > 0) {
+            vista.mostrarEnfriamiento(getNombreHabilidad(indice), getTurnosEnfriamiento(indice));
+            return;
+        }
 
-        boolean aturdido = batalla.heroeAturdido();   // se pregunta antes: después ya es turno del enemigo
-        batalla.ejecutarAtaqueHeroe();
-        if (!aturdido) {
-            vista.efectoTemblor();
-            vista.mostrarAtaque(getNombreHeroe(),getNombreEnemigo(),  // <-- nuevo
-            batalla.getUltimoDanio());
-        }
-        actualizar();
-    }
-    
-    private void usarHabilidad(int indice) {
-        if (!puedeActuar()) return;
+        vista.setBotonesHabilitados(false);
+        String rutaHeroe = obtenerRutaSpriteHeroe(batalla.getHeroe().getNombre());
 
-        boolean aturdido = batalla.heroeAturdido();
-        if (!aturdido && !batalla.getHeroe().puedeUsarHabilidad(indice)) {
-            return;   // habilidad en enfriamiento: no se gasta el turno
-        }
-        batalla.ejecutarHabilidadHeroe(indice);
-        if (!aturdido) {
-            vista.efectoTemblor();
-            vista.mostrarHabilidad(getNombreHeroe(), getNombreHabilidad(indice),getNombreEnemigo(), batalla.getUltimoDanio());// <-- nuevo
-        }
-        actualizar();
+        vista.animarAtaqueHeroe(rutaHeroe, () -> {
+            batalla.ejecutarHabilidadHeroe(indice);
+        });
     }
 
-    // ---------- Pantalla  ----------
-     /** Refleja el estado de la batalla y decide qué sigue. */
-    private void actualizar() {
-        vista.actualizarEstadisticas(
-                getNombreHeroe(), batalla.getHeroe().getVida(),// <-- nuevo
-                getNombreEnemigo(), batalla.getEnemigo().getVida());// <-- nuevo
- 
-        if (batalla.batallaTerminada()) {
-            terminar();
-        } else if (batalla.getTurnoActual() == Batalla.Turno.ENEMIGO) {
-            vista.mostrarTurno(getNombreEnemigo());   // <-- nuevo
+    // ---------- Avisos de la batalla ----------
+
+    @Override
+    public void ataqueRealizado(Entidad atacante, Entidad objetivo, int danio) {
+        vista.efectoTemblor();
+        vista.mostrarAtaque(atacante.getNombre(), objetivo.getNombre(), danio);
+        refrescarVidas();
+    }
+
+    @Override
+    public void habilidadUsada(Entidad usuario, String habilidad, Entidad objetivo, int danio) {
+        vista.efectoTemblor();
+        vista.mostrarHabilidad(usuario.getNombre(), habilidad, objetivo.getNombre(), danio);
+        refrescarVidas();
+    }
+
+    @Override
+    public void turnoPerdido(Entidad aturdida) {
+        vista.mostrarAturdido(aturdida.getNombre());
+    }
+
+    @Override
+    public void turnoCambiado(Entidad aQuienLeToca) {
+        refrescarVidas();   // un veneno pudo bajar vida al cerrar el turno anterior
+        vista.mostrarTurno(aQuienLeToca.getNombre());
+        
+        if (aQuienLeToca == batalla.getEnemigo()) {
             vista.setBotonesHabilitados(false);
-            programarTurnoEnemigo();
+            
+            String rutaSpriteEnemigo = obtenerRutaSpriteAtaque(batalla.getEnemigo().getNombre());
+            
+            despuesDe(pausaEnemigoMs, () -> {
+                // Reproduce la animación del enemigo y al terminar ejecuta el golpe en el modelo
+                vista.animarAtaqueEnemigo(rutaSpriteEnemigo, () -> {
+                    batalla.ejecutarTurnoEnemigo();
+                });
+            });
         } else {
-            vista.mostrarTurno(getNombreHeroe());   // <-- nuevo
             vista.setBotonesHabilitados(true);   // si está aturdido, al tocar un botón pierde el turno
         }
     }
 
-    /** El enemigo juega después de una pausa (una sola vez por turno). */
-    /** El enemigo juega después de una pausa. */
-    private void programarTurnoEnemigo() {
-        Timer espera = new Timer(pausaEnemigoMs, e -> {
-            vista.efectoTemblor();
-            batalla.ejecutarTurnoEnemigo();
-            actualizar();
-        });
-
-        espera.setRepeats(false);
-        espera.start();
-    }
-
-    /** Muestra el resultado y, tras una pausa, le avisa al mediador (una sola vez). */
-    private void terminar() {
-        if (terminada) {return;}
-        terminada = true;
+    @Override
+    public void finDeBatalla(boolean victoria) {
+        refrescarVidas();
         vista.setBotonesHabilitados(false);
-        vista.mostrarResultado(gano());   // el texto ("¡Victoria!" / "Derrota...") lo arma la vista
- 
-        despuesDe(pausaFinalMs, () -> controlador.batallaTerminada());
+
+        if (victoria) {
+            // Si ganamos, reproducimos la animación de derrota del enemigo antes de cerrar
+            String rutaDerrota = obtenerRutaSpriteDerrota(batalla.getEnemigo().getNombre());
+            vista.animarDerrotaEnemigo(rutaDerrota, () -> {
+                finalizarConRetraso(victoria);
+            });
+        } else {
+            // Si perdimos (muere el héroe), reproducimos su animación de derrota antes de cerrar
+            String rutaDerrotaHeroe = obtenerRutaSpriteDerrotaHeroe(batalla.getHeroe().getNombre());
+            vista.animarDerrotaHeroe(rutaDerrotaHeroe, () -> {
+                finalizarConRetraso(victoria);
+            });
+        }
     }
+
+    private void finalizarConRetraso(boolean victoria) {
+        vista.mostrarResultado(victoria);
+        despuesDe(pausaFinalMs, () -> {
+            batalla.desuscribir(this);   // ya no necesita avisos de esta batalla
+            controlador.batallaTerminada();
+        });
+    }
+
+    // ---------- Auxiliares ----------
+
+    private String obtenerRutaSpriteAtaque(String nombreEnemigo) {
+        return "/recursos/sprites/" + nombreEnemigo.toLowerCase() + "_ataque.png";
+    }
+
+    private String obtenerRutaSpriteHeroe(String nombreHeroe) {
+        return "/recursos/sprites/" + nombreHeroe.toLowerCase() + "_ataque.png";
+    }
+
+    private String obtenerRutaSpriteDerrota(String nombreEnemigo) {
+        return "/recursos/sprites/" + nombreEnemigo.toLowerCase() + "_derrota.png";
+    }
+
+    private String obtenerRutaSpriteDerrotaHeroe(String nombreHeroe) {
+        return "/recursos/sprites/" + nombreHeroe.toLowerCase() + "_derrota.png";
+    }
+
+    private void refrescarVidas() {
+        vista.actualizarEstadisticas(
+                batalla.getHeroe().getNombre(), batalla.getHeroe().getVida(),
+                batalla.getEnemigo().getNombre(), batalla.getEnemigo().getVida());
+    }
+
     /** Ejecuta una acción una sola vez después de una pausa. */
     private void despuesDe(int ms, Runnable accion) {
         Timer timer = new Timer(ms, e -> accion.run());
         timer.setRepeats(false);
         timer.start();
     }
-    ///////// GET  
-    /// get para ller mas facil 
-    public String getNombreHeroe(){
-        return batalla.getHeroe().getNombre();
-    }
-    public String getNombreEnemigo(){
-        return batalla.getEnemigo().getNombre();
-    }
-    public String getNombreHabilidad(int indice){
+
+    public String getNombreHabilidad(int indice) {
         return batalla.getHeroe().getHabilidad(indice).getNombreHabilidad();
+    }
+
+    public int getTurnosEnfriamiento(int indice) {
+        return batalla.getHeroe().getHabilidad(indice).getCooldownActual();
     }
 }

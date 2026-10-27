@@ -1,46 +1,110 @@
 package modelo;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * Sujeto del patrón Observer. Guarda la lista de observadores, ofrece
+ * suscribir/desuscribir, y después de cada cambio la recorre y avisa a cada uno.
+ */
 public class Batalla {
 
     public enum Turno { HEROE, ENEMIGO }
 
     private final Heroe heroe;
     private final Enemigo enemigo;
-    private int ultimoDanio;
+    private final Lugar lugar;
     private Turno turnoActual = Turno.HEROE;
 
-    public Batalla(Heroe heroe, Enemigo enemigo) {
+    private final List<ObservadorBatalla> observadores = new ArrayList<>();
+
+    public Batalla(Heroe heroe, Enemigo enemigo, Lugar lugar) {
         this.heroe = heroe;
         this.enemigo = enemigo;
+        this.lugar = lugar;
         // Que no queden efectos ni cooldowns de una batalla anterior
         heroe.prepararParaBatalla();
         enemigo.prepararParaBatalla();
     }
 
+    // ---------- Observer ----------
+
+    public boolean suscribir(ObservadorBatalla observador) {
+        if (observador == null) {
+            return false;
+        }
+        this.observadores.add(observador);
+        return true;
+    }
+
+    public boolean desuscribir(ObservadorBatalla observador) {
+        return this.observadores.remove(observador);
+    }
+
+    private void avisarAtaque(Entidad atacante, Entidad objetivo, int danio) {
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.ataqueRealizado(atacante, objetivo, danio);
+        }
+    }
+
+    private void avisarHabilidad(Entidad usuario, String habilidad, Entidad objetivo, int danio) {
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.habilidadUsada(usuario, habilidad, objetivo, danio);
+        }
+    }
+
+    private void avisarTurnoPerdido(Entidad aturdida) {
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.turnoPerdido(aturdida);
+        }
+    }
+
+    private void avisarCambioTurno() {
+        Entidad actual = (turnoActual == Turno.HEROE) ? heroe : enemigo;
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.turnoCambiado(actual);
+        }
+    }
+
+    private void avisarFin() {
+        boolean victoria = resultadoBatalla();
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.finDeBatalla(victoria);
+        }
+    }
+
+    /** Avisa a quién le toca el primer turno. Se llama después de suscribir a los observadores. */
+    public void comenzar() {
+        avisarCambioTurno();
+    }
+
+    // ---------- Acciones ----------
+
     public void ejecutarAtaqueHeroe() {
         if (turnoActual != Turno.HEROE || batallaTerminada()) return;
 
         if (heroe.puedeActuar()) {
-            heroe.atacar(enemigo);
+            int danio = heroe.atacar(enemigo);
+            avisarAtaque(heroe, enemigo, danio);
         } else {
-            perderTurno(heroe);
+            avisarTurnoPerdido(heroe);
         }
         terminarAccion();
     }
 
     /** Devuelve false si la habilidad está en cooldown (el turno NO se gasta). */
-    public boolean ejecutarHabilidadHeroe(int indiceHabilidad) {
+    public boolean ejecutarHabilidadHeroe(int indice) {
         if (turnoActual != Turno.HEROE || batallaTerminada()) return false;
 
         if (heroe.puedeActuar()) {
-            if (!heroe.puedeUsarHabilidad(indiceHabilidad)) {
-                return false; // la interfaz avisa "en enfriamiento"
+            if (!heroe.puedeUsarHabilidad(indice)) {
+                return false;   // el controlador avisa "en enfriamiento"
             }
-            heroe.usarHabilidad(indiceHabilidad, enemigo);
+            String nombre = heroe.getHabilidad(indice).getNombreHabilidad();
+            int danio = heroe.usarHabilidad(indice, enemigo);
+            avisarHabilidad(heroe, nombre, enemigo, danio);
         } else {
-            perderTurno(heroe);
+            avisarTurnoPerdido(heroe);
         }
         terminarAccion();
         return true;
@@ -50,16 +114,34 @@ public class Batalla {
         if (turnoActual != Turno.ENEMIGO || batallaTerminada()) return;
 
         if (enemigo.puedeActuar()) {
-            enemigo.actuarEnemigo(heroe);
+            int indice = enemigo.elegirHabilidad();
+            if (indice >= 0) {
+                String nombre = enemigo.getHabilidad(indice).getNombreHabilidad();//hacxer getet
+                int danio = enemigo.usarHabilidad(indice, heroe);//hacer get
+                avisarHabilidad(enemigo, nombre, heroe, danio);
+            } else {
+                int danio = enemigo.atacar(heroe);
+                avisarAtaque(enemigo, heroe, danio);
+            }
         } else {
-            perderTurno(enemigo);
+            avisarTurnoPerdido(enemigo);
         }
         terminarAccion();
     }
 
-    private void perderTurno(Entidad entidad) {
-        ultimoDanio = 0;
-        System.out.println(entidad.getNombre() + " está aturdido y pierde 1 turno");
+    // ---------- Flujo de turnos ----------
+
+    private void terminarAccion() {
+        if (batallaTerminada()) {
+            avisarFin();
+            return;
+        }
+        pasarTurno();
+        if (batallaTerminada()) {   // un veneno puede matar al cerrar el turno
+            avisarFin();
+            return;
+        }
+        avisarCambioTurno();
     }
 
     /** Al final del turno de cada uno, se procesan los efectos que tiene encima. */
@@ -73,19 +155,7 @@ public class Batalla {
         }
     }
 
-    private void terminarAccion() {
-        if (!batallaTerminada()) {
-            pasarTurno();
-        }
-    }
-
-    // el int devuelve el último daño que se realizó, lo usamos para imprimir en consola por cada turno
-    public int getUltimoDanio() { return ultimoDanio; }
-
-    /** Al que le toca ahora está aturdido (sirve para avisarle al jugador). */
-    public boolean heroeAturdido() {
-        return turnoActual == Turno.HEROE && !heroe.puedeActuar();
-    }
+    // ---------- Consultas ----------
 
     /** Efectos que tiene encima el héroe (veneno, desangrado, aturdimiento). */
     public List<EfectoPorTurno> getEfectosSobreHeroe() {
@@ -108,4 +178,6 @@ public class Batalla {
     public Heroe getHeroe()         { return heroe; }
     public Enemigo getEnemigo()     { return enemigo; }
     public Turno getTurnoActual()   { return turnoActual; }
+    public Lugar getLugar()         { return lugar; }
+
 }

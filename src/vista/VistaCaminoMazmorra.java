@@ -1,4 +1,3 @@
-
 //VERSION 3 .1 nevo
 package vista;
  
@@ -140,10 +139,11 @@ public class VistaCaminoMazmorra extends JPanel {
     /** Botón que se ve solo como la imagen de la flecha: se aclara con el mouse y se oscurece al hacer clic. */
     private JButton crearFlecha(String ruta, String textoAlternativo) {
         JButton boton = new JButton();
-        boton.setContentAreaFilled(false);
         boton.setBorderPainted(false);
         boton.setFocusPainted(false);
+        boton.setContentAreaFilled(false);
         boton.setOpaque(false);
+        boton.setRolloverEnabled(true); // Asegura que detecte el hover y los clics correctamente en componentes transparentes
         boton.setBorder(BorderFactory.createEmptyBorder());
         boton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
@@ -209,7 +209,7 @@ public class VistaCaminoMazmorra extends JPanel {
     /** factor > 1 aclara, factor < 1 oscurece (la transparencia no se toca). */
     private BufferedImage ajustarBrillo(BufferedImage imagen, float factor) {
         RescaleOp op = new RescaleOp(new float[]{factor, factor, factor, 1f},
-                                    new float[]{0f, 0f, 0f, 0f}, null);
+                                     new float[]{0f, 0f, 0f, 0f}, null);
         return op.filter(imagen, null);
     }
 }

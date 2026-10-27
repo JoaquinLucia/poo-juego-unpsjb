@@ -1,4 +1,5 @@
 package vista;
+
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
 import javax.swing.JPanel;
@@ -6,14 +7,12 @@ import javax.swing.Timer;
 import vista.paneles.PanelBatalla;
 import vista.paneles.PanelInferior; 
 
- // Pantalla de combate. Es un panel dentro de VentanaPrincipal
-
-public class VistaBatalla extends JPanel{
-    private final PanelBatalla panelFondo= new PanelBatalla();
+// Pantalla de combate. Es un panel dentro de VentanaPrincipal
+public class VistaBatalla extends JPanel {
+    private final PanelBatalla panelFondo = new PanelBatalla();
     private final PanelInferior panelInferior = new PanelInferior();
     private Timer timerTemblor;
     private int pasosTemblor;
-
 
     public VistaBatalla() {        
         super(new BorderLayout(0, 0));
@@ -41,10 +40,17 @@ public class VistaBatalla extends JPanel{
         });
         timerTemblor.start();
     }
+
     // --- MÉTODOS PARA QUE EL CONTROLADOR ACTUALICE LA INTERFAZ ---
+    public void mostrarFondo(String rutaFondo) {
+        panelFondo.reiniciar();
+        panelFondo.setFondo(rutaFondo);
+    }
+
     public void actualizarEstadisticas(String nombreHeroe, int vidaHeroe, String nombreEnemigo, int vidaEnemigo) {
         panelFondo.actualizarBarras(nombreHeroe, vidaHeroe, nombreEnemigo, vidaEnemigo);
     }
+
     public void mostrarResultado(boolean gano) {
         mostrarResultado(gano ? "¡Victoria!" : "Derrota...");
     }
@@ -61,6 +67,11 @@ public class VistaBatalla extends JPanel{
         mostrarResultado(atacante + " usó " + habilidad + " sobre " + objetivo + " (" + danio + " de daño)");
     }
 
+    public void mostrarEnfriamiento(String habilidad, int turnos) {
+        String unidad = (turnos == 1) ? "turno" : "turnos";
+        mostrarResultado(habilidad + " está en enfriamiento (" + turnos + " " + unidad + ")");
+    }
+
     public void mostrarTurno(String nombre) {
         panelInferior.mostrarTurno("Turno de " + nombre);
     }
@@ -68,9 +79,11 @@ public class VistaBatalla extends JPanel{
     public void setBotonesHabilitados(boolean estado) {
         panelInferior.setBotonesHabilitados(estado);
     }
+
     public void mostrarRetratos(String rutaHeroe, String rutaEnemigo) {
         panelInferior.setRetratos(rutaHeroe, rutaEnemigo);
     }
+
     /** Muestra el resultado final y pide el nombre del jugador. Devuelve null si cancela. */
     public String pedirNombreFinal(boolean derrotoAlJefe, int puntos) {
         String titulo = derrotoAlJefe ? "¡Derrotaste al jefe!" : "Has caído en la mazmorra...";
@@ -78,22 +91,47 @@ public class VistaBatalla extends JPanel{
         return javax.swing.JOptionPane.showInputDialog(this, mensaje, "Fin de la partida",
                 javax.swing.JOptionPane.PLAIN_MESSAGE);
     }
-    //nuevo revisa 
-    // /** Muestra el resultado final y pide el nombre del jugador. Devuelve null si cancela. */
-    // public String pedirNombreFinal(boolean derrotoAlJefe, int puntos) {
-    //     String titulo = derrotoAlJefe ? "¡Derrotaste al jefe!" : "Has caído en la mazmorra...";
-    //     return JOptionPane.showInputDialog(this,
-    //             titulo + "\nPuntaje: " + puntos + "\n\nIngresá tu nombre:",
-    //             "Fin de la partida", JOptionPane.PLAIN_MESSAGE);
-    // }
+
+    public void mostrarAturdido(String nombre) {
+        mostrarResultado(nombre + " está aturdido y pierde el turno");
+    }
+
+    // --- MÉTODOS DE ANIMACIÓN PARA EL ENEMIGO Y EL HÉROE ---
+    public void mostrarSpriteEnemigo(String rutaSprite) {
+        panelFondo.mostrarSpriteEnemigo(rutaSprite);
+    }
+
+    public void mostrarSpriteHeroe(String rutaSprite) {
+        panelFondo.mostrarSpriteHeroe(rutaSprite);
+    }
+
+    public void animarAtaqueEnemigo(String rutaSpriteSheet, Runnable alTerminar) {
+        panelFondo.reproducirAnimacionAtaque(rutaSpriteSheet, alTerminar);
+    }
+
+    public void animarAtaqueHeroe(String rutaSpriteSheet, Runnable alTerminar) {
+        panelFondo.reproducirAnimacionAtaqueHeroe(rutaSpriteSheet, alTerminar);
+    }
+
+    public void animarDerrotaEnemigo(String rutaSpriteSheet, Runnable alTerminar) {
+        panelFondo.reproducirAnimacionDerrota(rutaSpriteSheet, alTerminar);
+    }
+
+    public void animarDerrotaHeroe(String rutaSpriteSheet, Runnable alTerminar) {
+        panelFondo.reproducirAnimacionDerrotaHeroe(rutaSpriteSheet, alTerminar);
+    }
 
     // --- ENGANCHES DE BOTONES PARA EL CONTROLADOR ---
 
     public void onAtacar(ActionListener listener) {
-        panelInferior.getBotonAtacar().addActionListener(listener);
+        var boton = panelInferior.getBotonAtacar();
+        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
+        boton.addActionListener(listener);
     }
 
     public void onHabilidad(ActionListener listener) {
-        panelInferior.getBotonHabilidad().addActionListener(listener);
+        var boton = panelInferior.getBotonHabilidad();
+        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
+        boton.addActionListener(listener);
     }
 }

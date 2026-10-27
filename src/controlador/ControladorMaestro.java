@@ -1,8 +1,12 @@
 package controlador;
 
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFrame;
+import controlador.utilidades.GestorDeSonido;
 import modelo.Batalla;
 import modelo.Dificultad;
 import modelo.Enemigo;
@@ -13,8 +17,8 @@ import modelo.Partida;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import modelo.SeleccionHeroe;
-import modelo.factory.FabricaEnemigo;
-import modelo.factory.FabricaHabilidad;
+import modelo.catalogos.CatalogoEnemigos;
+import modelo.catalogos.CatalogoHabilidades;
 import persistencia.ConexionBD;
 import vista.VentanaPrincipal;
 import vista.VistaBatalla;
@@ -43,8 +47,8 @@ public class ControladorMaestro {
     private final String pantallaBatalla = "batalla";
 
     private final VentanaPrincipal ventana = new VentanaPrincipal();
-    private final FabricaHabilidad fabricaHabilidad = new FabricaHabilidad();
-    private final FabricaEnemigo fabricaEnemigo = new FabricaEnemigo(fabricaHabilidad);
+    private final CatalogoHabilidades catalogoHabilidades = new CatalogoHabilidades();
+    private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(catalogoHabilidades);
     private final PuntajeDAO puntajeDAO;   // interfaz: la implementación (SQLite) la elige el main
 
     // ---- Controladores de cada pantalla ----
@@ -74,10 +78,20 @@ public class ControladorMaestro {
         ventana.registrarTecla(KeyEvent.VK_ESCAPE, "pausa",
                 () -> abrirPausa(),
                 () -> partida != null && !ventana.enTransicion());
+
+        // Cerrar con la X también pasa por salirDelJuego(), así la conexión se cierra siempre
+        ventana.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        ventana.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                salirDelJuego();
+            }
+        });
     }
 
     /** Arranca el juego mostrando el menú. */
     public void iniciar() {
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
         controladorMenu.mostrar();
         ventana.mostrarDirecto(pantallaMenu);
     }
@@ -86,6 +100,7 @@ public class ControladorMaestro {
 
     /** ControladorMenu: botón "Comenzar". Pantalla de selección nueva cada vez. */
     public void comenzar() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton comenzar
         quitarSeleccion();
         vistaSeleccion = new PanelSeleccionPersonaje();
         controladorSeleccion = new ControladorSeleccion(vistaSeleccion, new SeleccionHeroe(crearHeroes()), this);
@@ -95,11 +110,16 @@ public class ControladorMaestro {
 
     /** ControladorSeleccion: botón "Volver". */
     public void volverAlMenu() {
-        ventana.cambiarPantalla(pantallaMenu, null, () -> quitarSeleccion());
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton volver
+        ventana.cambiarPantalla(pantallaMenu, null, () -> {
+            GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
+            quitarSeleccion();
+        });
     }
 
     /** ControladorSeleccion: botón "Elegir héroe". Empieza la partida en el primer camino. */
     public void heroeElegido() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton heroe elegido
         partida = new Partida(controladorSeleccion.getHeroeElegido());
 
         // Pantalla del camino nueva para cada partida (así no se acumulan listeners)
@@ -116,11 +136,13 @@ public class ControladorMaestro {
 
     /** ControladorCaminoMazmorra: se eligió una flecha. */
     public void caminoElegido() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton camino elegido
         iniciarBatalla(controladorCamino.getDificultadElegida());
     }
 
     /** ControladorCaminoMazmorra: botón de la sala del jefe. */
     public void enfrentarJefe() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton enfrentar jefe
         iniciarBatalla(Dificultad.NORMAL);
     }
 
@@ -139,19 +161,23 @@ public class ControladorMaestro {
         } else {
             partida.registrarVictoria();
             controladorCamino.volverDeBatalla();   // pasa al lugar siguiente
+            GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
             ventana.cambiarPantalla(pantallaCamino, null, null);
         }
     }
 
     /** ControladorPausa: botón "Volver al juego". */
     public void reanudar() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton reanudar
         ventana.atenuar(false);
     }
 
     /** ControladorPausa: botón "Volver al título". Se descarta la partida sin guardar puntaje. */
     public void abandonarPartida() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav"); // sonido boton abandonar partida
         ventana.atenuar(false);
         partida = null;
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
         ventana.cambiarPantalla(pantallaMenu, null, null);
     }
 
@@ -165,20 +191,39 @@ public class ControladorMaestro {
 
     /**
      * Batalla contra el enemigo del lugar actual (en la sala del jefe, el jefe).
-     * La fábrica crea el enemigo con sus valores base y después se ajusta a la dificultad.
+     * El catálogo crea el enemigo con sus estadísticas ya ajustadas a la dificultad.
      */
     private void iniciarBatalla(Dificultad dificultad) {
         Lugar lugar = partida.getCamino().getLugarActual();
 
-        Enemigo enemigo = fabricaEnemigo.crearPersonaje(lugar.getTipoEnemigo());
-        enemigo.aplicarDificultad(dificultad);
+        Enemigo enemigo = catalogoEnemigos.crearPersonaje(lugar.getTipoEnemigo(), dificultad);
+
+        // sonido musica de enemigo
+        switch (lugar.getTipoEnemigo().toLowerCase()) {
+            case "esclavo":
+                GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/esclavo_musica.wav"); // sonido enemigo esclavo
+                break;
+            case "cazador":
+                GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/cazador_musica.wav"); // sonido enemigo cazador
+                break;
+            case "jester":
+            case "jestar":
+                GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/jester_musica.wav"); // sonido enemigo jester
+                break;
+            case "akuma":
+                GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/akuma_musica.wav"); // sonido jefe akuma
+                break;
+            default:
+                GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
+                break;
+        }
 
         // Pantalla de batalla nueva para cada pelea
         if (vistaBatalla != null) {
             ventana.quitarPantalla(vistaBatalla);
         }
         vistaBatalla = new VistaBatalla();
-        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partida.getHeroe(), enemigo), this);
+        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partida.getHeroe(), enemigo, lugar), this);
         ventana.agregarPantalla(pantallaBatalla, vistaBatalla);
 
         ventana.cambiarPantalla(pantallaBatalla, null, null);
@@ -201,6 +246,7 @@ public class ControladorMaestro {
             puntajeDAO.guardar(new Puntaje(nombre, partida.getHeroe().getNombre(), puntos));
         }
         partida = null;
+        GestorDeSonido.getInstancia().reproducirMusicaEnBucle("recursos/sonidos/juego_musica.wav"); // sonido musica general juego
         ventana.cambiarPantalla(pantallaMenu, null, null);
     }
 
@@ -218,14 +264,14 @@ public class ControladorMaestro {
         List<Heroe> heroes = new ArrayList<>();
 
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
-        habilidadesArtorias.add(fabricaHabilidad.crearHabilidad("golpe_aturdidor"));
-        heroes.add(new Heroe("Artorias", 600, 1, 4, habilidadesArtorias,
-                "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
+        habilidadesArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
+        heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
+           "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg","Caballero de gwyn"));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
-        habilidadesMerlin.add(fabricaHabilidad.crearHabilidad("dardo_venenoso"));
-        heroes.add(new Heroe("Merlin", 450, 65, 4, habilidadesMerlin,
-                "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Escolta de Gwyn"));
+        habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
+        heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
+           "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg","Mago de Gwyn"));
 
         return heroes;
     }

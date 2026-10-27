@@ -5,10 +5,10 @@ import java.util.List;
 
 public abstract class Entidad {
     private String nombre;
-    protected int vida;
-    protected int vidaActual;
+    private int vida;
+    private int vidaActual; // <-- ¡Faltaba declarar este atributo!
     private final int vidaMaxima; // la vida con la que arranca; tope para las curaciones
-    protected int ataque;
+    private int ataque;
     private List<Habilidad> habilidades;
     private int cantidadHabilidadMax;
     private String sprite;
@@ -18,7 +18,7 @@ public abstract class Entidad {
     private final List<EfectoPorTurno> efectos = new ArrayList<>(); // efectos que tiene ENCIMA
 
     public Entidad(String nombre, int vida, int ataque, int cantidadHabilidadMax,
-                   List<Habilidad> habilidades, String sprite, String spriteFrontal) {
+        List<Habilidad> habilidades, String sprite, String spriteFrontal) {
         if (vida <= 0) {
             throw new IllegalArgumentException("La vida debe ser mayor a 0");
         }
@@ -40,16 +40,17 @@ public abstract class Entidad {
     }
 
     // ---------- Combate ----------
-    public void recibirDanio(int danio) {
-        this.vida -= danio;
-        if (this.vida < 0) {
-            this.vida = 0;
-        }
-        this.vidaActual = this.vida; // Sincronizamos con vidaActual
+    /** Resta vida y devuelve el daño que recibió realmente (no baja de 0). */
+    public int recibirDanio(int danio) {
+        int vidaAntes = vida;
+        vida = Math.max(0, vida - danio);
+        this.vidaActual = vida; // Sincronizamos
+        return vidaAntes - vida;
     }
 
-    public void atacar(Entidad objetivo) {
-        objetivo.recibirDanio(this.ataque);
+    /** Devuelve el daño que hizo. */
+    public int atacar(Entidad objetivo) {   
+        return objetivo.recibirDanio(this.ataque);
     }
 
     public boolean estaVivo() {
@@ -66,7 +67,21 @@ public abstract class Entidad {
     }
 
     // ---------- Habilidades ----------
-    public void agregarHabilidad(Habilidad habilidad) {
+
+    /** Devuelve el daño que le hizo al objetivo. */
+    public int usarHabilidad(int posicion, Entidad objetivo) {
+      if (posicion < 0 || posicion >= getCantidadHabilidades()) {
+          throw new IllegalArgumentException("Habilidad inválida");
+      }
+      return habilidades.get(posicion).ejecutarHabilidad(this, objetivo);
+  }
+
+    public boolean puedeUsarHabilidad(int posicion) {
+        return posicion >= 0 && posicion < getCantidadHabilidades()
+            && habilidades.get(posicion).getCdListo();
+    }
+
+     public void agregarHabilidad(Habilidad habilidad) {
         if (habilidad == null) {
             throw new IllegalArgumentException("La habilidad no puede ser null");
         }
@@ -76,18 +91,6 @@ public abstract class Entidad {
         habilidades.add(habilidad);
     }
 
-    public void usarHabilidad(int posicion, Entidad objetivo) {
-        if (posicion < 0 || posicion >= getCantidadHabilidades()) {
-            throw new IllegalArgumentException("Habilidad inválida");
-        }
-        habilidades.get(posicion).ejecutarHabilidad(this, objetivo);
-    }
-
-    public boolean puedeUsarHabilidad(int posicion) {
-        return posicion >= 0 && posicion < getCantidadHabilidades()
-            && habilidades.get(posicion).getCdListo();
-    }
-
     public void reducirCooldowns() {
         for (Habilidad h : habilidades) {
             h.cronoCooldown();
@@ -95,8 +98,6 @@ public abstract class Entidad {
     }
 
     // ---------- Efectos ----------
-    // Las habilidades del rival se registran acá al aplicarse sobre esta entidad.
-
     /** Lo usa la habilidad que aturde (o libera) a esta entidad. */
     public void setAturdida(boolean aturdida) { this.aturdida = aturdida; }
 
@@ -146,13 +147,13 @@ public abstract class Entidad {
     }
 
     // ---------- Getters ----------
-    public String getNombre()           { return this.nombre; }
-    public int getVida()               { return this.vida; }
-    public int getVidaActual()         { return this.vidaActual; }
-    public int getVidaMaxima()         { return this.vidaMaxima; }
-    public String getSprite()          { return sprite; }
-    public String getSpriteFrontal()   { return spriteFrontal; }
-    public int getAtaque()             { return this.ataque; }
+    public String getNombre()              { return this.nombre; }
+    public int getVida()                 { return this.vida; }
+    public int getVidaActual()           { return this.vidaActual; } // <-- Útil agregarlo también
+    public int getVidaMaxima()           { return this.vidaMaxima; }
+    public String getSprite()            { return sprite; }
+    public String getSpriteFrontal()     { return spriteFrontal; }
+    public int getAtaque()               { return this.ataque; }
     public List<Habilidad> getHabilidades() { return this.habilidades; }
     public int getCantidadHabilidadMax()    { return cantidadHabilidadMax; }
 
