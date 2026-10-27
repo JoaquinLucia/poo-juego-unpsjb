@@ -14,7 +14,9 @@ public class GestorDeSonido {
     
     // Variable para recordar qué música en bucle está sonando actualmente
     private String musicaActualEnBucle = null;
-
+    // Variables para las opciones de gestion de volumen
+    private int volumenMusica = 100;
+    private int volumenEfectos = 100; 
     // Constructor privado 
     private GestorDeSonido() {}
 
@@ -39,6 +41,7 @@ public class GestorDeSonido {
                     clip.stop();
                 }
                 clip.setFramePosition(0);
+                aplicarVolumen(clip, volumenEfectos);
                 clip.start();            
             }
         } catch (Exception e) {
@@ -65,6 +68,7 @@ public class GestorDeSonido {
                     clip.stop();
                 }
                 clip.setFramePosition(0);
+                aplicarVolumen(clip, volumenMusica);
                 clip.loop(Clip.LOOP_CONTINUOUSLY); // Reproducción continua en bucle
                 musicaActualEnBucle = rutaRelativa; // Actualizamos la pista actual activa
             }
@@ -107,6 +111,33 @@ public class GestorDeSonido {
         } catch (Exception e) {
             System.err.println("Excepción al cargar el audio: " + rutaRelativa);
             e.printStackTrace();
+        }
+    }
+    // getters para sonido
+    public int getVolumenMusica() { return volumenMusica; }
+    public int getVolumenEfectos() { return volumenEfectos; } 
+    public void setVolumenMusica(int volumen) {
+        this.volumenMusica = volumen;
+        // Si hay música sonando, le actualizamos el volumen en vivo
+        if (musicaActualEnBucle != null) {
+            Clip clip = cacheClips.get(musicaActualEnBucle);
+            aplicarVolumen(clip, volumen);
+        }
+    }
+    public void setVolumenEfectos(int volumen) {
+        this.volumenEfectos = volumen;
+    }
+    // Lógica matemática para convertir de 0-100% a Decibeles (FloatControl)
+    private void aplicarVolumen(Clip clip, int volumenPorcentaje) {
+        if (clip != null && clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+            FloatControl control = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            if (volumenPorcentaje <= 0) {
+                control.setValue(control.getMinimum()); // Muteado
+            } else {
+                // Escala logarítmica para que el deslizador se sienta natural al oído humano
+                float dB = (float) (Math.log10(volumenPorcentaje / 100.0) * 20.0);
+                control.setValue(dB);
+            }
         }
     }
 }

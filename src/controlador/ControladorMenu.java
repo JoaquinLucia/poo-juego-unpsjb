@@ -2,6 +2,8 @@ package controlador;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import controlador.utilidades.GestorDeSonido;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import vista.VistaMenu;
@@ -49,8 +51,16 @@ public class ControladorMenu {
         vista.setVisible(true);
     }
 
-    private void mostrarOpciones() {
-        vista.mostrarMensaje("Opciones (próximamente)");
+private void mostrarOpciones() {
+        GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
+        JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
+        vista.paneles.PanelOpciones modalOpciones = new vista.paneles.PanelOpciones(ventana);
+
+        modalOpciones.onCerrar(e -> modalOpciones.dispose());
+
+        vista.setVisible(false);   // esconde el menú
+        modalOpciones.setVisible(true); // frena acá hasta que cierra
+        vista.setVisible(true);    // muestra el menú
     }
 
     private void salir() {
