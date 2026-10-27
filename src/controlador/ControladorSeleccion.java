@@ -69,7 +69,8 @@ public class ControladorSeleccion {
                 h.getNivel(),
                 h.getVida(),
                 h.getAtaque(),
-                habilidad);
+                habilidad,
+                h.getPorcentajeDefensaReducida());
 
         vista.getPanelImagen().mostrarImagen(h.getSprite());
 

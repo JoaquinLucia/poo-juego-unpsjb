@@ -16,6 +16,9 @@ public Heroe(String nombre, int vida, int ataque, int cantidadHabilidadMax, List
 
     //DEFENSA
     public double getMultiplicadorDefensaPropio() { return multiplicadorDefensaPropio; }
+    public int getPorcentajeDefensaReducida() {
+        return (int) Math.round((1.0 - multiplicadorDefensaPropio) * 100);
+    }
     // HABILIDADES
     public void reemplazarHabilidad(int posicion, Habilidad nuevaHabilidad) {
         if (nuevaHabilidad == null) {

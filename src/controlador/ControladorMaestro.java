@@ -264,7 +264,7 @@ public class ControladorMaestro {
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
         habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
         heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
-        "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg", "Mago de Gwyn", 0.3));
+        "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg", "Mago de Gwyn", 0.7));
 
         return heroes;
     }

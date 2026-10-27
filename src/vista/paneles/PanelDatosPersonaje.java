@@ -18,6 +18,7 @@ public class PanelDatosPersonaje extends JPanel {
     private final JLabel vida;
     private final JLabel ataque;
     private final JLabel habilidad;
+    private final JLabel defensa;
 
     public PanelDatosPersonaje() {
 
@@ -39,6 +40,7 @@ public class PanelDatosPersonaje extends JPanel {
         vida = crearEtiqueta("Vida: ", 18, TEXTO);
         ataque = crearEtiqueta("Ataque: ", 18, TEXTO);
         habilidad = crearEtiqueta("Habilidad: ", 18, TEXTO);
+        defensa = crearEtiqueta("Defensa: ", 18, TEXTO);
 
         informacion.add(nombre);
         informacion.add(clase);
@@ -46,6 +48,7 @@ public class PanelDatosPersonaje extends JPanel {
         informacion.add(vida);
         informacion.add(ataque);
         informacion.add(habilidad);
+        informacion.add(defensa);
 
         add(informacion, BorderLayout.CENTER);
     }
@@ -85,14 +88,19 @@ public class PanelDatosPersonaje extends JPanel {
         habilidad.setText("Habilidad: " + valor);
     }
 
+    public void setDefensa(int porcentaje) {
+    defensa.setText("Defensa: Bloquea " + porcentaje + "%");
+}
+
     /** Actualiza todos los datos de una sola vez. */
-    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, String habilidad) {
+    public void mostrarDatos(String nombre, String clase, int nivel, int vida,int ataque, String habilidad, int porcentajeDefensa) {
         setNombre(nombre);
         setClase(clase);
         setNivel(nivel);
         setVida(vida);
         setAtaque(ataque);
         setHabilidad(habilidad);
+        setDefensa(porcentajeDefensa);
     }
  
     /** Vuelve al estado inicial. */
@@ -103,7 +111,8 @@ public class PanelDatosPersonaje extends JPanel {
         vida.setText("Vida: ");
         ataque.setText("Ataque: ");
         habilidad.setText("Habilidad: ");
-    }
+        defensa.setText("Defensa: ");
+}
  
     public JLabel getNombre() {
         return nombre;
