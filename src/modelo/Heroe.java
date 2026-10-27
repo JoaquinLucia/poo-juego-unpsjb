@@ -5,13 +5,17 @@ import java.util.List;
 public class Heroe extends Entidad {
     private int nivel;
     private String descripcion;
+    private final double multiplicadorDefensaPropio;
 
-    public Heroe(String nombre, int vida, int ataque, int cantidadHabilidadMax, List<Habilidad> habilidades, String sprite,String sprite_Frontal,String descripcion) {
-        super(nombre, vida, ataque, cantidadHabilidadMax, habilidades,sprite,sprite_Frontal);
+public Heroe(String nombre, int vida, int ataque, int cantidadHabilidadMax, List<Habilidad> habilidades, String sprite, String sprite_Frontal, String descripcion, double multiplicadorDefensaPropio) {
+        super(nombre, vida, ataque, cantidadHabilidadMax, habilidades, sprite, sprite_Frontal);
         this.nivel = 1;
-        this.descripcion = descripcion;    
+        this.descripcion = descripcion;
+        this.multiplicadorDefensaPropio = multiplicadorDefensaPropio;
     }
 
+    //DEFENSA
+    public double getMultiplicadorDefensaPropio() { return multiplicadorDefensaPropio; }
     // HABILIDADES
     public void reemplazarHabilidad(int posicion, Habilidad nuevaHabilidad) {
         if (nuevaHabilidad == null) {

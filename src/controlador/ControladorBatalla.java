@@ -30,6 +30,10 @@ public class ControladorBatalla implements ObservadorBatalla {
         // Conectado con animación previa al ataque o habilidad del héroe
         vista.onAtacar(e -> ejecutarAtaqueHeroeConAnimacion());
         vista.onHabilidad(e -> usarHabilidadHeroeConAnimacion(0));
+        vista.onDefenderse(e-> {
+            vista.setBotonesHabilitados(false);
+            batalla.ejecutarDefensaHeroe();
+        });
     }
 
     /** Muestra el estado inicial y arranca la pelea. */
@@ -83,14 +87,22 @@ public class ControladorBatalla implements ObservadorBatalla {
     @Override
     public void ataqueRealizado(Entidad atacante, Entidad objetivo, int danio) {
         vista.efectoTemblor();
-        vista.mostrarAtaque(atacante.getNombre(), objetivo.getNombre(), danio);
+        if (objetivo.estaDefendiendo()) {
+            vista.mostrarResultado(atacante.getNombre() + " atacó, pero " + objetivo.getNombre() + " bloqueó el golpe (" + danio + " de daño)");
+        } else {
+            vista.mostrarAtaque(atacante.getNombre(), objetivo.getNombre(), danio);
+        }
         refrescarVidas();
     }
 
-    @Override
+@Override
     public void habilidadUsada(Entidad usuario, String habilidad, Entidad objetivo, int danio) {
         vista.efectoTemblor();
-        vista.mostrarHabilidad(usuario.getNombre(), habilidad, objetivo.getNombre(), danio);
+        if (objetivo.estaDefendiendo() && danio > 0) {
+            vista.mostrarResultado(usuario.getNombre() + " usó " + habilidad + ", pero el daño fue bloqueado (" + danio + " de daño)");
+        } else {
+            vista.mostrarHabilidad(usuario.getNombre(), habilidad, objetivo.getNombre(), danio);
+        }
         refrescarVidas();
     }
 
@@ -146,6 +158,11 @@ public class ControladorBatalla implements ObservadorBatalla {
             batalla.desuscribir(this);   // ya no necesita avisos de esta batalla
             controladorMaestro.batallaTerminada();
         });
+    }
+
+    @Override
+    public void defensaRealizada(Entidad entidad) {
+        vista.mostrarResultado(entidad.getNombre() + " se prepara para bloquear el daño");
     }
 
     // ---------- Auxiliares ----------

@@ -52,6 +52,11 @@ public class Batalla {
             observador.habilidadUsada(usuario, habilidad, objetivo, danio);
         }
     }
+        private void avisarDefensa(Entidad entidad) {
+        for (ObservadorBatalla observador : this.observadores) {
+            observador.defensaRealizada(entidad);
+        }
+    }
 
     private void avisarTurnoPerdido(Entidad aturdida) {
         for (ObservadorBatalla observador : this.observadores) {
@@ -109,6 +114,17 @@ public class Batalla {
         terminarAccion();
         return true;
     }
+    public void ejecutarDefensaHeroe() {
+        if (turnoActual != Turno.HEROE || batallaTerminada()) return;
+
+        if (heroe.puedeActuar()) {
+            heroe.activarDefensa(heroe.getMultiplicadorDefensaPropio());
+            avisarDefensa(heroe);
+        } else {
+            avisarTurnoPerdido(heroe);
+        }
+        terminarAccion();
+    }
 
     public void ejecutarTurnoEnemigo() {
         if (turnoActual != Turno.ENEMIGO || batallaTerminada()) return;
@@ -145,13 +161,14 @@ public class Batalla {
     }
 
     /** Al final del turno de cada uno, se procesan los efectos que tiene encima. */
-    private void pasarTurno() {
+private void pasarTurno() {
         if (turnoActual == Turno.HEROE) {
             heroe.finalizarTurno();
             turnoActual = Turno.ENEMIGO;
         } else {
             enemigo.finalizarTurno();
             turnoActual = Turno.HEROE;
+            heroe.activarDefensa(1.0); // <-- Acá se termina la postura defensiva
         }
     }
 

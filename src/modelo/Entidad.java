@@ -13,6 +13,7 @@ public abstract class Entidad {
     private int cantidadHabilidadMax;
     private String sprite;
     private String spriteFrontal;
+    private double multiplicadorDefensa = 1.0; // 1.0 significa daño normal
 
     private boolean aturdida = false;
     private final List<EfectoPorTurno> efectos = new ArrayList<>(); // efectos que tiene ENCIMA
@@ -40,11 +41,12 @@ public abstract class Entidad {
     }
 
     // ---------- Combate ----------
-    /** Resta vida y devuelve el daño que recibió realmente (no baja de 0). */
-    public int recibirDanio(int danio) {
+/** Resta vida aplicando defensa y devuelve el daño que recibió realmente. */
+public int recibirDanio(int danio) {
+        int danioReducido = (int) Math.round(danio * multiplicadorDefensa);
         int vidaAntes = vida;
-        vida = Math.max(0, vida - danio);
-        this.vidaActual = vida; // Sincronizamos
+        vida = Math.max(0, vida - danioReducido);
+        this.vidaActual = vida; 
         return vidaAntes - vida;
     }
 
@@ -65,6 +67,13 @@ public abstract class Entidad {
         this.vidaActual = this.vida; // Sincronizamos con vidaActual
         return vida - vidaAntes;
     }
+    public void activarDefensa(double multiplicador) {
+        this.multiplicadorDefensa = multiplicador;
+    }
+    public boolean estaDefendiendo() {
+        return this.multiplicadorDefensa < 1.0;
+    }
+
 
     // ---------- Habilidades ----------
 
@@ -128,6 +137,7 @@ public abstract class Entidad {
 
     /** Se saca de encima los efectos que tenga y reinicia sus cooldowns. */
     public void prepararParaBatalla() {
+        multiplicadorDefensa = 1.0;
         for (EfectoPorTurno e : efectos) {
             e.limpiarEfecto();
         }

@@ -48,8 +48,8 @@ public class PanelControles extends JPanel {
         estilizarBoton(elegir);
         estilizarBoton(volver);
 
-        panelAcciones.add(elegir);
         panelAcciones.add(volver);
+        panelAcciones.add(elegir);
 
         add(panelAcciones, BorderLayout.SOUTH);
     }

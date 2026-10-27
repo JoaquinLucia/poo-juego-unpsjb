@@ -20,4 +20,6 @@ public interface ObservadorBatalla {
  
     /** Terminó la batalla. */
     void finDeBatalla(boolean victoria);
+    /** Alguien adoptó postura defensiva. */
+    void defensaRealizada(Entidad entidad);
 }

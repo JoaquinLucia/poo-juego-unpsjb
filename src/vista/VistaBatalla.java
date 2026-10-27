@@ -134,4 +134,11 @@ public class VistaBatalla extends JPanel {
         for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
         boton.addActionListener(listener);
     }
+
+    public void onDefenderse(java.awt.event.ActionListener listener) {
+        var boton = panelInferior.getBotonDefenderse();
+        for (java.awt.event.ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
+        boton.addActionListener(listener);
+
+}
 }

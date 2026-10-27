@@ -259,12 +259,12 @@ public class ControladorMaestro {
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
         habilidadesArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
         heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
-            "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg", "Caballero de gwyn"));
+        "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg", "Caballero de Gwyn", 0.5));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
         habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
         heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
-            "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg", "Mago de Gwyn"));
+        "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg", "Mago de Gwyn", 0.3));
 
         return heroes;
     }
