@@ -18,7 +18,7 @@ public class ControladorPausa{
         this.controlador = controlador;
         vista.onReanudar(e -> {
             vista.cerrar();
-            controlador.reanudar();
+            controlador.reanudarPartida();
         });
         vista.onVolverAlTitulo(e -> {
             vista.cerrar();

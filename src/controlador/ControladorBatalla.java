@@ -15,15 +15,15 @@ public class ControladorBatalla implements ObservadorBatalla {
 
     private final VistaBatalla vista;
     private final Batalla batalla;
-    private final ControladorMaestro controlador;
+    private final ControladorMaestro controladorMaestro;
 
-    private final int pausaEnemigoMs = 2500;    // para que se vea qué hizo cada uno
-    private final int pausaFinalMs = 1500;     // para que se vea el resultado antes de cambiar de pantalla
+    private final int pausaTurnoEnemigoMs = 2500;    // para que se vea qué hizo cada uno
+    private final int pausaFinBatallaMs = 1500;     // para que se vea el resultado antes de cambiar de pantalla
 
-    public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro controlador) {
+    public ControladorBatalla(VistaBatalla vista, Batalla batalla, ControladorMaestro controladorMaestro) {
         this.vista = vista;
         this.batalla = batalla;
-        this.controlador = controlador;
+        this.controladorMaestro = controladorMaestro;
 
         batalla.suscribir(this);
         
@@ -33,7 +33,7 @@ public class ControladorBatalla implements ObservadorBatalla {
     }
 
     /** Muestra el estado inicial y arranca la pelea. */
-    public void iniciar() {
+    public void iniciarBatalla() {
         vista.mostrarFondo(batalla.getLugar().getRutaCombate());
         vista.mostrarRetratos(batalla.getHeroe().getSpriteFrontal(),
                             batalla.getEnemigo().getSpriteFrontal());
@@ -51,7 +51,7 @@ public class ControladorBatalla implements ObservadorBatalla {
     }
 
     /** Lo consulta el controlador maestro después de recibir BATALLA_TERMINADA. */
-    public boolean gano() {
+    public boolean heroeGano() {
         return batalla.resultadoBatalla();
     }
 
@@ -95,8 +95,8 @@ public class ControladorBatalla implements ObservadorBatalla {
     }
 
     @Override
-    public void turnoPerdido(Entidad aturdida) {
-        vista.mostrarAturdido(aturdida.getNombre());
+    public void turnoPerdido(Entidad entidadAturdida) {
+        vista.mostrarAturdido(entidadAturdida.getNombre());
     }
 
     @Override
@@ -109,7 +109,7 @@ public class ControladorBatalla implements ObservadorBatalla {
             
             String rutaSpriteEnemigo = obtenerRutaSpriteAtaque(batalla.getEnemigo().getNombre());
             
-            despuesDe(pausaEnemigoMs, () -> {
+            ejecutarConRetraso(pausaTurnoEnemigoMs, () -> {
                 // Reproduce la animación del enemigo y al terminar ejecuta el golpe en el modelo
                 vista.animarAtaqueEnemigo(rutaSpriteEnemigo, () -> {
                     batalla.ejecutarTurnoEnemigo();
@@ -121,30 +121,30 @@ public class ControladorBatalla implements ObservadorBatalla {
     }
 
     @Override
-    public void finDeBatalla(boolean victoria) {
+    public void finDeBatalla(boolean heroeGano) {
         refrescarVidas();
         vista.setBotonesHabilitados(false);
 
-        if (victoria) {
+        if (heroeGano) {
             // Si ganamos, reproducimos la animación de derrota del enemigo antes de cerrar
             String rutaDerrota = obtenerRutaSpriteDerrota(batalla.getEnemigo().getNombre());
             vista.animarDerrotaEnemigo(rutaDerrota, () -> {
-                finalizarConRetraso(victoria);
+                finalizarConRetraso(heroeGano);
             });
         } else {
             // Si perdimos (muere el héroe), reproducimos su animación de derrota antes de cerrar
             String rutaDerrotaHeroe = obtenerRutaSpriteDerrotaHeroe(batalla.getHeroe().getNombre());
             vista.animarDerrotaHeroe(rutaDerrotaHeroe, () -> {
-                finalizarConRetraso(victoria);
+                finalizarConRetraso(heroeGano);
             });
         }
     }
 
-    private void finalizarConRetraso(boolean victoria) {
-        vista.mostrarResultado(victoria);
-        despuesDe(pausaFinalMs, () -> {
+    private void finalizarConRetraso(boolean heroeGano) {
+        vista.mostrarResultado(heroeGano);
+        ejecutarConRetraso(pausaFinBatallaMs, () -> {
             batalla.desuscribir(this);   // ya no necesita avisos de esta batalla
-            controlador.batallaTerminada();
+            controladorMaestro.batallaTerminada();
         });
     }
 
@@ -173,17 +173,17 @@ public class ControladorBatalla implements ObservadorBatalla {
     }
 
     /** Ejecuta una acción una sola vez después de una pausa. */
-    private void despuesDe(int ms, Runnable accion) {
+    private void ejecutarConRetraso(int ms, Runnable accion) {
         Timer timer = new Timer(ms, e -> accion.run());
         timer.setRepeats(false);
         timer.start();
     }
 
-    public String getNombreHabilidad(int indice) {
-        return batalla.getHeroe().getHabilidad(indice).getNombreHabilidad();
+    private String getNombreHabilidad(int indiceHabilidad) {
+        return batalla.getHeroe().getHabilidad(indiceHabilidad).getNombreHabilidad();
     }
 
-    public int getTurnosEnfriamiento(int indice) {
-        return batalla.getHeroe().getHabilidad(indice).getCooldownActual();
+    private int getTurnosEnfriamiento(int indiceHabilidad) {
+        return batalla.getHeroe().getHabilidad(indiceHabilidad).getCooldownActual();
     }
 }
