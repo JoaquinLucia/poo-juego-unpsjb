@@ -24,5 +24,8 @@ public class HabilidadCurar extends Habilidad {
 
     /** Cuánto curó realmente la última vez (puede ser menos si estaba casi lleno). */
     public int getUltimaCuracion() { return ultimaCuracion; }
-
+@Override
+    public String getResumenDeUsoHab(String usuario, String objetivo) {
+        return usuario + " usó " + getNombreHabilidad()+ " y recuperó " + getValorBase() + " de vida";
+    }
 }

@@ -12,10 +12,20 @@ import javax.swing.JPanel;
 // Panel que dibuja una imagen de fondo (GIF animado incluido) cubriendo todo su tamaño.
 public class PanelFondo extends JPanel {
 
-    private final Image imagen;
+    private Image imagen;
+
+    /** Panel sin fondo inicial; se asigna después con setFondo(). */
+    public PanelFondo(LayoutManager layout) {
+        super(layout);
+    }
 
     public PanelFondo(String rutaRecurso, LayoutManager layout) {
         super(layout);
+        setFondo(rutaRecurso);
+    }
+
+    /** Cambia la imagen de fondo. Si no existe, avisa por consola y queda sin fondo. */
+    public void setFondo(String rutaRecurso) {
         URL url = getClass().getResource(rutaRecurso);
         if (url == null) {
             System.err.println("No se encontró el fondo: " + rutaRecurso);
@@ -24,6 +34,7 @@ public class PanelFondo extends JPanel {
             // Se carga con ImageIcon (no con ImageIO) para que el GIF conserve la animación
             imagen = new ImageIcon(url).getImage();
         }
+        repaint();
     }
 
     @Override

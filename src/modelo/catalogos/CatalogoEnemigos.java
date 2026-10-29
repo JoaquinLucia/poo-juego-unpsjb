@@ -1,11 +1,9 @@
 package modelo.catalogos;
 
 import java.util.List;
-
 import modelo.Dificultad;
 import modelo.Enemigo;
 
-// Se puede prescindir del factory de enemigos y solo hacer un switch; el resto es sobreingeniería
 public class CatalogoEnemigos {
 
     private final CatalogoHabilidades habilidades;
@@ -37,7 +35,9 @@ public class CatalogoEnemigos {
                     dificultad);
             case "akuma" -> new Enemigo("Akuma", 300, 20, 2,
                     List.of(habilidades.crearHabilidad("golpe_aturdidor"),
-                            habilidades.crearHabilidad("corte_profundo")),
+                            habilidades.crearHabilidad("corte_profundo"),
+                            habilidades.crearHabilidad("curacion")),
+
                     "/recursos/personajes/mago.png", "/recursos/akumaFrontal.jpg",
                     dificultad);
             default -> throw new IllegalArgumentException("Enemigo desconocido: " + tipo);

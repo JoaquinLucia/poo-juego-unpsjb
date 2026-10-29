@@ -53,6 +53,10 @@ public class HabilidadVeneno extends Habilidad implements EfectoPorTurno {
         objetivo = null;
         turnosRestantes = 0;
     }
-
+@Override 
+    public String getResumenDeUsoHab(String usuario, String objetivo){
+        return usuario + " usó " + getNombreHabilidad()+ " sobre  " + objetivo +
+        " queda envenenado ("+ danioPorTurno + " de daño por turno durante " + duracion + " turnos)";
+    }
     public int getDanioPorTurno() { return danioPorTurno; }
 }

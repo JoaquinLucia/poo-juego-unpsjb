@@ -2,74 +2,88 @@ package vista;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import recursos.rutas.RutasRecursos;
+import vista.animacion.CatalogoApariencias;
+import vista.animacion.HojaSprites;
 import vista.paneles.PanelBatalla;
-import vista.paneles.PanelInferior; 
+import vista.paneles.PanelInferior;
 
-// Pantalla de combate. Es un panel dentro de VentanaPrincipal
+/**
+ * Pantalla de combate. Es un panel dentro de VentanaPrincipal.
+ * No conoce el modelo: el controlador le pasa textos y números,
+ * y ella decide cómo mostrarlos (qué imagen, qué animación).
+ */
 public class VistaBatalla extends JPanel {
-    private final PanelBatalla panelFondo = new PanelBatalla();
+
+    private final PanelBatalla panelBatalla;
     private final PanelInferior panelInferior = new PanelInferior();
     private Timer timerTemblor;
     private int pasosTemblor;
 
-    public VistaBatalla() {        
+    public VistaBatalla(RutasRecursos rutas) {
         super(new BorderLayout(0, 0));
-        add(panelFondo, BorderLayout.CENTER);
+        this.panelBatalla = new PanelBatalla(rutas, new CatalogoApariencias(), new HojaSprites());
+        add(panelBatalla, BorderLayout.CENTER);
         add(panelInferior, BorderLayout.SOUTH);
     }
 
     // --- EFECTOS VISUALES ---
+
     public void efectoTemblor() {
         if (timerTemblor != null && timerTemblor.isRunning()) {
             return;
         }
-        int x = panelFondo.getX();
-        int y = panelFondo.getY();
+        int x = panelBatalla.getX();
+        int y = panelBatalla.getY();
         pasosTemblor = 0;
 
         timerTemblor = new Timer(20, e -> {
-            if (++pasosTemblor >= 8) {
-                panelFondo.setLocation(x, y);   // vuelve a su lugar
+            pasosTemblor++;
+            if (pasosTemblor >= 8) {
+                panelBatalla.setLocation(x, y);   // vuelve a su lugar
                 timerTemblor.stop();
             } else {
-                panelFondo.setLocation(x + (int) (Math.random() * 6 - 3),
-                                       y + (int) (Math.random() * 6 - 3));
+                panelBatalla.setLocation(x + (int) (Math.random() * 6 - 3),
+                                         y + (int) (Math.random() * 6 - 3));
             }
         });
         timerTemblor.start();
     }
 
     // --- MÉTODOS PARA QUE EL CONTROLADOR ACTUALICE LA INTERFAZ ---
-    public void mostrarFondo(String rutaFondo) {
-        panelFondo.reiniciar();
-        panelFondo.setFondo(rutaFondo);
+
+    /** Corta animaciones de la pelea anterior y prepara las barras para la nueva. */
+    public void prepararNuevaBatalla() {
+        panelBatalla.reiniciar();
+    }
+
+    /** Recibe el nombre del lugar (ej. "BOSQUE"); la vista sabe qué imagen le corresponde. */
+    public void mostrarFondoCombate(String lugar) {
+        panelBatalla.mostrarFondoCombate(lugar);
     }
 
     public void actualizarEstadisticas(String nombreHeroe, int vidaHeroe, String nombreEnemigo, int vidaEnemigo) {
-        panelFondo.actualizarBarras(nombreHeroe, vidaHeroe, nombreEnemigo, vidaEnemigo);
+        panelBatalla.actualizarBarras(nombreHeroe, vidaHeroe, nombreEnemigo, vidaEnemigo);
     }
 
     public void mostrarResultado(boolean gano) {
-        mostrarResultado(gano ? "¡Victoria!" : "Derrota...");
+        if (gano) {
+            mostrarResultado("¡Victoria!");
+        } else {
+            mostrarResultado("Derrota...");
+        }
     }
 
     public void mostrarResultado(String mensaje) {
         panelInferior.mostrarResultado(mensaje);
     }
-    
-    public void mostrarAtaque(String atacante, String objetivo, int danio) {
-        mostrarResultado(atacante + " atacó a " + objetivo + " e hizo " + danio + " de daño");
-    }
-
-    public void mostrarHabilidad(String atacante, String habilidad, String objetivo, int danio) {
-        mostrarResultado(atacante + " usó " + habilidad + " sobre " + objetivo + " (" + danio + " de daño)");
-    }
 
     public void mostrarEnfriamiento(String habilidad, int turnos) {
-        String unidad = (turnos == 1) ? "turno" : "turnos";
-        mostrarResultado(habilidad + " está en enfriamiento (" + turnos + " " + unidad + ")");
+        mostrarResultado(habilidad + " está en enfriamiento: " + turnos + " turnos");
     }
 
     public void mostrarTurno(String nombre) {
@@ -86,59 +100,61 @@ public class VistaBatalla extends JPanel {
 
     /** Muestra el resultado final y pide el nombre del jugador. Devuelve null si cancela. */
     public String pedirNombreFinal(boolean derrotoAlJefe, int puntos) {
-        String titulo = derrotoAlJefe ? "¡Derrotaste al jefe!" : "Has caído en la mazmorra...";
+        String titulo;
+        if (derrotoAlJefe) {
+            titulo = "¡Derrotaste al jefe!";
+        } else {
+            titulo = "Has caído en la mazmorra...";
+        }
         String mensaje = titulo + "\nPuntaje: " + puntos + "\n\nIngresá tu nombre:";
-        return javax.swing.JOptionPane.showInputDialog(this, mensaje, "Fin de la partida",
-                javax.swing.JOptionPane.PLAIN_MESSAGE);
+        return JOptionPane.showInputDialog(this, mensaje, "Fin de la partida", JOptionPane.PLAIN_MESSAGE);
     }
 
     public void mostrarAturdido(String nombre) {
         mostrarResultado(nombre + " está aturdido y pierde el turno");
     }
 
-    // --- MÉTODOS DE ANIMACIÓN PARA EL ENEMIGO Y EL HÉROE ---
-    public void mostrarSpriteEnemigo(String rutaSprite) {
-        panelFondo.mostrarSpriteEnemigo(rutaSprite);
+    // --- ANIMACIONES (reciben nombres; las rutas las resuelve la vista) ---
+
+    public void mostrarPersonajes(String nombreHeroe, String nombreEnemigo) {
+        panelBatalla.mostrarPersonajes(nombreHeroe, nombreEnemigo);
     }
 
-    public void mostrarSpriteHeroe(String rutaSprite) {
-        panelFondo.mostrarSpriteHeroe(rutaSprite);
+    public void animarAtaqueHeroe(String nombre, Runnable alTerminar) {
+        panelBatalla.animarAtaqueHeroe(nombre, alTerminar);
     }
 
-    public void animarAtaqueEnemigo(String rutaSpriteSheet, Runnable alTerminar) {
-        panelFondo.reproducirAnimacionAtaque(rutaSpriteSheet, alTerminar);
+    public void animarAtaqueEnemigo(String nombre, Runnable alTerminar) {
+        panelBatalla.animarAtaqueEnemigo(nombre, alTerminar);
     }
 
-    public void animarAtaqueHeroe(String rutaSpriteSheet, Runnable alTerminar) {
-        panelFondo.reproducirAnimacionAtaqueHeroe(rutaSpriteSheet, alTerminar);
+    public void animarDerrotaHeroe(String nombre, Runnable alTerminar) {
+        panelBatalla.animarDerrotaHeroe(nombre, alTerminar);
     }
 
-    public void animarDerrotaEnemigo(String rutaSpriteSheet, Runnable alTerminar) {
-        panelFondo.reproducirAnimacionDerrota(rutaSpriteSheet, alTerminar);
-    }
-
-    public void animarDerrotaHeroe(String rutaSpriteSheet, Runnable alTerminar) {
-        panelFondo.reproducirAnimacionDerrotaHeroe(rutaSpriteSheet, alTerminar);
+    public void animarDerrotaEnemigo(String nombre, Runnable alTerminar) {
+        panelBatalla.animarDerrotaEnemigo(nombre, alTerminar);
     }
 
     // --- ENGANCHES DE BOTONES PARA EL CONTROLADOR ---
 
     public void onAtacar(ActionListener listener) {
-        var boton = panelInferior.getBotonAtacar();
-        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
-        boton.addActionListener(listener);
+        reemplazarAccion(panelInferior.getBotonAtacar(), listener);
     }
 
     public void onHabilidad(ActionListener listener) {
-        var boton = panelInferior.getBotonHabilidad();
-        for (ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
-        boton.addActionListener(listener);
+        reemplazarAccion(panelInferior.getBotonHabilidad(), listener);
     }
 
-    public void onDefenderse(java.awt.event.ActionListener listener) {
-        var boton = panelInferior.getBotonDefenderse();
-        for (java.awt.event.ActionListener l : boton.getActionListeners()) boton.removeActionListener(l);
-        boton.addActionListener(listener);
+    public void onDefenderse(ActionListener listener) {
+        reemplazarAccion(panelInferior.getBotonDefenderse(), listener);
+    }
 
-}
+    /** Quita los listeners de una batalla anterior para que un clic no dispare dos veces. */
+    private void reemplazarAccion(JButton boton, ActionListener listener) {
+        for (ActionListener anterior : boton.getActionListeners()) {
+            boton.removeActionListener(anterior);
+        }
+        boton.addActionListener(listener);
+    }
 }

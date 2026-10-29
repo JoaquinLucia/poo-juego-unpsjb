@@ -47,7 +47,7 @@ public class ControladorCaminoMazmorra {
 
     /** Muestra el lugar actual: flechas en los caminos, un solo botón en la sala del jefe. */
     private void actualizarVista() {
-        vista.mostrarFondo(modelo.getLugarActual().getRutaFondo());
+        vista.mostrarFondoCamino(modelo.getLugarActual().name());  // 
 
         if (modelo.llegoAlJefe()) {
             vista.mostrarBotonJefe();

@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-
+import recursos.rutas.RutasRecursos;
 /**
  * Pantalla del recorrido de la mazmorra:
  *   - arriba, la imagen del lugar,
@@ -18,6 +18,8 @@ import javax.swing.*;
  * No conoce el modelo: recibe textos y rutas del controlador.
  */
 public class VistaCaminoMazmorra extends JPanel {
+
+    private final RutasRecursos rutas;
 
     private final Color fondoOscuro = new Color(15, 14, 16);
     private final Color madera = new Color(40, 35, 30);
@@ -40,9 +42,9 @@ public class VistaCaminoMazmorra extends JPanel {
     private final JTextArea txtLog = new JTextArea(4, 40);
     private Image fondo;
 
-    public VistaCaminoMazmorra() {
+    public VistaCaminoMazmorra(RutasRecursos rutas) {
         super(new BorderLayout());
-        setBackground(fondoOscuro);
+        this.rutas = rutas;
 
         // ---- Panel superior: la imagen del lugar ----
         JPanel panelSuperior = new JPanel() {
@@ -90,6 +92,9 @@ public class VistaCaminoMazmorra extends JPanel {
     }
 
     // ---------- Lo que usa el controlador ----------
+    public void mostrarFondoCamino(String lugar) {
+        mostrarFondo(rutas.fondoCamino(lugar));
+    }
 
     public void mostrarFondo(String ruta) {
         URL url = getClass().getResource(ruta);

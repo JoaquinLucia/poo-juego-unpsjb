@@ -47,7 +47,7 @@ public abstract class Habilidad {
         this.cooldownActual = this.cooldown;
         this.recienUsada = true;
     }
-
+public  abstract String getResumenDeUsoHab(String usuario, String objetivo);
     // ---------- Getters ----------
     public String getNombreHabilidad() { return nombreHabilidad; }
     public String getDescripcion()     { return descripcion; }

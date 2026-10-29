@@ -6,14 +6,12 @@ import java.util.List;
 public abstract class Entidad {
     private String nombre;
     private int vida;
-    private int vidaActual; // <-- ¡Faltaba declarar este atributo!
     private final int vidaMaxima; // la vida con la que arranca; tope para las curaciones
     private int ataque;
     private List<Habilidad> habilidades;
     private int cantidadHabilidadMax;
     private String sprite;
     private String spriteFrontal;
-    private double multiplicadorDefensa = 1.0; // 1.0 significa daño normal
 
     private boolean aturdida = false;
     private final List<EfectoPorTurno> efectos = new ArrayList<>(); // efectos que tiene ENCIMA
@@ -31,7 +29,6 @@ public abstract class Entidad {
         }
         this.nombre = nombre;
         this.vida = vida;
-        this.vidaActual = vida;
         this.vidaMaxima = vida;
         this.ataque = ataque;
         this.cantidadHabilidadMax = cantidadHabilidadMax;
@@ -42,13 +39,19 @@ public abstract class Entidad {
 
     // ---------- Combate ----------
 /** Resta vida aplicando defensa y devuelve el daño que recibió realmente. */
-public int recibirDanio(int danio) {
-        int danioReducido = (int) Math.round(danio * multiplicadorDefensa);
+    /** Resta vida y devuelve el daño que recibió realmente. */
+    public int recibirDanio(int danio) {
+        if (danio < 0) {
+            danio = 0;
+        }
         int vidaAntes = vida;
-        vida = Math.max(0, vida - danioReducido);
-        this.vidaActual = vida; 
+        vida = vida - danio;
+        if (vida < 0) {
+            vida = 0;               // la vida no baja de 0
+        }
         return vidaAntes - vida;
     }
+    
 
     /** Devuelve el daño que hizo. */
     public int atacar(Entidad objetivo) {   
@@ -61,19 +64,16 @@ public int recibirDanio(int danio) {
 
     /** Cura sin pasarse de la vida máxima. Devuelve cuánto curó realmente. */
     public int sumarVida(int cantidad) {
-        if (cantidad <= 0 || !estaVivo()) return 0;
+        if (cantidad <= 0 || !estaVivo()) {
+            return 0;
+        }
         int vidaAntes = vida;
-        vida = Math.min(vida + cantidad, vidaMaxima);
-        this.vidaActual = this.vida; // Sincronizamos con vidaActual
+        vida = vida + cantidad;
+        if (vida > vidaMaxima) {
+            vida = vidaMaxima;      // no se pasa del máximo
+        }
         return vida - vidaAntes;
     }
-    public void activarDefensa(double multiplicador) {
-        this.multiplicadorDefensa = multiplicador;
-    }
-    public boolean estaDefendiendo() {
-        return this.multiplicadorDefensa < 1.0;
-    }
-
 
     // ---------- Habilidades ----------
 
@@ -137,7 +137,6 @@ public int recibirDanio(int danio) {
 
     /** Se saca de encima los efectos que tenga y reinicia sus cooldowns. */
     public void prepararParaBatalla() {
-        multiplicadorDefensa = 1.0;
         for (EfectoPorTurno e : efectos) {
             e.limpiarEfecto();
         }
@@ -159,7 +158,6 @@ public int recibirDanio(int danio) {
     // ---------- Getters ----------
     public String getNombre()              { return this.nombre; }
     public int getVida()                 { return this.vida; }
-    public int getVidaActual()           { return this.vidaActual; } // <-- Útil agregarlo también
     public int getVidaMaxima()           { return this.vidaMaxima; }
     public String getSprite()            { return sprite; }
     public String getSpriteFrontal()     { return spriteFrontal; }

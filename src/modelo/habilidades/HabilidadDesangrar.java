@@ -58,7 +58,11 @@ public class HabilidadDesangrar extends Habilidad implements EfectoPorTurno {
         turnosRestantes = 0;
         danioActual = danioInicial;
     }
-
+@Override 
+    public String getResumenDeUsoHab(String usuario, String objetivo){
+        return usuario + " usó " + getNombreHabilidad()+ " sobre " + objetivo +
+        ", empieza a sangrar ("+ danioActual + " de daño, sube 1 por turno durante " + duracion + " turnos)";
+    }
     /** Daño que hará en el próximo tick. */
     public int getDanioActual() { return danioActual; }
 }
