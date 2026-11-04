@@ -1,0 +1,33 @@
+El patrón Template Method (Método Plantilla) es un patrón de diseño de comportamiento que define el esqueleto (los pasos fijos) de un algoritmo en una clase base, pero delega la implementación de algunos de esos pasos a las clases hijas. De esta forma, las subclases pueden redefinir partes específicas del algoritmo sin cambiar su estructura general.
+
+En tu proyecto "Senderos de las Cenizas", está aplicado de manual en la clase abstracta modelo.Habilidad, específicamente en el método ejecutarHabilidad().
+
+Aquí está exactamente cómo lo implementaste:
+
+Java
+public abstract class Habilidad {
+    // ... atributos e inicialización ...
+
+    /** MÉTODO PLANTILLA: Fija el orden inalterable de los pasos */
+    public final int ejecutarHabilidad(Entidad usuario, Entidad objetivo) {
+        if (!getCdListo()) return 0;                 // Paso 1: Chequear si se puede usar
+        int vidaAntes = objetivo.getVida();          // Paso 2: Registrar estado previo
+        
+        aplicarEfecto(usuario, objetivo);            // Paso 3: EL PASO DELEGADO (Abstracto)
+        
+        activarCooldown();                           // Paso 4: Encender el enfriamiento
+        return vidaAntes - objetivo.getVida();       // Paso 5: Calcular y devolver el impacto
+    }
+
+    /** EL "GANCHO" (Hook): Lo que cada hija debe programar */
+    protected abstract void aplicarEfecto(Entidad usuario, Entidad objetivo);
+}
+¿Por qué esta implementación es clave para tu arquitectura?
+1. El uso de la palabra reservada final
+Al declarar public final int ejecutarHabilidad(...), le estás diciendo al compilador de Java que ninguna clase hija puede sobrescribir este método. Estás blindando el motor de combate. Una clase hija como HabilidadVeneno no puede rebelarse y decidir alterar la forma en que se miden los cooldowns o se devuelve el daño.
+
+2. Eliminación de código duplicado (DRY)
+Si no usaras este patrón, tendrías que haber escrito el chequeo de if (!getCdListo()) y la llamada a activarCooldown() dentro de cada una de tus habilidades (HabilidadCurar, HabilidadAturdir, etc.).
+
+3. Prevención de Bugs (Seguridad de Diseño)
+En los RPG, un bug hiper común es crear un ataque nuevo y olvidarse de programarle que gaste su tiempo de recarga (cooldown), lo que permite al jugador "spamear" la habilidad infinitamente. Con tu Template Method, es imposible que pase. Quien programe una nueva habilidad en tu juego solo se ve forzado a escribir qué hace el golpe en aplicarEfecto(...); el método plantilla se encarga de descontar los turnos automáticamente siempre.

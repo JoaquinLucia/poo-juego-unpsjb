@@ -1,0 +1,26 @@
+El patrón Observer (Observador) es uno de los pilares de la programación orientada a eventos, y en tu proyecto "Senderos de las Cenizas" está implementado de forma masiva y nativa, principalmente para comunicar la Vista con el Controlador sin que se acoplen.
+En la teoría (GoF), el patrón Observer define una relación de uno a muchos donde un objeto (el Sujeto u Observable) cambia de estado y notifica automáticamente a todos los que lo están vigilando (los Observadores).
+Aquí te detallo los 3 lugares exactos donde lo aplicaste y cómo funciona en tu código:
+1. El estándar de Java:
+ActionListener (Vista $\rightarrow$ Controlador)En Java Swing, el manejo de eventos de botones es la implementación canónica del patrón Observer.
+El Sujeto (Observable): Los botones (ej. JButton atacar en PanelInferior). El botón mantiene una lista interna de quiénes lo están "escuchando".
+El Observador: El controlador (ej. ControladorBatalla).Cómo se aplicó: En lugar de que el botón tenga la lógica adentro, la Vista expone un "enchufe" para que alguien se suscriba.
+En VistaBatalla.java:Javapublic void onAtacar(ActionListener listener) {
+    reemplazarAccion(panelInferior.getBotonAtacar(), listener);
+}
+En ControladorBatalla.java (el observador se suscribe usando una expresión Lambda):Javavista.onAtacar(e -> manejarAccionHeroe(AccionHeroe.ATACAR));
+Por qué usarlo: Permite la Vista Pasiva. El botón de ataque no sabe qué es un Héroe ni cómo calcular el daño. Solo sabe que fue presionado y "grita" (notifica) que algo pasó. El Controlador, que estaba observando en silencio, escucha el grito y ejecuta la matemática.
+2. Animación de GIFs: 
+ImageObserver (Java2D nativo)Usaste el patrón Observer nativo de las librerías gráficas de Java para mantener vivos los fondos animados sin tener que programar un bucle manual.
+El Sujeto (Observable): La imagen GIF cargada en memoria (Image fondo).El Observador: El panel que la dibuja (PanelFondo o el panel superior en VistaCaminoMazmorra).
+Cómo se aplicó:
+En PanelFondo.java dentro del método paintComponent:Javag2.drawImage(imagen, x, y, ancho, alto, this); // El "this" al final es clave
+Por qué usarlo: Al pasar this como el parámetro ImageObserver, le estás diciendo al GIF: "Avisame cada vez que pases al siguiente cuadro de tu animación". Cuando el GIF cambia de frame, notifica al panel, lo que dispara automáticamente un repaint() en Swing. Es una forma brillante y ultra optimizada de tener fondos animados.
+3. Sincronización Asíncrona: Callbacks (Runnable)Aunque técnicamente es una variante simplificada de Observer (con un solo suscriptor), el uso que le diste al Runnable en tus animaciones sigue el mismo principio de "avísame cuando termines".
+El Sujeto (Observable): El AnimadorSprite y su temporizador.
+El Observador: El método que inyecta el ControladorBatalla.
+Cómo se aplicó:
+En ControladorBatalla.java:Javavista.animarAtaqueHeroe(heroe.getNombre(), () -> resolverComando(comando));
+Por qué usarlo: El controlador no puede quedarse esperando (congelando el juego) a que terminen los 15 frames del espadazo. En lugar de eso, el controlador le delega la animación a la vista y le deja un observador (() -> resolverComando()). Cuando AnimadorSprite termina de dibujar el último cuadro, notifica a ese observador ejecutando alTerminar.run(), logrando un flujo perfecto sin trabar el hilo principal (EDT).
+Resumen para tu defensa:
+Si los profesores te preguntan cómo lograste que la interfaz gráfica sea independiente del motor de juego, la respuesta es el Patrón Observer. La Vista se limita a ser un Sujeto que emite eventos, y los Controladores son Observadores que se suscriben a esos eventos para inyectar las órdenes de combate, logrando un desacoplamiento total (cumpliendo el Principio de Inversión de Dependencias).
