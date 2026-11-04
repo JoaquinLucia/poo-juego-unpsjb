@@ -1,0 +1,48 @@
+En esta capa de persistencia completas la separación entre la arquitectura del juego y el almacenamiento de datos, aplicando de forma estricta los patrones Singleton y DAO (Data Access Object) junto con JDBC y encapsulamiento de excepciones.
+
+1. Desglose de los componentes
+ConexionBD (Patrón Singleton):
+
+Garantiza que exista una única conexión física activa hacia el archivo SQLite (datos/juego.db).
+
+Su constructor privado asegura que el directorio se cree automáticamente si no existe y ejecuta la sentencia DDL para la tabla puntaje.
+
+Posee métodos sincronizados (getInstancia() y cerrar()) para evitar condiciones de carrera si dos hilos intentaran inicializar o cerrar la base al mismo tiempo.
+
+PersistenciaException (Excepción Personalizada Unchecked):
+
+Hereda de RuntimeException. Actúa como un envoltorio (wrapper) de las excepciones comprobadas de JDBC (SQLException).
+
+PuntajeDAOSQLite (Implementación DAO con JDBC):
+
+Traduce los objetos de la capa de dominio (Puntaje) a registros de base de datos y viceversa.
+
+Aísla todas las sentencias SQL (INSERT, SELECT) dentro de variables privadas y utiliza PreparedStatement junto con bloques try-with-resources.
+
+2. Análisis comparativo: ¿Por qué este enfoque frente a otras alternativas?
+A. Ocultamiento de la tecnología de persistencia (Decoupling)
+La alternativa ingenua: Lanzar SQLException directamente desde los métodos de la interfaz PuntajeDAO.
+
+Por qué tu diseño es superior: Si la interfaz PuntajeDAO declarara throws SQLException, obligarías a toda la capa del dominio y a los controladores de la vista a importar paquetes de java.sql. Al capturar la excepción JDBC y envolverla en PersistenciaException, si el día de mañana decides cambiar SQLite por un archivo JSON o una base remota, la firma de los métodos del modelo no cambia en absoluto.
+
+B. Prevención de SQL Injection y gestión segura de recursos
+La alternativa ingenua: Concatenar strings directamente en las consultas (ej: "VALUES ('" + jugador + "', " + puntos + ")").
+
+Por qué tu diseño es superior: El uso exclusivo de PreparedStatement en PuntajeDAOSQLite escapa automáticamente cualquier carácter especial introducido por el usuario, eliminando el riesgo de inyección SQL. Además, el uso de try-with-resources asegura el cierre implícito de los punteros PreparedStatement y ResultSet al salir del bloque, previniendo fuga de memoria y de descriptores de archivo.
+
+C. Integridad duplicada (Dominio + Base de Datos)
+Integraste restricciones en la definición DDL de SQLite (CHECK (length(trim(jugador)) > 0) y CHECK (puntos >= 0)) que coinciden exactamente con las validaciones que habías puesto en el constructor de Puntaje en la capa de modelo.
+
+Esto implementa la práctica de defensa en profundidad: aunque un error de software saltara la validación en Java, la base de datos rechazaría un registro inválido.
+
+D. Control centralizado de conexión (Singleton)
+Al tratarse de una base de datos embebida basada en archivos como SQLite, abrir y cerrar conexiones por cada consulta genera un overhead innecesario en disco y puede provocar bloqueos de archivo (database locked).
+
+Reutilizar la única Connection a través de ConexionBD.getInstancia().getConexion() es la forma óptima de gestionar la persistencia en aplicaciones de escritorio de un solo usuario.
+
+3. Detalle técnico a destacar
+En las consultas sqlMejores y sqlTodos:
+
+SQL
+SELECT jugador, heroe, puntos, fecha FROM puntaje ORDER BY puntos DESC, fecha ASC
+El criterio secundario de ordenamiento fecha ASC resuelve de forma limpia los empates: ante una misma cantidad de puntos, conserva el mérito del jugador que logró dicho récord primero en el tiempo.

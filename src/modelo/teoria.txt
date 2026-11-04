@@ -1,0 +1,43 @@
+Con este paquete completo se aprecia toda la columna vertebral de tu juego. Has logrado un modelo de dominio sumamente robusto y, sobre todo, agnóstico de la vista (cumpliendo a rajatabla con el patrón MVC).
+
+Vamos a desglosar los puntos más fuertes y las decisiones de diseño arquitectónico que aplicaste en estos archivos:
+
+1. El cierre del patrón Command y la "IA" del Enemigo
+En la clase Batalla, el método ejecutar(Comando comando) actúa como el Invoker del patrón Command.
+
+La ventaja: La batalla no sabe si el jugador atacó, se defendió o usó un ítem; simplemente llama a comando.ejecutar() y guarda el texto resultante en el historial. Esto hace que el bucle de juego sea genérico y ultra extensible.
+
+La IA encapsulada: En la clase Enemigo, el método elegirComando(Entidad objetivo) es brillante. En lugar de que el controlador principal tenga que decidir qué hace el enemigo, la propia entidad evalúa sus cooldowns (elegirHabilidad()) y fabrica el objeto Comando correspondiente. El controlador solo tiene que pedirle el comando al enemigo y pasárselo a la Batalla.
+
+2. Template Method en Habilidad
+En la clase abstracta Habilidad, usaste un concepto de diseño avanzado conocido como Template Method (Método Plantilla):
+
+Java
+public final int ejecutarHabilidad(Entidad usuario, Entidad objetivo) {
+    if (!getCdListo()) return 0;
+    int vidaAntes = objetivo.getVida();
+    aplicarEfecto(usuario, objetivo); // <-- Llama a la implementación hija
+    activarCooldown();
+    return vidaAntes - objetivo.getVida();
+}
+¿Por qué es excelente? Al declarar el método base como final, aseguras que el flujo obligatorio (chequear si está lista, registrar la vida previa, activar el cooldown y calcular la diferencia) se cumpla siempre. Las clases hijas (HabilidadVeneno, HabilidadCurar) solo se preocupan por sobrescribir aplicarEfecto, sin riesgo de que se olviden de encender el cooldown.
+
+3. Encapsulamiento del Estado y Arquitectura Limpia (MVC)
+Clases como SeleccionHeroe y ModeloCaminoMazmorra son el ejemplo perfecto de cómo debe ser un Modelo en MVC:
+
+No hay dependencias de Swing (JFrame, ImageIcon, etc.).
+
+SeleccionHeroe maneja la matemática de índices circulares ((indice + 1) % heroes.size()) de manera segura, aislando a la interfaz gráfica de errores de desbordamiento (IndexOutOfBounds).
+
+ModeloCaminoMazmorra actúa como una máquina de estados finitos sencilla (Camino 1 -> Camino 2 -> Camino 3 -> Jefe). El controlador de la vista solo tiene que preguntar llegoAlJefe() para saber qué pantalla cargar a continuación.
+
+4. Patrón DAO e Inmutabilidad para la Persistencia
+PuntajeDAO: Separaste perfectamente la definición (qué se puede hacer con los puntajes) de su implementación (SQLite). Esto permite que el día de mañana puedas cambiar el guardado a un archivo .json o a una base de datos en la nube sin tocar ni una sola línea de la clase Partida o de los controladores.
+
+Inmutabilidad en Puntaje: Al hacer los atributos final y no proveer setters, te aseguras de que una vez terminada la partida, el registro sea un paquete de datos sellado. Esto evita bugs muy difíciles de rastrear donde un puntaje se modifica accidentalmente antes de llegar a la base de datos.
+
+5. Manejo de Herencia (Entidad -> Heroe / Enemigo)
+La clase abstracta Entidad agrupa más del 80% de la lógica pesada del combate (listas de habilidades, cooldowns, curación topeada por la vida máxima, recepción de daño).
+Esto deja a Heroe y Enemigo extremadamente limpios, dedicándose solo a lo que los hace únicos (el héroe tiene la mecánica de multiplicadorDefensa y niveles, mientras que el enemigo tiene la IA de selección de habilidades y los multiplicadores del enum Dificultad).
+
+Toda la estructura está lista para ser conectada a los Controladores. Viendo lo limpio que está el Modelo, la integración con las vistas mediante eventos o listeners debería ser muy directa.

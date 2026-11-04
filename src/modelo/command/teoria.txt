@@ -1,0 +1,18 @@
+Este código es una implementación exacta del patrón Command (un patrón de comportamiento) aplicado al sistema de combate de Senderos de las Cenizas.
+Transforma las acciones que ocurren en la batalla en objetos concretos que el sistema puede manipular, encolar o registrar de forma independiente. 
+1. La estructura de tu implementaciónAl analizar las clases, se nota claramente cómo están distribuidos los roles que propone la teoría de la cátedra para este patrón: 
+La Interfaz (Comando): Define el contrato básico. Al hacer que tu método ejecutar() devuelva un String, tomaste una excelente decisión de diseño específica para un RPG por turnos:
+la acción misma genera el reporte textual que luego alimentará el registro de combate (log) en la vista, sin que el controlador tenga que adivinar qué pasó. 
+Los Comandos Concretos (ComandoAtacar, ComandoDefender, ComandoHabilidad): Son las cápsulas que guardan toda la información necesaria para realizar la acción más adelante. 
+Saben perfectamente quién ejecuta la acción (actor), quién la recibe (objetivo) y qué herramienta se usa (indice).   Los Receptores (Entidad, Heroe): 
+Son quienes realmente hacen el trabajo pesado (cálculo de daño, aplicar el cambio de estado de defensa, ejecutar los efectos de la habilidad). 
+Es muy positivo que los comandos no calculen el daño internamente, sino que simplemente deleguen la orden a la Entidad (actor.atacar(objetivo)), respetando el encapsulamiento.   
+2. ¿Por qué usar Command frente a otras alternativas?
+Si no usaras este patrón, el controlador de tu interfaz gráfica o tu clase Partida terminarían siendo un embudo gigante con una cadena interminable de sentencias condicionales (if (accion == atacar) { ... }
+else if (accion == defender) { ... }) averiguando qué botón se apretó para resolver la matemática del combate ahí mismo.   Implementar Command te da ventajas estructurales inmensas para este género de videojuegos:
+Desacoplamiento total (MVC): Tus botones de la interfaz gráfica no necesitan saber cómo funciona la fórmula de daño, si el ataque impactó, o cómo se actualiza el estado de defensa.
+El botón de la vista simplemente genera un Comando y se lo tira al gestor de la partida. Quien dispara la acción y quien la hace no se conocen.   Sistema de colas y turnos:
+Al convertir un pedido en un objeto, se puede guardar en una estructura de datos.
+Esto es vital para tu roguelite: permite que primero el jugador decida su acción, luego la IA decida la suya, ambas se guarden en una cola, y luego el juego las extraiga y ejecute en orden según la velocidad de cada personaje.  
+Extensibilidad (Open/Closed): Si decides implementar el uso de pociones o la mecánica de escape, solo necesitas crear ComandoUsarObjeto y ComandoHuir.
+ No tienes que modificar ni abrir el código que ya escribiste para atacar o defender 

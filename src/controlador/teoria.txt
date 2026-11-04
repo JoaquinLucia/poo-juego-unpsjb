@@ -1,0 +1,44 @@
+RESUMEN DE ARQUITECTURA: CAPA DE CONTROLADORES (MVC)
+1. ¿Qué hacen y cómo funcionan?
+Los controladores actúan como el "cerebro" y el "pegamento" de la arquitectura MVC. Su responsabilidad exclusiva es escuchar los eventos de la Vista (que es 100% pasiva y no sabe qué hace cada botón), procesar la intención del jugador, actualizar el Modelo (que es 100% matemático y no sabe de gráficos), y finalmente ordenar a la Vista que refleje los nuevos cambios.
+
+Funcionan bajo un principio de estricta separación: la Vista y el Modelo jamás se tocan entre sí. Todo dato o acción pasa por el Controlador como intermediario.
+
+2. Patrones de Diseño y Técnicas Integradas
+Patrón Mediator (El Orquestador central):
+Implementado en el ControladorMaestro. En lugar de que la pantalla de Selección instancie a la pantalla de Batalla (creando dependencias cruzadas), todos los controladores menores solo hablan con el Maestro. Él es el único que sabe cómo cambiar de "escena" en la ventana principal.
+
+Inyección de Dependencias (Dependency Injection):
+El ControladorMaestro no instancia la base de datos ni el motor de audio directamente. Recibe el PuntajeDAO y el GestorDeSonido por constructor. Esto permite que el día de mañana se pueda inyectar una base de datos distinta o un motor de audio sin cambiar el código del juego.
+
+Programación Orientada a Eventos (Callbacks/Lambdas):
+Los controladores inyectan su lógica dentro de la vista usando métodos como vista.onAtacar(e -> manejarAccion()). La vista solo expone un "enchufe"; el controlador es quien le conecta la corriente.
+
+Asincronismo no bloqueante (javax.swing.Timer):
+Implementado en ControladorBatalla a través del método ejecutarConRetraso(). Separa el tiempo de la computadora (que calcula el daño instantáneamente) del tiempo visual (lo que tarda la animación del espadazo en terminar).
+
+Patrón Singleton y Flyweight (en GestorDeSonido):
+Asegura una única instancia del motor de audio (Singleton) y mantiene los archivos .wav cargados en la memoria RAM (Flyweight) para evitar demoras al hacer clics.
+
+3. Criterio de Diseño: ¿Por qué elegimos esta manera?
+¿Por qué un Controlador Maestro en lugar de navegación directa?Técnica descartada: Hacer new ControladorBatalla() desde dentro de ControladorMenu().El problema: Genera dependencias circulares y fugas de memoria (Memory Leaks), ya que las pantallas viejas nunca se destruyen correctamente y quedan apiladas en la RAM.La solución: El Maestro limpia la pantalla vieja, crea el controlador nuevo y lo monta, manteniendo la memoria limpia partida tras partida.
+
+¿Por qué usar Timers en lugar de pausar el hilo?Técnica descartada: Usar Thread.sleep(2500) para esperar a que el enemigo termine su turno.El problema: En Java Swing, dormir el hilo principal (EDT) congela la ventana por completo. Las barras de vida no bajarían, los botones no se hundirían y el SO pensaría que el juego "No responde".La solución: El Timer detiene el flujo lógico del controlador de forma asíncrona, dejando que la Vista siga repintando a 60 FPS sin bloqueos.
+
+¿Por qué el Controlador mapea Comandos?
+En lugar de mandar Strings a la Batalla, el ControladorBatalla mapea los botones de la UI directamente a objetos Comando (Patrón Command del modelo). Esto elimina errores de tipeo y facilita la integración.
+
+4. Desglose de Archivos
+ControladorMaestro.java: El director de orquesta. Mantiene la VentanaPrincipal, escucha a los demás controladores y decide cuándo cambiar de pantalla (Ej: Menú -> Selección -> Mazmorra). También inyecta el DAO y el Sonido.
+
+ControladorBatalla.java: Controla el combate. Envía comandos al modelo, descuenta las vidas, deshabilita los botones para evitar "dobles clics" y sincroniza los turnos con temporizadores.
+
+ControladorMenu.java: Maneja las acciones de la pantalla inicial. Es capaz de abrir paneles modales por sí solo (Opciones, Puntuaciones) y le avisa al Maestro si hay que iniciar el juego.
+
+ControladorSeleccion.java: Conecta las flechas de la vista con la lista circular (SeleccionHeroe) del modelo. Al confirmar, le entrega el Héroe elegido al Maestro.
+
+ControladorCaminoMazmorra.java: Traduce las elecciones de flechas (Izquierda, Frente, Derecha) en niveles de dificultad matemática del modelo y le avisa al Maestro que es hora de iniciar un combate.
+
+ControladorPausa.java: Captura la tecla ESC en cualquier momento, congela la lógica y ofrece opciones para reanudar o destruir la partida actual abortando al menú principal.
+
+GestorDeSonido.java (en utilidades): Wrapper de la tarjeta de sonido. Traduce porcentajes humanos de volumen (0-100) en decibelios logarítmicos reales (Math.log10), procesando la física del audio sin que los controladores de UI se ensucien con la API nativa de Java Sound.

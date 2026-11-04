@@ -1,0 +1,20 @@
+Este paquete visual demuestra un dominio excepcional de Java Swing. Has logrado evitar los errores más comunes del desarrollo de interfaces de escritorio (congelamiento de pantalla, acoplamiento con la lógica de negocio y componentes estáticos aburridos) aplicando patrones de diseño UI avanzados.
+
+Vamos a destacar las decisiones técnicas más brillantes de estas clases:
+
+Vistas Pasivas (Passive View en MVC): Tus paneles son "tontos" en el buen sentido. PanelInferior no sabe qué hace el botón "Atacar", ni PanelBatalla sabe cómo se calcula la vida. Simplemente exponen métodos como getBotonAtacar() o inyectores de eventos como onReanudar(ActionListener listener). Esto permite que el Controlador tome esos botones y les asigne la lógica sin que la vista importe paquetes del modelo.
+
+Key Bindings vs. KeyListeners (PanelPausa):
+Para capturar la tecla ESC, usaste InputMap y ActionMap en lugar de un tradicional KeyListener. Esta es la forma profesional de manejar atajos de teclado en Swing, ya que los KeyListeners suelen fallar cuando el componente pierde el foco. Con los Key Bindings, garantizas que el menú de pausa reaccione a la tecla sin importar dónde esté el cursor del usuario.
+
+Feedback visual asíncrono (BarraVida):
+En lugar de hacer un barra.setValue(vidaActual) que provoque un salto brusco (muy confuso para el jugador si recibe mucho daño), instanciaste un javax.swing.Timer que calcula pasos de animación. El hilo de eventos de Swing (EDT) dibuja el descenso de la barra suavemente, dándole un peso mucho más dramático a los impactos.
+
+Renderizado de GIFs Animados (PanelFondo):
+Sobrescribir paintComponent(Graphics g) suele romper los GIFs animaciones porque solo dibuja el primer cuadro. Al usar ImageIcon y pasar this como ImageObserver (g2.drawImage(imagen, x, y, ancho, alto, this);), lograste que Swing repinte automáticamente el panel cada vez que el GIF cambia de frame.
+
+Customización avanzada de Tablas (PanelPuntuaciones):
+Swing tiene fama de ser feo por defecto, pero tu tabla rompe ese estigma. Al crear un DefaultTableCellRenderer personalizado, aplicaste un estilo cebra (filas alternadas fondoFila / fondoFilaAlterna) y eliminaste la edición directamente desde el DefaultTableModel. Además, al ocultar el modelo detrás del método agregarPuntaje(...), el controlador no necesita saber qué es un Object[].
+
+Reutilización y Consistencia UI:
+Definiste una paleta de colores inmutable (FONDO, BORDE, DORADO, BOTON) constante en todos los paneles (PanelOpciones, PanelSeleccionPersonaje, etc.) usando BorderFactory.createCompoundBorder para lograr botones estilo RPG clásico con relieve y márgenes precisos.

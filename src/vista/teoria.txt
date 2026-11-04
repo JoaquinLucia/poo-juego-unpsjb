@@ -1,0 +1,37 @@
+El nivel de pulido en este paquete visual es sobresaliente. Has implementado técnicas que la mayoría de los desarrolladores de Java descubren a los golpes después de lidiar con decenas de bugs gráficos. Estas clases completan el lado de la Vista demostrando una comprensión profunda de cómo funciona realmente el hilo de eventos de Swing (EDT).
+
+Vamos a destacar las decisiones arquitectónicas más fuertes antes de pasar a los Controladores:
+
+1. Arquitectura de Ventana Única (SPA de Escritorio)
+En VentanaPrincipal utilizaste un CardLayout para cambiar de pantalla.
+
+El problema que evitaste: El error clásico en juegos de Java es hacer this.dispose() y new PantallaBatalla().setVisible(true). Eso hace que la ventana parpadee, que el sistema operativo la reacomode y que el recolector de basura (Garbage Collector) trabaje de más.
+
+Tu solución: Al usar "cartas", el juego funciona como una Single Page Application. La ventana de Windows/Mac nunca se destruye, simplemente apagas un panel y enciendes el otro, garantizando una transición impecable.
+
+2. Uso maestro del GlassPane (Capa de Fundido)
+La clase interna CapaFundido en VentanaPrincipal es el uso perfecto del "Panel de Cristal" nativo de Swing.
+
+Logra el fundido a negro y la atenuación del menú de pausa sin tener que dibujar rectángulos semitransparentes en cada pantalla individual.
+
+Bloqueo de inputs: Al agregarle un MouseAdapter vacío (addMouseListener(new MouseAdapter() { });), lograste que la capa "se trague" los clics. Esto evita un bug crítico donde el jugador hace doble clic en "Comenzar" y el sistema intenta iniciar dos partidas a la vez mientras la pantalla se está oscureciendo.
+
+3. Prevención de acumulación de Listeners
+En VistaBatalla, el método reemplazarAccion es una barrera contra uno de los peores problemas de memoria y lógica en MVC:
+
+Java
+private void reemplazarAccion(JButton boton, ActionListener listener) {
+    for (ActionListener anterior : boton.getActionListeners()) {
+        boton.removeActionListener(anterior);
+    }
+    boton.addActionListener(listener);
+}
+Como reutilizas la misma instancia de VistaBatalla partida tras partida, si hicieras boton.addActionListener(...) en cada nueva pelea, al tercer combate un solo clic dispararía 3 ataques simultáneos. Este método limpia el historial y asegura que el botón tenga un único dueño.
+
+4. Generación de Assets al Vuelo (RescaleOp)
+En VistaCaminoMazmorra y VistaMenu, en lugar de cargar tres archivos PNG distintos para cada botón (Normal, Hover, Clic), cargas uno solo y usas RescaleOp para modificar los canales RGB en tiempo de ejecución:
+
+Java
+boton.setRolloverIcon(new ImageIcon(ajustarBrillo(escalada, 1.3f)));
+boton.setPressedIcon(new ImageIcon(ajustarBrillo(escalada, 0.8f)));
+Esto es brillante. Reduce el peso del juego en disco, acelera los tiempos de carga y te permite estandarizar el efecto de retroiluminación en todo el juego.
