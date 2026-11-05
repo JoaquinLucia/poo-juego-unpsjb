@@ -51,7 +51,7 @@ Interfaz Gráfica (IGU):
 
 Indicadores visuales de estado (barras de vida, turno activo y registro de combate).
 
-Persistencia:
+#Persistencia:
 
 Guardado y consulta del historial de batallas y mejores clasificaciones (High Scores) en una base de datos SQLite.
 
@@ -60,7 +60,7 @@ Los personajes representados por éstas clases tendrán comportamientos y caract
 Por una parte, esto hace referencia al polimorfismo, ya que en la forma que se utiliza herencia permite que las subclases puedan utilizar los comportamientos de la clase padre, aplicados a su propia manera.
 Por otra parte, tenemos en consideración implementar varias interfaces que nos permitan reutilizar código mediante el polimorfismo, así poder  aplicar los comportamientos asociados a éstos a distintas clases que lo requieran.
 
-Herencia: Habilidad abstracta
+##Herencia: Habilidad abstracta
 
 Todas las habilidades (curar, aturdir, desangrar) son una Habilidad y comparten nombre, descripción, valor base y toda la lógica de cooldown. La herencia evita duplicar ese código en cada clase.
 
@@ -76,7 +76,7 @@ Se usa interface porque Java no permite herencia múltiple y porque “durar var
 
 Entidad guarda una List<EfectoPorTurno> y en finalizarTurno() llama a procesarTurno sobre cada uno, sin saber si es aturdimiento o desangrado. Depende de la abstracción, no de las clases concretas.
 --------
-Patrón Command
+##Patrón Command
 Problema
 
 En un combate por turnos hay que ejecutar acciones distintas (atacar, usar habilidad, defender), tanto del héroe (botones) como del enemigo (su propia decisión). En nuestro caso teníamos varias métodos para cada accion sea del heroe como del enemigo y repetian reglas comunes aturdimiento, verificación si la batalla termino 
@@ -93,6 +93,7 @@ Extensibilidad: una acción nueva es una clase más, sin modificar Batalla (Abie
 Por qué no implementamos deshacer()
 La interfaz Comando tiene ejecutar() y deshacer() “si hace falta”: deshacer es una posibilidad del patrón, no una parte obligatoria. La esencia de Command es convertir un pedido en un objeto que el invocador ejecuta sin saber qué hace.
 Cada acción es un objeto que implementa la interfaz Comando con un único método ejecutar():
+
 -----
 
 
