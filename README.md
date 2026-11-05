@@ -60,7 +60,8 @@ Los personajes representados por éstas clases tendrán comportamientos y caract
 Por una parte, esto hace referencia al polimorfismo, ya que en la forma que se utiliza herencia permite que las subclases puedan utilizar los comportamientos de la clase padre, aplicados a su propia manera.
 Por otra parte, tenemos en consideración implementar varias interfaces que nos permitan reutilizar código mediante el polimorfismo, así poder  aplicar los comportamientos asociados a éstos a distintas clases que lo requieran.
 
-##Herencia: Habilidad abstracta
+Herencia: Habilidad abstracta
+-----------------------------
 
 Todas las habilidades (curar, aturdir, desangrar) son una Habilidad y comparten nombre, descripción, valor base y toda la lógica de cooldown. La herencia evita duplicar ese código en cada clase.
 
@@ -75,8 +76,9 @@ No todas las habilidades dejan un efecto que dura varios turnos: HabilidadCurar 
 Se usa interface porque Java no permite herencia múltiple y porque “durar varios turnos” es una capacidad, no una identidad. Las clases siguen heredando de Habilidad y además implementan el contrato si les corresponde.
 
 Entidad guarda una List<EfectoPorTurno> y en finalizarTurno() llama a procesarTurno sobre cada uno, sin saber si es aturdimiento o desangrado. Depende de la abstracción, no de las clases concretas.
---------
-##Patrón Command
+
+#Patrón Command
+-----
 Problema
 
 En un combate por turnos hay que ejecutar acciones distintas (atacar, usar habilidad, defender), tanto del héroe (botones) como del enemigo (su propia decisión). En nuestro caso teníamos varias métodos para cada accion sea del heroe como del enemigo y repetian reglas comunes aturdimiento, verificación si la batalla termino 
