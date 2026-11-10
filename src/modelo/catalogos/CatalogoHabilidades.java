@@ -16,25 +16,25 @@ public class CatalogoHabilidades  {
             //                                    nombre, descripción, dañoBase, cooldown, duración
             case "golpe_aturdidor" -> new HabilidadAturdir(
                     "Golpe aturdidor", "Golpea y aturde al enemigo un turno.",
-                    80, 3, 1);
+                    45, 4, 1);
 
             //                                    nombre, descripción, dañoBase, cooldown, dañoPorTurno, duración
             case "dardo_venenoso" -> new HabilidadVeneno(
                     "Dardo venenoso", "Envenena: 4 de daño por turno durante 3 turnos.",
-                    5, 3, 4, 3);
+                    12, 3, 9, 3);
 
             //                                    nombre, descripción, dañoBase, cooldown, dañoInicial, duración
             case "corte_profundo" -> new HabilidadDesangrar(
                     "Corte profundo", "Abre una herida que sangra cada vez más.",
-                    8, 3, 2, 3);
+                    10, 3, 4, 3);
 
             case "grito" -> new HabilidadAturdir(
                     "Grito aterrador", "Aturde al enemigo sin dañarlo.",
                     0, 4, 2);
 
             case "curacion" -> new HabilidadCurar(
-                    "Curación", "Recupera 25 de vida.",
-                    25, 4);
+                    "Curación", "Recupera 30 de vida.",
+                    30, 5);
  
             default -> throw new IllegalArgumentException("Habilidad desconocida: " + id);
         };

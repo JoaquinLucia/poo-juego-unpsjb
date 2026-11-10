@@ -1,9 +1,11 @@
 package controlador;
 
+import controlador.utilidades.GestorDeSonido;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
-import controlador.utilidades.GestorDeSonido;
+import javax.swing.SwingWorker;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import vista.VistaMenu;
@@ -19,6 +21,7 @@ public class ControladorMenu {
     private final VistaMenu vista;
     private final PuntajeDAO puntajeDAO;
     private final ControladorMaestro controladorM;
+
     public ControladorMenu(VistaMenu vista, PuntajeDAO puntajeDAO, ControladorMaestro controlador) {
         
         this.vista = vista;
@@ -36,12 +39,35 @@ public class ControladorMenu {
     }
 
     private void mostrarPuntuaciones() {
+        vista.cargando(true);
+        new SwingWorker<List<Puntaje>, Void>() {
+ 
+            @Override
+            protected List<Puntaje> doInBackground() {
+                return puntajeDAO.mejores(100);          // en otro hilo
+            }
+ 
+            @Override
+            protected void done() {                      // en el hilo de eventos
+                try {
+                    abrirTablaPuntuaciones(get());
+                } catch (InterruptedException | ExecutionException ex) {
+                    vista.mostrarError("No se pudieron cargar los puntajes");   // cómo se muestra, lo decide la vista
+                }
+                vista.cargando(false);
+            }
+        }.execute();
+    }
+
+        //método para armar y mostrar la tabla de puntuaciones. Se llama solo desde el hilo de eventos.
+        private void abrirTablaPuntuaciones(List<Puntaje> mejores){
+        
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         PanelPuntuaciones modal = new PanelPuntuaciones(ventana);
 
         modal.limpiarPuntajes();
         int posicion = 1;
-        for (Puntaje p : puntajeDAO.mejores(100)) {
+        for (Puntaje p : mejores) {
             modal.agregarPuntaje(posicion++, p.getJugador(), p.getPuntos());
         }
         modal.onCerrar(e -> modal.dispose());

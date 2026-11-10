@@ -28,7 +28,7 @@ public class PuntajeDAOSQLite implements PuntajeDAO {
 
    
     @Override
-    public void guardar(Puntaje puntaje) {
+    public synchronized void guardar(Puntaje puntaje) {
         if (puntaje == null) {
             throw new IllegalArgumentException("El puntaje no puede ser null");
         }
@@ -43,7 +43,7 @@ public class PuntajeDAOSQLite implements PuntajeDAO {
     }
 
     @Override
-    public List<Puntaje> mejores(int cantidad) {
+    public synchronized List<Puntaje> mejores(int cantidad) {
         if (cantidad < 1) {
             throw new IllegalArgumentException("La cantidad debe ser al menos 1");
         }
@@ -56,7 +56,7 @@ public class PuntajeDAOSQLite implements PuntajeDAO {
     }
 
     @Override
-    public List<Puntaje> todos() {
+    public synchronized List<Puntaje> todos() {
         try (PreparedStatement ps = conexion().prepareStatement(sqlTodos)) {
             return leerPuntajes(ps);
         } catch (SQLException e) {

@@ -21,7 +21,7 @@ public class HabilidadVeneno extends Habilidad implements EfectoPorTurno {
         this.duracion = duracion;
     }
 
-    @Override
+    @Override //padre
     protected void aplicarEfecto(Entidad usuario, Entidad objetivo) {
         if (getValorBase() > 0) objetivo.recibirDanio(getValorBase());
         this.objetivo = objetivo;

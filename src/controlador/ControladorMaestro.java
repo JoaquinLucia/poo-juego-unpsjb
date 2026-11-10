@@ -1,13 +1,16 @@
 package controlador;
 
-import controlador.utilidades.GestorDeSonido;
-import java.awt.event.KeyEvent;
+
+import controlador.utilidades.GestorDeSonido;        // hilos
+import java.awt.event.KeyEvent;  // hilos
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;   
 import java.util.HashMap;
 import java.util.List;       
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.JFrame;
 import modelo.Batalla;
 import modelo.Dificultad;
@@ -22,6 +25,7 @@ import modelo.SeleccionHeroe;
 import modelo.catalogos.CatalogoEnemigos;
 import modelo.catalogos.CatalogoHabilidades;
 import persistencia.ConexionBD;
+import persistencia.GuardadorDePuntajes;          // hilos
 import recursos.rutas.RutasRecursos;
 import vista.VentanaPrincipal;
 import vista.VistaBatalla;
@@ -67,7 +71,7 @@ public class ControladorMaestro {
 
     // ---- Dependencias inyectadas (las elige el main) ----
     private final PuntajeDAO puntajeDAO;
-    private final GestorDeSonido sonido;   // [MODIFICADO] nuevo atributo: el gestor de sonido inyectado
+    private final GestorDeSonido sonido;   
 
     // ---- Controladores de cada pantalla ----
     private final VistaMenu vistaMenu = new VistaMenu();
@@ -84,16 +88,27 @@ public class ControladorMaestro {
 
     private Partida partidaActual;
 
+    //Hilos
+    private final BlockingQueue<Puntaje> pendientes = new LinkedBlockingQueue<>();
+    
+    private final Thread guardador;
+
+    private Thread cargadorDeSonidos;
+
     // El constructor ahora recibe también el GestorDeSonido (inyección de dependencia)
     public ControladorMaestro(PuntajeDAO puntajeDAO, GestorDeSonido sonido) {
         this.puntajeDAO = puntajeDAO;
-        this.sonido = sonido;   // [MODIFICADO] se guarda la referencia inyectada
+        this.sonido = sonido;   //  se guarda la referencia inyectada
 
         musicaPorEnemigo.put("esclavo", "recursos/sonidos/esclavo_musica.wav");
         musicaPorEnemigo.put("cazador", "recursos/sonidos/cazador_musica.wav");
         musicaPorEnemigo.put("jester",  "recursos/sonidos/jester_musica.wav");
         musicaPorEnemigo.put("akuma",   "recursos/sonidos/akuma_musica.wav");
 
+        //hilo : el guardador arranca una sola vez y espera los puntajes en cola
+        guardador = new Thread(new GuardadorDePuntajes(pendientes, puntajeDAO), "guardador");
+        guardador.start();
+        //
         vistaMenu.aplicarEscala(ventanaPrincipal.getEscala());
         controladorMenu = new ControladorMenu(vistaMenu, puntajeDAO, this);
         ventanaPrincipal.agregarPantalla(pantallaMenu, vistaMenu);
@@ -116,7 +131,8 @@ public class ControladorMaestro {
 
     /** Arranca el juego mostrando el menú. */
     public void iniciar() {
-        reproducirMusicaPrincipal();   //
+        precargarSonidosEnSegundoPlano();// hilo
+        reproducirMusicaPrincipal();   
         controladorMenu.mostrar();
         ventanaPrincipal.mostrarDirecto(pantallaMenu);
     }
@@ -183,7 +199,7 @@ public class ControladorMaestro {
 
         if (!gano) {
             terminarPartida(false);
-        } else if (partidaActual.getCamino().llegoAlJefe()) {
+        } else if (partidaActual.llegoAlJefe()) {
             partidaActual.registrarVictoriaJefe();
             terminarPartida(true);
         } else {
@@ -200,11 +216,6 @@ public class ControladorMaestro {
         ventanaPrincipal.atenuar(false);
     }
 
-    /** Alias por compatibilidad. */
-    public void reanudar() {
-        reanudarPartida();
-    }
-
     /** ControladorPausa: botón "Volver al título". Se descarta la partida sin guardar puntaje. */
     public void abandonarPartida() {
         volverAlMenu();
@@ -212,6 +223,18 @@ public class ControladorMaestro {
 
     /** ControladorPausa: botón "Salir del juego". */
     public void salirDelJuego() {
+        //hilo
+        // al cargador de sonido se le pide que termine, y si no cargó ya no hace falta
+        if (cargadorDeSonidos != null) {
+            cargadorDeSonidos.interrupt();
+        }
+        // al guardador no se interrumpe porque se perderían los puntajes de la cola
+        try {
+            pendientes.put(GuardadorDePuntajes.FIN);
+            guardador.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         ConexionBD.cerrar();
         System.exit(0);
     }
@@ -219,7 +242,7 @@ public class ControladorMaestro {
     // ---------- Acciones internas del maestro ----------
 
     private void iniciarBatalla(Dificultad dificultad) {
-        Lugar lugar = partidaActual.getCamino().getLugarActual();
+        Lugar lugar = partidaActual.getLugarActual();
         Enemigo enemigo = catalogoEnemigos.crearPersonaje(lugar.getTipoEnemigo(), dificultad);
 
         
@@ -247,7 +270,12 @@ public class ControladorMaestro {
         int puntos = partidaActual.calcularPuntajeFinal();
         String nombreJugador = vistaBatalla.pedirNombreFinal(derrotoAlJefe, puntos);
         if (nombreJugador != null && !nombreJugador.isBlank()) {
-            puntajeDAO.guardar(new Puntaje(nombreJugador, partidaActual.getHeroe().getNombre(), puntos));
+            // antes se hacía en la interfaz, ahora se deja en la cola y el juego sigue, lo guarda el hilo guardador
+            try {
+                pendientes.put(new Puntaje(nombreJugador, partidaActual.getHeroe().getNombre(), puntos));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         partidaActual = null;
         reproducirMusicaPrincipal();  
@@ -276,6 +304,23 @@ public class ControladorMaestro {
         }
         sonido.reproducirMusicaEnBucle(ruta);
     }
+    //lee todos los sonidos en un propio hilo, y lo unico que comparte con el hilo de la interfaz es el GestorSonido
+    private void precargarSonidosEnSegundoPlano() {
+        List<String> rutasSonidos = new ArrayList<>();
+        rutasSonidos.add(MUSICA_PRINCIPAL);
+        rutasSonidos.add(EFECTO_BOTON);
+        rutasSonidos.addAll(musicaPorEnemigo.values());
+
+        cargadorDeSonidos = new Thread(() -> {
+            for (String ruta : rutasSonidos) {
+                if (Thread.currentThread().isInterrupted()) {
+                    return;   // se pidió que termine (al salir del juego)
+                }
+                sonido.precargar(ruta);
+            }
+        }, "cargador-sonidos");
+        cargadorDeSonidos.start();
+    }
     // ---------- Auxiliares ----------
 
     private void quitarPantallaSeleccion() {
@@ -291,12 +336,12 @@ public class ControladorMaestro {
 
         List<Habilidad> habilidadesArtorias = new ArrayList<>();
         habilidadesArtorias.add(catalogoHabilidades.crearHabilidad("golpe_aturdidor"));
-        heroes.add(new Heroe("Artorias", 600, 15, 3, habilidadesArtorias,
+        heroes.add(new Heroe("Artorias", 550, 500, 3, habilidadesArtorias,
                 "/recursos/personajes/caballero.png", "/recursos/artoriasFrontal.jpg", "Caballero de Gwyn", 0.5));
 
         List<Habilidad> habilidadesMerlin = new ArrayList<>();
         habilidadesMerlin.add(catalogoHabilidades.crearHabilidad("dardo_venenoso"));
-        heroes.add(new Heroe("Merlin", 450, 25, 2, habilidadesMerlin,
+        heroes.add(new Heroe("Merlin", 480, 35, 2, habilidadesMerlin,
                 "/recursos/personajes/mago.png", "/recursos/magoFrontal.jpg", "Mago de Gwyn", 0.7));
 
         return heroes;

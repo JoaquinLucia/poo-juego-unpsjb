@@ -1,12 +1,11 @@
 package controlador.utilidades;
 
-import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.sound.sampled.*;
 public class GestorDeSonido {
 
     private static GestorDeSonido instanciaUnica;
@@ -88,6 +87,11 @@ public class GestorDeSonido {
         if (rutaRelativa.equals(musicaActualEnBucle)) {
             musicaActualEnBucle = null;
         }
+    }
+    
+    //Carga un audio sin reproducirlos. La usa el hilo cargador de sonidos.
+     public void precargar(String rutaRelativa) {
+        precargarEfecto(rutaRelativa);
     }
 
     // Método privado para cargar el archivo desde los recursos del proyecto

@@ -20,13 +20,13 @@ public class CatalogoApariencias {
 
     public CatalogoApariencias() {
         //                         x    y   ancho alto recorte
-        heroes.put("artorias", new Apariencia(150,  30, 290, 670, 35));   // antes -50  (+80)
-        heroes.put("merlin",   new Apariencia(210, 100, 310, 560, 25));   // antes 20   (+80, a probar)
-
-        enemigos.put("jester",  new Apariencia(880, 225, 380, 380, 0));   // antes 145  (+80)
-        enemigos.put("esclavo", new Apariencia(850, 195, 400, 400, 0));   // antes 110  (a probar)
-        enemigos.put("cazador", new Apariencia(850, 195, 400, 400, 0));   // antes 110  (a probar)
-        enemigos.put("akuma",   new Apariencia(850, 195, 400, 400, 0));
+        heroes.put("artorias", new Apariencia(33, 131, 494, 483, 0));
+        heroes.put("merlin",   new Apariencia(110, 160, 562, 414, 0));
+        
+        enemigos.put("jester", new Apariencia(1009, 131, 494, 483, 0));   // antes 145  (+80)
+        enemigos.put("esclavo", new Apariencia(892, 0, 526, 614, 0));
+        enemigos.put("cazador", new Apariencia(795, 47, 636, 567, 0));
+        enemigos.put("akuma", new Apariencia(660, 131, 540, 483, 0));
     }
 
     public Apariencia buscarHeroe(String nombre) {

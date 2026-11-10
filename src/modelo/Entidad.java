@@ -27,6 +27,10 @@ public abstract class Entidad {
         if (cantidadHabilidadMax < 1) {
             throw new IllegalArgumentException("La entidad debe poder llevar al menos una habilidad");
         }
+        if (habilidades.size() > cantidadHabilidadMax) {
+        throw new IllegalArgumentException(nombre + " tiene " + habilidades.size()
+                + " habilidades y el máximo es " + cantidadHabilidadMax);
+        }
         this.nombre = nombre;
         this.vida = vida;
         this.vidaMaxima = vida;
@@ -52,7 +56,6 @@ public abstract class Entidad {
         return vidaAntes - vida;
     }
     
-
     /** Devuelve el daño que hizo. */
     public int atacar(Entidad objetivo) {   
         return objetivo.recibirDanio(this.ataque);

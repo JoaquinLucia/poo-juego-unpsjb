@@ -34,7 +34,12 @@ public class Partida {
     public int calcularPuntajeFinal() {
         return puntos + heroe.getVida();
     }
-
+    public Lugar getLugarActual() {
+        return camino.getLugarActual();
+    }
+    public boolean llegoAlJefe() {
+    return camino.llegoAlJefe();
+}
     public Heroe getHeroe()                  { return heroe; }
     public ModeloCaminoMazmorra getCamino()  { return camino; }
 }

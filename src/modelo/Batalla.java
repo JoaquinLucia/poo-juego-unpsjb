@@ -1,7 +1,5 @@
 package modelo;
 
-import java.util.ArrayList;
-import java.util.List;
 import modelo.command.Comando;
 
 public class Batalla {
@@ -12,8 +10,6 @@ public class Batalla {
     private final Enemigo enemigo;
     private final Lugar lugar;
     private Turno turnoActual = Turno.HEROE;
-
-    private final List<String> historial = new ArrayList<>();
 
 
     public Batalla(Heroe heroe, Enemigo enemigo, Lugar lugar) {
@@ -26,7 +22,7 @@ public class Batalla {
     }
 
     // ---------- Acciones ----------COMAND
-
+//ejecutar accion comando
     /** Ejecuta el comando, gasta el turno y devuelve qué pasó. */
     public String ejecutar(Comando comando) {
         Entidad actor = entidadEnTurno();
@@ -42,7 +38,6 @@ public class Batalla {
             texto = comando.ejecutar();
         }
 
-        historial.add(texto);
         if (!batallaTerminada()) {
             pasarTurno();
         }
@@ -63,19 +58,10 @@ public class Batalla {
     }
 
     // ---------- Consultas ----------
-
-    /** Efectos que tiene encima el héroe (veneno, desangrado, aturdimiento). */
-    public List<EfectoPorTurno> getEfectosSobreHeroe() {
-        return heroe.getEfectosActivos();
-    }
     public Entidad entidadEnTurno() {
         return (turnoActual == Turno.HEROE) ? heroe : enemigo;
     }
-    /** Efectos que tiene encima el enemigo. */
-    public List<EfectoPorTurno> getEfectosSobreEnemigo() {
-        return enemigo.getEfectosActivos();
-    }
-
+    
     public boolean batallaTerminada() {
         return !heroe.estaVivo() || !enemigo.estaVivo();
     }
@@ -83,8 +69,6 @@ public class Batalla {
     public boolean resultadoBatalla() {
         return heroe.estaVivo() && !enemigo.estaVivo();
     }
-    public List<String> getHistorial() { return new ArrayList<>(historial); }
-
 
     public Heroe getHeroe()         { return heroe; }
     public Enemigo getEnemigo()     { return enemigo; }

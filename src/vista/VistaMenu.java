@@ -204,24 +204,26 @@ public class VistaMenu extends JPanel {
 
     // ---------- Accesos para el Controlador de Menú y Selección ----------
 
-    // public void mostrarSeleccion() {
-    //     cartas.show(this, PANTALLA_SELECCION);
-    // }
-
     public void mostrarMenu() {
         cartas.show(this, PANTALLA_MENU);
     }
     
-    // Método clave para que ControladorMenu le pase el panel a ControladorSeleccion
-    // public VistaSeleccionPersonaje getPanelSeleccion() {
-    //     return panelSeleccion;
-    // }
+    //------Hilos----------
+
+    public void cargando(boolean cargando) {
+        ranking.setEnabled(!cargando);
+    }
 
     // ---------- Diálogos ----------
 
     public void mostrarMensaje(String mensaje) {
         JOptionPane.showMessageDialog(this, mensaje);
     }
+
+    public void mostrarError(String mensaje) {
+    JOptionPane.showMessageDialog(this, mensaje,
+            "Puntuaciones", JOptionPane.ERROR_MESSAGE);
+    }   
 
     public boolean confirmar(String mensaje, String titulo) {
         int respuesta = JOptionPane.showConfirmDialog(

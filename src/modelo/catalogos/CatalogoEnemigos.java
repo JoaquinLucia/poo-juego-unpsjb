@@ -21,19 +21,19 @@ public class CatalogoEnemigos {
             throw new IllegalArgumentException("La dificultad no puede ser null");
         }
         return switch (tipo.toLowerCase()) {
-            case "esclavo" -> new Enemigo("Esclavo", 80, 8, 1,
+            case "esclavo" -> new Enemigo("Esclavo", 120, 14, 1,
                     List.of(habilidades.crearHabilidad("grito")),
                     "/recursos/personajes/mago.png", "/recursos/esclavoFrontal.jpg",
                     dificultad);
-            case "cazador" -> new Enemigo("Cazador", 60, 10, 1,
+            case "cazador" -> new Enemigo("Cazador", 150, 20, 1,
                     List.of(habilidades.crearHabilidad("corte_profundo")),
                     "/recursos/personajes/mago.png", "/recursos/cazadorFrontal.jpg",
                     dificultad);
-            case "jester" -> new Enemigo("Jester", 60, 10, 1,
+            case "jester" -> new Enemigo("Jester", 80, 14, 1,
                     List.of(habilidades.crearHabilidad("dardo_venenoso")),
                     "/recursos/personajes/mago.png", "/recursos/jesterFrontal.jpg",
                     dificultad);
-            case "akuma" -> new Enemigo("Akuma", 300, 20, 2,
+            case "akuma" -> new Enemigo("Akuma", 270, 20, 3,
                     List.of(habilidades.crearHabilidad("golpe_aturdidor"),
                             habilidades.crearHabilidad("corte_profundo"),
                             habilidades.crearHabilidad("curacion")),

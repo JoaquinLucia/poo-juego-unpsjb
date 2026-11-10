@@ -21,26 +21,26 @@ public class ControladorCaminoMazmorra {
         this.modelo = modelo;
         this.vista = vista;
         this.controlador = controlador;
-        vista.onIzquierda(e -> elegir(Dificultad.FACIL));
-        vista.onFrente(e -> elegir(Dificultad.NORMAL));
-        vista.onDerecha(e -> elegir(Dificultad.DIFICIL));
+        vista.onIzquierda(e -> elegirCamino(Dificultad.FACIL));
+        vista.onFrente(e -> elegirCamino(Dificultad.NORMAL));
+        vista.onDerecha(e -> elegirCamino(Dificultad.DIFICIL));
         vista.onEnfrentarJefe(e -> controlador.enfrentarJefe());
 
         actualizarVista();
     }
 
-    /** Lo consulta el mediador después de recibir CAMINO_ELEGIDO. */
+    /** Lo consulta el maestro después de recibir CAMINO_ELEGIDO. */
     public Dificultad getDificultadElegida() {
         return modelo.getDificultadElegida();
     }
 
-    /** Lo llama el mediador al ganar una batalla de camino: pasa al lugar siguiente. */
+    /** Lo llama el maestro al ganar una batalla de camino: pasa al lugar siguiente. */
     public void volverDeBatalla() {
         modelo.avanzar();
         actualizarVista();
     }
 
-    private void elegir(Dificultad dificultad) {
+    private void elegirCamino(Dificultad dificultad) {
         modelo.elegir(dificultad);
         controlador.caminoElegido();
     }

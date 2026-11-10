@@ -55,6 +55,6 @@ public class HabilidadAturdir extends Habilidad implements EfectoPorTurno {
     }
 @Override
     public String getResumenDeUsoHab(String usuario, String objetivo) {
-        return usuario + " usó " + getNombreHabilidad() + " e hizo " + getValorBase()+ " de daño a " + objetivo +  ", queda aturdido ";
+        return usuario + " usó " + getNombreHabilidad() + " e hizo " + getValorBase()+ " de daño a " + objetivo +  ", queda aturdido  por " + turnosRestantes + " turn0s";
     }
 }

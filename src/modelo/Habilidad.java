@@ -15,7 +15,6 @@ public abstract class Habilidad {
         this.cooldownActual = 0;
     }
 
-        
     /** Pasos comunes a todas las habilidades. Devuelve el daño que le hizo al objetivo. */
     public final int ejecutarHabilidad(Entidad usuario, Entidad objetivo) {
         if (!getCdListo()) return 0;
