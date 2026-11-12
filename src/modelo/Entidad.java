@@ -93,16 +93,6 @@ public abstract class Entidad {
             && habilidades.get(posicion).getCdListo();
     }
 
-     public void agregarHabilidad(Habilidad habilidad) {
-        if (habilidad == null) {
-            throw new IllegalArgumentException("La habilidad no puede ser null");
-        }
-        if (getCantidadHabilidades() >= getCantidadHabilidadMax()) {
-            throw new IllegalStateException(getNombre() + " ya tiene el máximo de habilidades");
-        }
-        habilidades.add(habilidad);
-    }
-
     public void reducirCooldowns() {
         for (Habilidad h : habilidades) {
             h.cronoCooldown();

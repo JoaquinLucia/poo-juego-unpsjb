@@ -1,12 +1,17 @@
 package modelo;
  
 import java.util.List;
+import java.util.Random;
 import modelo.command.Comando;
 import modelo.command.ComandoAtacar;
 import modelo.command.ComandoHabilidad;
  
 public class Enemigo extends Entidad {
- 
+
+    private final Random random = new Random();
+    private final double probabilidadEsquivar = 0.20; // 20%
+    private final double probabilidadCritico = 0.10; // 10%
+
     public Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax,
                    List<Habilidad> habilidades, String sprite, String spriteFrontal,
                    Dificultad dificultad) {
@@ -37,4 +42,27 @@ public class Enemigo extends Entidad {
         }
         return new ComandoAtacar(this, objetivo);
     }
+
+    // Ataque común con probabilidad de golpe crítico (daño doble pero que no se imprime en pantalla)
+    @Override
+    public int atacar(Entidad objetivo) {
+        if (random.nextDouble() < probabilidadCritico) {
+            System.out.println(getNombre() + " dio un golpe crítico!");
+            return objetivo.recibirDanio(getAtaque() * 2);
+        }
+        return super.atacar(objetivo);
+    }
+
+    //Enemigo ahora tiene una probabilidad de esquivar el daño de los ataques del 20% pero no los efectos de las habilidades 
+    //tampoco se imprime en pantalla
+    @Override
+    public int recibirDanio(int danio) {
+        if (random.nextDouble() < probabilidadEsquivar) {
+            System.out.println(getNombre() + " esquivó el ataque!");
+            return 0;
+        }
+        return super.recibirDanio(danio);
+    }
+
+    
 }

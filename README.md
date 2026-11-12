@@ -41,12 +41,6 @@ El jugador deberá realizar una elección en la interfaz de la pantalla de juego
 Combate
 El jugador enfrenta un enemigo.
 
-Combate élite
-Enfrenta enemigos más fuertes pero recibe mejores recompensas.
-
-Recompensa
-Después de cada combates el jugador podrá elegir entre diferentes recompensas (Robar una habilidad del enemigo, mejora de habilidad o un aumento de estadísticas a excepto del ataque).
-
 Interfaz Gráfica (IGU):
 
 Indicadores visuales de estado (barras de vida, turno activo y registro de combate).
@@ -60,21 +54,21 @@ Los personajes representados por éstas clases tendrán comportamientos y caract
 Por una parte, esto hace referencia al polimorfismo, ya que en la forma que se utiliza herencia permite que las subclases puedan utilizar los comportamientos de la clase padre, aplicados a su propia manera.
 Por otra parte, tenemos en consideración implementar varias interfaces que nos permitan reutilizar código mediante el polimorfismo, así poder  aplicar los comportamientos asociados a éstos a distintas clases que lo requieran.
 
-Patron de Diseño : Factory 
-
-Problema: En nuestro RPG, cada nivel tiene un enemigo preestablecido que debe crearse al iniciar el combate. Si la lógica de niveles o de batalla se encargara directamente de instanciar cada enemigo, tendría que conocer sus clases concretas y cómo configurarlos. A medida que se agreguen nuevos enemigos, sería necesario modificar esa lógica, aumentando el acoplamiento y dificultando el mantenimiento del sistema.
-
-Solución: Se utilizará el patrón Factory para centralizar la creación y configuración de los enemigos, separándola de la lógica de niveles y combates. Así, el sistema podrá solicitar el enemigo correspondiente sin encargarse directamente de instanciarlo.
-
 ## 3. Arquitectura y Diseño
 
 ### Patrón de Diseño Adicional:
 
-### Diagramas de Diseño
+#Patrón Command
 
-#### **Diagrama de Clases UML (Conceptual)**
+Problema
 
-#### **Prototipo de la IGU (Wireframe)**
+En un combate por turnos hay que ejecutar acciones distintas (atacar, usar habilidad, defender), tanto del héroe (botones) como del enemigo (su propia decisión). En nuestro caso teníamos varias métodos para cada accion sea del heroe como del enemigo y repetian reglas comunes, como aturdimiento, si alguna de las entidades murió después de cada turno, y posteriormente verificar si la batalla terminó.
+
+Solución El controladorbatalla asigna cada botón a un comando con un EnumMap y se lo entrega a Batalla, que lo ejecuta sin saber qué hace.
+
+Qué nos resolvió Desacoplamiento: el controlador no conoce la lógica de daño ni de habilidades. Tratamiento uniforme: el héroe y el enemigo usan el mismo mecanismo. Reglas centralizadas: aturdimiento e historial se resuelven en un solo lugar. Extensibilidad: una acción nueva es una clase más, sin modificar Batalla (Abierto/Cerrado).
+
+Por qué no implementamos deshacer() La interfaz Comando tiene ejecutar() y deshacer() “si hace falta”: deshacer es una posibilidad del patrón, no una parte obligatoria. La esencia de Command es convertir un pedido en un objeto que el invocador ejecuta sin saber qué hace. Cada acción es un objeto que implementa la interfaz Comando con un único método ejecutar():
 
 ## 4. Stack Tecnológico 
 

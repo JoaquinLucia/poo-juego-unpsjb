@@ -3,13 +3,13 @@ package controlador.utilidades;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.sound.sampled.*;
 public class GestorDeSonido {
 
     private static GestorDeSonido instanciaUnica;
-    private final Map<String, Clip> cacheClips = new HashMap<>();
+    private final Map<String, Clip> cacheClips = new ConcurrentHashMap<>();
     
     // Variable para recordar qué música en bucle está sonando actualmente
     private String musicaActualEnBucle = null;
@@ -95,7 +95,7 @@ public class GestorDeSonido {
     }
 
     // Método privado para cargar el archivo desde los recursos del proyecto
-    private void precargarEfecto(String rutaRelativa) {
+    private synchronized void precargarEfecto(String rutaRelativa) {
         if (cacheClips.containsKey(rutaRelativa)) return;
         try {
             URL url = GestorDeSonido.class.getClassLoader().getResource(rutaRelativa);

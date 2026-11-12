@@ -2,15 +2,15 @@ package controlador;
 
 
 import controlador.utilidades.GestorDeSonido;        // hilos
-import java.awt.event.KeyEvent;  // hilos
+import java.awt.event.KeyEvent;  
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;   
 import java.util.HashMap;
 import java.util.List;       
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue; // hilos
+import java.util.concurrent.LinkedBlockingQueue; // hilos
 import javax.swing.JFrame;
 import modelo.Batalla;
 import modelo.Dificultad;
@@ -106,7 +106,7 @@ public class ControladorMaestro {
         musicaPorEnemigo.put("akuma",   "recursos/sonidos/akuma_musica.wav");
 
         //hilo : el guardador arranca una sola vez y espera los puntajes en cola
-        guardador = new Thread(new GuardadorDePuntajes(pendientes, puntajeDAO), "guardador");
+        guardador = new Thread(new GuardadorDePuntajes(pendientes, puntajeDAO));
         guardador.start();
         //
         vistaMenu.aplicarEscala(ventanaPrincipal.getEscala());
@@ -318,7 +318,7 @@ public class ControladorMaestro {
                 }
                 sonido.precargar(ruta);
             }
-        }, "cargador-sonidos");
+        });
         cargadorDeSonidos.start();
     }
     // ---------- Auxiliares ----------
