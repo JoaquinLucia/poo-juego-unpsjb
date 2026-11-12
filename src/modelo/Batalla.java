@@ -48,7 +48,7 @@ public class Batalla {
         }
         return texto;
     }
-    
+     
     // ---------- Flujo de turnos ----------
 
     /** Al final del turno de cada uno, se procesan los efectos que tiene encima. */

@@ -3,3 +3,4 @@ package modelo.command;
 public interface Comando {
     String ejecutar();
 }
+ 

@@ -4,6 +4,7 @@ import java.util.List;
 import modelo.command.Comando;
 import modelo.command.ComandoAtacar;
 import modelo.command.ComandoHabilidad;
+import modelo.command.ComandoPasarTurno;
  
 public class Enemigo extends Entidad {
  
@@ -35,6 +36,13 @@ public class Enemigo extends Entidad {
         if (indice >= 0) {
             return new ComandoHabilidad(this, objetivo, indice);
         }
+
+        // El enemigo tiene una chance de "pasar turno" o recuperar compostura
+        // Si la vida desciende del umbral crítico de 45 HP y la IA evalúa con una probabilidad del 50%(0.5)para decidir entre un respiro estrategico y ceder el turno
+        if (this.getVida() < 45 && Math.random() < 0.5) {
+            return new ComandoPasarTurno(this);
+        }
+
         return new ComandoAtacar(this, objetivo);
     }
 }

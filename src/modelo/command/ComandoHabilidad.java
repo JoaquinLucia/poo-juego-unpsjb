@@ -22,5 +22,5 @@ public class ComandoHabilidad implements Comando {
         return habilidad.getResumenDeUsoHab(actor.getNombre(), objetivo.getNombre());
 
     }
-}
+} 
  

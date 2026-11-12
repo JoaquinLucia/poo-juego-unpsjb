@@ -12,7 +12,7 @@ import modelo.command.Comando;
 import modelo.command.ComandoAtacar;
 import modelo.command.ComandoDefender;
 import modelo.command.ComandoHabilidad;
-import vista.VistaBatalla;
+import vista.VistaBatalla; 
 
 /*
  * Controla la pantalla de combate. Es el único que conoce al modelo y a la vista:

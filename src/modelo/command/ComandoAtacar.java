@@ -17,4 +17,4 @@ public String ejecutar() {
     int danio = actor.atacar(objetivo);
     return actor.getNombre() + " atacó a " + objetivo.getNombre() + " y le hizo " + danio + " de daño";
 }
-}
+} 

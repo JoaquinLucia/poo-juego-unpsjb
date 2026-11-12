@@ -15,4 +15,4 @@ public class ComandoDefender implements Comando {
         actor.defender();   // el método de Entidad que activa estaDefendiendo()
         return actor.getNombre() + " se prepara para bloquear el daño";
     }
-}
+} 
