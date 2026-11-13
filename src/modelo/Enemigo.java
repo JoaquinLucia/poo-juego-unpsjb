@@ -1,20 +1,30 @@
 package modelo;
 
 
-public class Enemigo extends Entidad{
+import java.util.List;
+import modelo.command.Comando;
 
-    //private int resistenciaDanio;
+public abstract class Enemigo extends Entidad {
 
-public Enemigo(String nombre, int vida, int ataque,int cantidadHabilidadMax, Habilidad habilidadInicial) {
 
-    super(nombre, vida, ataque, cantidadHabilidadMax);
-    if (habilidadInicial==null){
-            throw new IllegalArgumentException("El enemigo debe tener una habilidad inicial");
+    protected Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax,
+                    List<Habilidad> habilidades, String sprite, String spriteFrontal,
+                    String rutaMusica, Dificultad dificultad) {
+        super(nombre,
+              dificultad.ajustarVida(vida),
+              dificultad.ajustarAtaque(ataque),
+              cantidadHabilidadMax, habilidades, sprite, spriteFrontal);
     }
-    agregarHabilidad(habilidadInicial);
+
+    /** Su "IA": cada tipo de enemigo decide a su manera qué jugar. No ejecuta nada. */
+    public abstract Comando elegirComando(Entidad objetivo);
+    
+    public int elegirHabilidad() {
+        for (int i = 0; i < getCantidadHabilidades(); i++) {
+            if (puedeUsarHabilidad(i)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
-      //  this.resistenciaDanio = resistenciaDanio;
-
-}
-
-
