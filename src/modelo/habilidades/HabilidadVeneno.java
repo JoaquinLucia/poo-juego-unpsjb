@@ -12,8 +12,7 @@ public class HabilidadVeneno extends Habilidad implements EfectoPorTurno {
     private Entidad objetivo;
     private int turnosRestantes = 0;
 
-    public HabilidadVeneno(String nombre, String descripcion, int danioBase, int cooldown,
-                           int danioPorTurno, int duracion) {
+    public HabilidadVeneno(String nombre, String descripcion, int danioBase, int cooldown,int danioPorTurno, int duracion) {
         super(nombre, descripcion, danioBase, cooldown);
         if (duracion < 1) throw new IllegalArgumentException("El veneno debe durar al menos un turno");
         if (danioPorTurno < 0) throw new IllegalArgumentException("El daño por turno no puede ser negativo");
@@ -29,6 +28,9 @@ public class HabilidadVeneno extends Habilidad implements EfectoPorTurno {
         objetivo.agregarEfecto(this);
     }
 
+    @Override
+    public boolean esAturdimiento() { return false; }
+    
     @Override
     public boolean afectaA(Entidad entidad) {
         return entidad != null && entidad == objetivo && turnosRestantes > 0;

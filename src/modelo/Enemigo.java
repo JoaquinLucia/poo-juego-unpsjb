@@ -5,6 +5,7 @@ import java.util.List;
 import modelo.command.Comando;
 
 public abstract class Enemigo extends Entidad {
+    private final String rutaMusica;
 
 
     protected Enemigo(String nombre, int vida, int ataque, int cantidadHabilidadMax,
@@ -14,6 +15,8 @@ public abstract class Enemigo extends Entidad {
               dificultad.ajustarVida(vida),
               dificultad.ajustarAtaque(ataque),
               cantidadHabilidadMax, habilidades, sprite, spriteFrontal);
+        this.rutaMusica = rutaMusica;
+
     }
 
     /** Su "IA": cada tipo de enemigo decide a su manera qué jugar. No ejecuta nada. */
@@ -27,4 +30,6 @@ public abstract class Enemigo extends Entidad {
         }
         return -1;
     }
+    
+    public String getRutaMusica() { return rutaMusica; }
 }

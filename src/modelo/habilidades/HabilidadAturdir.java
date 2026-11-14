@@ -46,7 +46,8 @@ public class HabilidadAturdir extends Habilidad implements EfectoPorTurno {
 
     @Override
     public int getTurnosEfecto() { return turnosRestantes; }
-
+    @Override
+    public boolean esAturdimiento() { return true; }
     @Override
     public void limpiarEfecto() {
         if (objetivo != null) objetivo.setAturdida(false);

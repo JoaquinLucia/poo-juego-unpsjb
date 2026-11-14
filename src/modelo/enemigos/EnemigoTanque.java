@@ -6,6 +6,7 @@ import modelo.Dificultad;
 import modelo.Enemigo;
 import modelo.Entidad;
 import modelo.Habilidad;
+import modelo.EfectoPorTurno;
 import modelo.command.Comando;
 import modelo.command.ComandoAtacar;
 import modelo.command.ComandoHabilidad;
@@ -28,6 +29,13 @@ public class EnemigoTanque extends Enemigo {
         }
         return new ComandoAtacar(this, objetivo);
     }
+    /** Si el efecto aturde, lo deshace y no lo guarda: nunca queda aturdido ni en la lista. */
     @Override
-    public void setAturdida(boolean aturdida) { }
+    public void agregarEfecto(EfectoPorTurno efecto) {
+        if (efecto.esAturdimiento()) {
+            efecto.limpiarEfecto();
+            return;
+        }
+        super.agregarEfecto(efecto);
+    }
 }

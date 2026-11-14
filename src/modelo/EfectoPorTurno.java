@@ -6,4 +6,6 @@ public interface EfectoPorTurno {
     void procesarTurno(Entidad afectado);
     int getTurnosEfecto();
     void limpiarEfecto();
+
+    boolean esAturdimiento();//ultimo 
 }

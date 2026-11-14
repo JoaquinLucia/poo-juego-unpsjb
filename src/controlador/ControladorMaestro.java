@@ -4,10 +4,8 @@ import controlador.utilidades.GestorDeSonido;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;   
-import java.util.HashMap;
-import java.util.List;       
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFrame;
 import modelo.Batalla;
 import modelo.Dificultad;
@@ -19,7 +17,6 @@ import modelo.Partida;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 import modelo.SeleccionHeroe;
-import modelo.catalogos.CatalogoEnemigos;
 import modelo.catalogos.CatalogoHabilidades;
 import persistencia.ConexionBD;
 import recursos.rutas.RutasRecursos;
@@ -48,10 +45,10 @@ public class ControladorMaestro {
 
     // Rutas de audio centralizadas en constantes.
     // Antes estaban escritas a mano en cada método.
-    private static final String MUSICA_PRINCIPAL = "recursos/sonidos/juego_musica.wav";
-    private static final String EFECTO_BOTON = "recursos/sonidos/sonidobotonesop.wav";
+    private final String MUSICA_PRINCIPAL = "recursos/sonidos/juego_musica.wav";
+    private final String EFECTO_BOTON = "recursos/sonidos/sonidobotonesop.wav";
     private final RutasRecursos rutas = new RutasRecursos();
-    private final Map<String, String> musicaPorEnemigo = new HashMap<>();
+
 
 
     // Nombres de las pantallas dentro de la ventana
@@ -63,11 +60,12 @@ public class ControladorMaestro {
     
     private final VentanaPrincipal ventanaPrincipal = new VentanaPrincipal();
     private final CatalogoHabilidades catalogoHabilidades = new CatalogoHabilidades();
-    private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(catalogoHabilidades);
+
+//private final CatalogoEnemigos catalogoEnemigos = new CatalogoEnemigos(catalogoHabilidades);
 
     // ---- Dependencias inyectadas (las elige el main) ----
     private final PuntajeDAO puntajeDAO;
-    private final GestorDeSonido sonido;   // [MODIFICADO] nuevo atributo: el gestor de sonido inyectado
+    private final GestorDeSonido sonido;   
 
     // ---- Controladores de cada pantalla ----
     private final VistaMenu vistaMenu = new VistaMenu();
@@ -89,10 +87,10 @@ public class ControladorMaestro {
         this.puntajeDAO = puntajeDAO;
         this.sonido = sonido;   //  se guarda la referencia inyectada
 
-        musicaPorEnemigo.put("esclavo", "recursos/sonidos/esclavo_musica.wav");
-        musicaPorEnemigo.put("cazador", "recursos/sonidos/cazador_musica.wav");
-        musicaPorEnemigo.put("jester",  "recursos/sonidos/jester_musica.wav");
-        musicaPorEnemigo.put("akuma",   "recursos/sonidos/akuma_musica.wav");
+        // musicaPorEnemigo.put("esclavo", "recursos/sonidos/esclavo_musica.wav");
+        // musicaPorEnemigo.put("cazador", "recursos/sonidos/cazador_musica.wav");
+        // musicaPorEnemigo.put("jester",  "recursos/sonidos/jester_musica.wav");
+        // musicaPorEnemigo.put("akuma",   "recursos/sonidos/akuma_musica.wav");
 
         vistaMenu.aplicarEscala(ventanaPrincipal.getEscala());
         controladorMenu = new ControladorMenu(vistaMenu, puntajeDAO, this);
@@ -114,7 +112,7 @@ public class ControladorMaestro {
         });
     }
 
-    /** Arranca el juego mostrando el menú. */
+    // Arranca el juego mostrando el menú. 
     public void iniciar() {
         reproducirMusicaPrincipal();   //
         controladorMenu.mostrar();
@@ -218,30 +216,28 @@ public class ControladorMaestro {
 
     // ---------- Acciones internas del maestro ----------
 
-    private void iniciarBatalla(Dificultad dificultad) {
-        Lugar lugar = partidaActual.getLugarActual();
-        Enemigo enemigo = catalogoEnemigos.crearPersonaje(lugar.getTipoEnemigo(), dificultad);
+private void iniciarBatalla(Dificultad dificultad) {
+    Lugar lugar = partidaActual.getLugarActual();
+    Enemigo enemigo = lugar.crearEnemigo(catalogoHabilidades, dificultad);
 
-        
-        // La elección de la música ahora la hace reproducirMusicaDeBatalla() usando el Map.
-        reproducirMusicaDeBatalla(lugar.getTipoEnemigo());
+    // Cada enemigo sabe cuál es su música
+    sonido.reproducirMusicaEnBucle(enemigo.getRutaMusica());
 
-        if (vistaBatalla != null) {
-            ventanaPrincipal.quitarPantalla(vistaBatalla);
-        }
-        vistaBatalla = new VistaBatalla(rutas);
-        controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partidaActual.getHeroe(), enemigo, lugar), this);
-        ventanaPrincipal.agregarPantalla(pantallaBatalla, vistaBatalla);
-
-        ventanaPrincipal.cambiarPantalla(pantallaBatalla, null, null);
-        controladorBatalla.iniciarBatalla();
+    if (vistaBatalla != null) {
+        ventanaPrincipal.quitarPantalla(vistaBatalla);
     }
+    vistaBatalla = new VistaBatalla(rutas);
+    controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partidaActual.getHeroe(), enemigo, lugar), this);
+    ventanaPrincipal.agregarPantalla(pantallaBatalla, vistaBatalla);
+
+    ventanaPrincipal.cambiarPantalla(pantallaBatalla, null, null);
+    controladorBatalla.iniciarBatalla();
+}
 
     private void abrirMenuPausa() {
         ventanaPrincipal.atenuar(true);
         controladorPausa.mostrar();
     }
-
     // (solo cambio de orden, la lógica es la misma).
     private void terminarPartida(boolean derrotoAlJefe) {
         int puntos = partidaActual.calcularPuntajeFinal();
@@ -269,13 +265,13 @@ public class ControladorMaestro {
     }
 
     /* elige la música según el enemigo; si no tiene una propia, suena la principal. */
-    private void reproducirMusicaDeBatalla(String tipoEnemigo) {
-        String ruta = musicaPorEnemigo.get(tipoEnemigo.toLowerCase());
-        if (ruta == null) {
-            ruta = MUSICA_PRINCIPAL;   // ese enemigo no tiene música propia
-        }
-        sonido.reproducirMusicaEnBucle(ruta);
-    }
+    // private void reproducirMusicaDeBatalla(String tipoEnemigo) {
+    //     String ruta = musicaPorEnemigo.get(tipoEnemigo.toLowerCase());
+    //     if (ruta == null) {
+    //         ruta = MUSICA_PRINCIPAL;   // ese enemigo no tiene música propia
+    //     }
+    //     sonido.reproducirMusicaEnBucle(ruta);
+    // }
     // ---------- Auxiliares ----------
 
     private void quitarPantallaSeleccion() {
