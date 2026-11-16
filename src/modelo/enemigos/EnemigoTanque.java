@@ -3,13 +3,9 @@ package modelo.enemigos;
 
 import java.util.List;
 import modelo.Dificultad;
-import modelo.Enemigo;
-import modelo.Entidad;
-import modelo.Habilidad;
 import modelo.EfectoPorTurno;
-import modelo.command.Comando;
-import modelo.command.ComandoAtacar;
-import modelo.command.ComandoHabilidad;
+import modelo.Enemigo;
+import modelo.Habilidad;
 
 // inmune al aturdimiento 
 public class EnemigoTanque extends Enemigo {
@@ -21,14 +17,14 @@ public class EnemigoTanque extends Enemigo {
             sprite, spriteFrontal, rutaMusica, dificultad);
     }
 
-    @Override
-    public Comando elegirComando(Entidad objetivo) {
-        int habilidad = elegirHabilidad();
-        if (habilidad >= 0) {
-            return new ComandoHabilidad(this, objetivo, habilidad);
-        }
-        return new ComandoAtacar(this, objetivo);
-    }
+    // @Override
+    // public Comando elegirComando(Entidad objetivo) {
+    //     int habilidad = elegirHabilidad();
+    //     if (habilidad >= 0) {
+    //         return new ComandoHabilidad(this, objetivo, habilidad);
+    //     }
+    //     return new ComandoAtacar(this, objetivo);
+    // }
     /** Si el efecto aturde, lo deshace y no lo guarda: nunca queda aturdido ni en la lista. */
     @Override
     public void agregarEfecto(EfectoPorTurno efecto) {
@@ -37,5 +33,9 @@ public class EnemigoTanque extends Enemigo {
             return;
         }
         super.agregarEfecto(efecto);
+    }
+    @Override
+    public int recibirDanio(int danio) {
+        return super.recibirDanio(danio * 80 / 100); //reduce un 80 % de sanio
     }
 }
