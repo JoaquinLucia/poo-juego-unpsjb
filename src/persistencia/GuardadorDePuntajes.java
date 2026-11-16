@@ -4,15 +4,13 @@ import java.util.concurrent.BlockingQueue;
 import modelo.Puntaje;
 import modelo.PuntajeDAO;
 
-//
  // Consumidor del patrón productor-consumidor.
  //Corre en su propio hilo ("guardador") y es el ÚNICO que guarda con el DAO:
  //el juego deja los puntajes en la cola con put() y sigue, sin esperar a la base.
- //
+
 public class GuardadorDePuntajes implements Runnable {
 
     // Elemento especial: avisa que no vienen más puntajes. Se compara con == a propósito.
-    // Ajustar los argumentos al constructor real de Puntaje.
     public static final Puntaje FIN = new Puntaje("jugador", "heroe", 0);
 
     private final BlockingQueue<Puntaje> pendientes;

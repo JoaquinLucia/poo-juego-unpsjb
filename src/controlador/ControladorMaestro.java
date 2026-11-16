@@ -146,7 +146,7 @@ public class ControladorMaestro {
         vistaSeleccion = new PanelSeleccionPersonaje();
         controladorSeleccion = new ControladorSeleccion(vistaSeleccion, new SeleccionHeroe(crearHeroesDisponibles()), this);
         ventanaPrincipal.agregarPantalla(pantallaSeleccion, vistaSeleccion);
-        ventanaPrincipal.cambiarPantalla(pantallaSeleccion, null, null);
+        ventanaPrincipal.cambiarPantalla(pantallaSeleccion);
     }
 
     /** ControladorSeleccion / ControladorPausa: botón "Volver" o "Volver al título". */
@@ -154,10 +154,7 @@ public class ControladorMaestro {
         reproducirSonidoBoton();   
         ventanaPrincipal.atenuar(false);
         partidaActual = null;
-        ventanaPrincipal.cambiarPantalla(pantallaMenu, null, () -> {
-            reproducirMusicaPrincipal();   
-            quitarPantallaSeleccion();
-        });
+        ventanaPrincipal.cambiarPantalla(pantallaMenu);
     }
 
     /** ControladorSeleccion: botón "Elegir héroe". Empieza la partida en el primer camino. */
@@ -175,7 +172,7 @@ public class ControladorMaestro {
         ventanaPrincipal.agregarPantalla(pantallaCamino, vistaCamino);
 
         // La selección se quita cuando el fundido ya terminó
-        ventanaPrincipal.cambiarPantalla(pantallaCamino, null, () -> quitarPantallaSeleccion());
+        ventanaPrincipal.cambiarPantalla(pantallaCamino);
     }
 
     /** ControladorCaminoMazmorra: se eligió una flecha. */
@@ -206,7 +203,7 @@ public class ControladorMaestro {
             partidaActual.registrarVictoria();
             controladorCamino.volverDeBatalla();   // pasa al lugar siguiente
             reproducirMusicaPrincipal();  
-            ventanaPrincipal.cambiarPantalla(pantallaCamino, null, null);
+            ventanaPrincipal.cambiarPantalla(pantallaCamino);
         }
     }
 
@@ -256,7 +253,7 @@ public class ControladorMaestro {
         controladorBatalla = new ControladorBatalla(vistaBatalla, new Batalla(partidaActual.getHeroe(), enemigo, lugar), this);
         ventanaPrincipal.agregarPantalla(pantallaBatalla, vistaBatalla);
 
-        ventanaPrincipal.cambiarPantalla(pantallaBatalla, null, null);
+        ventanaPrincipal.cambiarPantalla(pantallaBatalla);
         controladorBatalla.iniciarBatalla();
     }
 
@@ -279,7 +276,7 @@ public class ControladorMaestro {
         }
         partidaActual = null;
         reproducirMusicaPrincipal();  
-        ventanaPrincipal.cambiarPantalla(pantallaMenu, null, null);
+        ventanaPrincipal.cambiarPantalla(pantallaMenu);
     }
 
     // ---------- Sonido ----------

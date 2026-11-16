@@ -90,7 +90,7 @@ public class VentanaPrincipal extends JFrame {
      *   3. aclara la pantalla nueva,
      *   4. al terminar ejecuta "alTerminar" (puede ser null).
      */
-    public void cambiarPantalla(String nombre, Runnable preparar, Runnable alTerminar) {
+    public void cambiarPantalla(String nombre) {
         if (enTransicion()) {
             return; // ya hay un cambio en curso (por ejemplo, un doble clic)
         }
@@ -102,15 +102,25 @@ public class VentanaPrincipal extends JFrame {
             capaFundido.repaint();
             if (capaFundido.opacidad >= 1f) {
                 animacion.stop();
-                if (preparar != null) {
-                    preparar.run();
-                }
                 cartas.show(pantallas, nombre);
                 pantallas.revalidate();
-                aclarar(alTerminar);
+                aclarar();
             }
         });
         animacion.start();
+    }
+
+    private void aclarar() {
+    animacion = new Timer(MS_POR_PASO, null);
+    animacion.addActionListener(e -> {
+        capaFundido.opacidad = Math.max(0f, capaFundido.opacidad - PASO_ACLARAR);
+        capaFundido.repaint();
+        if (capaFundido.opacidad <= 0f) {
+            animacion.stop();
+            capaFundido.setVisible(false);
+        }
+    });
+    animacion.start();
     }
 
     public boolean enTransicion() {
@@ -146,22 +156,6 @@ public class VentanaPrincipal extends JFrame {
                 return habilitada.getAsBoolean();
             }
         });
-    }
-
-    private void aclarar(Runnable alTerminar) {
-        animacion = new Timer(MS_POR_PASO, null);
-        animacion.addActionListener(e -> {
-            capaFundido.opacidad = Math.max(0f, capaFundido.opacidad - PASO_ACLARAR);
-            capaFundido.repaint();
-            if (capaFundido.opacidad <= 0f) {
-                animacion.stop();
-                capaFundido.setVisible(false);
-                if (alTerminar != null) {
-                    alTerminar.run();
-                }
-            }
-        });
-        animacion.start();
     }
 
     /** Rectángulo negro con transparencia variable que cubre toda la ventana. */

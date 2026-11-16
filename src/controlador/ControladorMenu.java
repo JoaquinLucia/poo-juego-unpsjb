@@ -77,7 +77,7 @@ public class ControladorMenu {
         vista.setVisible(true);
     }
 
-private void mostrarOpciones() {
+    private void mostrarOpciones() {
         GestorDeSonido.getInstancia().reproducirEfecto("recursos/sonidos/sonidobotonesop.wav");
         JFrame ventana = (JFrame) SwingUtilities.getWindowAncestor(vista);
         vista.paneles.PanelOpciones modalOpciones = new vista.paneles.PanelOpciones(ventana);
