@@ -7,5 +7,4 @@ public interface EfectoPorTurno {
     int getTurnosEfecto();
     void limpiarEfecto();
 
-    boolean esAturdimiento();//ultimo 
 }

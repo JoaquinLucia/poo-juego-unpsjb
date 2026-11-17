@@ -28,8 +28,7 @@ public class HabilidadVeneno extends Habilidad implements EfectoPorTurno {
         objetivo.agregarEfecto(this);
     }
 
-    @Override
-    public boolean esAturdimiento() { return false; }
+
     
     @Override
     public boolean afectaA(Entidad entidad) {

@@ -37,8 +37,7 @@ public class HabilidadDesangrar extends Habilidad implements EfectoPorTurno {
         return entidad != null && entidad == objetivo && turnosRestantes > 0;
     }
 
-    @Override
-    public boolean esAturdimiento() { return false; }
+
     
     /** Se llama al final del turno del afectado: daño creciente. */
     @Override

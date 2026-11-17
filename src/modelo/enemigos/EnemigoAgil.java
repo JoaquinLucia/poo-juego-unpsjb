@@ -4,7 +4,11 @@ package modelo.enemigos;
 import java.util.List;
 import modelo.Dificultad;
 import modelo.Enemigo;
+import modelo.Entidad;
 import modelo.Habilidad;
+import modelo.command.Comando;
+import modelo.command.ComandoAtacar;
+import modelo.command.ComandoHabilidad;
 
 // aca la idea si el enemigo tiene menos del 30% de vida trata de rematar con basicos 
 public class EnemigoAgil extends Enemigo {
@@ -17,16 +21,17 @@ public class EnemigoAgil extends Enemigo {
     }
 
 
-    // @Override
-    // public Comando elegirComando(Entidad objetivo) {
-    //   //  if (objetivo.getPorcentajeVida() > 30) {
-    //         int habilidad = elegirHabilidad();
-    //         if (habilidad >= 0) {
-    //             return new ComandoHabilidad(this, objetivo, habilidad);
-    //   //      }
-    //     }
-    //     return new ComandoAtacar(this, objetivo);
-    // }
+    //Si el héroe ya tiene un efecto encima pega básico si no usa su  habilidad lista
+    @Override
+    public Comando elegirComando(Entidad objetivo) {
+        if (objetivo.getEfectosActivos().isEmpty()) {
+            int habilidad = elegirHabilidad();
+            if (habilidad >= 0) {
+                return new ComandoHabilidad(this, objetivo, habilidad);
+            }
+        }
+        return new ComandoAtacar(this, objetivo);
+    }
 
     
     @Override

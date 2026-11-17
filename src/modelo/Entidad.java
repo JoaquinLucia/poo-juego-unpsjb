@@ -120,7 +120,11 @@ public abstract class Entidad {
     public void agregarEfecto(EfectoPorTurno efecto) {
         if (!efectos.contains(efecto)) efectos.add(efecto);
     }
-
+    public void aturdir(EfectoPorTurno efecto) {
+        aturdida = true;
+        agregarEfecto(efecto);
+    }
+    //---------------------
     /**
      * Al terminar su turno: bajan sus cooldowns y los efectos que tiene encima
      * le aplican su daño (veneno, desangrado) y descuentan sus turnos.

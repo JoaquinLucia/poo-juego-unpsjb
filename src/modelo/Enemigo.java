@@ -3,8 +3,6 @@ package modelo;
 
 import java.util.List;
 import modelo.command.Comando;
-import modelo.command.ComandoAtacar;
-import modelo.command.ComandoHabilidad;
 
 public abstract class Enemigo extends Entidad {
     private final String rutaMusica;
@@ -19,14 +17,16 @@ public abstract class Enemigo extends Entidad {
 
     }
 
+
     /** Su "IA": cada tipo de enemigo decide a su manera qué jugar. No ejecuta nada. */
-    public Comando elegirComando(Entidad objetivo) {
-        int habilidad = elegirHabilidad();
-        if (habilidad >= 0) {
-            return new ComandoHabilidad(this, objetivo, habilidad);
-        }
-        return new ComandoAtacar(this, objetivo);
-    }
+    public abstract Comando elegirComando(Entidad objetivo);
+    // public Comando elegirComando(Entidad objetivo) {
+    //     int habilidad = elegirHabilidad();
+    //     if (habilidad >= 0) {
+    //         return new ComandoHabilidad(this, objetivo, habilidad);
+    //     }
+    //     return new ComandoAtacar(this, objetivo);
+    // }
     
     public int elegirHabilidad() {
         for (int i = 0; i < getCantidadHabilidades(); i++) {
